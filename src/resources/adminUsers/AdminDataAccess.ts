@@ -1,0 +1,27 @@
+// src/resources/adminUsers/AdminDataAccess.ts
+
+import DB from '../../utils/db';
+import AdminModel  from './AdminModel';
+
+class AdminDataAccess  {
+  static collection = 'AdminUsers';
+
+  async FindAllUsers(query = {}) {
+    return await new DB().FindAll(AdminDataAccess .collection, query);
+  }
+
+  async FindById(id: string) {
+    return await new DB().FindByID(AdminDataAccess .collection, id);
+  }
+
+  async DeleteUserById(id: string) {
+    return await new DB().DeleteById(AdminDataAccess .collection, id);
+  }
+
+  async InsertOne(admin: AdminModel) {
+    admin.validateNewAdmin();
+    return await new DB().Insert(AdminDataAccess .collection, admin);
+  }
+}
+
+export default AdminDataAccess ;
