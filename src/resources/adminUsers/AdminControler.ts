@@ -10,8 +10,8 @@ import AdminModel from "./AdminModel";
 
 
 export async function loginAdmin(req: Request, res: Response): Promise<Response> {
-  const { user_email, password } = req.body;
-  const user = await AdminService.loginUser(user_email, password);
+  const { username, password } = req.body;
+  const user = await AdminService.loginUser(username, password);
   
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password.' });

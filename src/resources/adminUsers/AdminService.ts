@@ -32,7 +32,7 @@ export async function createUser(user: AdminModel) {
 export async function loginUser(username: string, password: string) {
   const users = await adminDataAccess.FindAllUsers({
     username,
-    status: "active",
+    account_activated: true,
     deleted: false,
   }) || [];
 
