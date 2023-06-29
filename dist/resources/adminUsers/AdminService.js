@@ -42,7 +42,7 @@ function loginUser(username, password) {
     return __awaiter(this, void 0, void 0, function* () {
         const users = (yield adminDataAccess.FindAllUsers({
             username,
-            status: "active",
+            account_activated: true,
             deleted: false,
         })) || [];
         const user = users[0];

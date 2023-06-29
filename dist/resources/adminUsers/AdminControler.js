@@ -43,8 +43,8 @@ const AdminModel_1 = __importDefault(require("./AdminModel"));
 // import { validateUpdatedUser } from "./AdminValidation";
 function loginAdmin(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { user_email, password } = req.body;
-        const user = yield AdminService.loginUser(user_email, password);
+        const { username, password } = req.body;
+        const user = yield AdminService.loginUser(username, password);
         if (!user) {
             return res.status(401).json({ error: 'Invalid email or password.' });
         }
