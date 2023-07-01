@@ -23,6 +23,14 @@ class AdminDataAccess  {
     admin.validateNewAdmin();
     return await new DB().Insert(AdminDataAccess .collection, admin);
   }
+  
+  async UpdateUserDeletionStatus(id: string) {
+    try {
+      return await new DB().Update(AdminDataAccess.collection, id, { deleted: true });
+    } catch (error) {
+      return error;
+    }
+  }
 }
 
 export default AdminDataAccess ;

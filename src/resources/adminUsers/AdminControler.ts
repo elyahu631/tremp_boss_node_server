@@ -61,3 +61,12 @@ export async function getAllAdminUsers(req: Request, res: Response): Promise<Res
   }
 }
 
+export async function markAdminUserAsDeleted(req: Request, res: Response): Promise<Response> {
+  try {
+    const { id } = req.params;
+    await AdminService.markUserAsDeleted(id);
+    return res.status(200).json({ message: "User deletion status successfully updated" });
+  } catch (error: any) {
+    throw error;
+  }
+}

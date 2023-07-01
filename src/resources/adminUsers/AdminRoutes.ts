@@ -9,6 +9,7 @@ import {
   deleteAdminUserById,
   addAdminUser,
   getAllAdminUsers,
+  markAdminUserAsDeleted,
 } from "./AdminControler";
 
 const adminRouter: Router = express.Router();
@@ -18,6 +19,7 @@ adminRouter.get("/all", authenticateToken, getAllAdminUsers);
 adminRouter.get("/:id",authenticateToken, getAdminUserById);
 adminRouter.post("/add",authenticateToken, addAdminUser);
 adminRouter.delete("/delete/:id", authenticateToken, deleteAdminUserById);
+adminRouter.put("/markDeleted/:id", authenticateToken, markAdminUserAsDeleted);
 
 adminRouter.use(handleErrors); 
 

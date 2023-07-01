@@ -58,3 +58,6 @@ export async function getAllUsers() {
   return adminDataAccess.FindAllUsers({},{password: 0 });
 }
 
+export async function markUserAsDeleted(id: string) {
+  return adminDataAccess.UpdateUserDeletionStatus(id);
+}
