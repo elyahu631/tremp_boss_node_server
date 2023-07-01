@@ -6,8 +6,9 @@ import AdminModel  from './AdminModel';
 class AdminDataAccess  {
   static collection = 'AdminUsers';
 
-  async FindAllUsers(query = {}) {
-    return await new DB().FindAll(AdminDataAccess .collection, query);
+  async FindAllUsers(query = {},projection = {}) {
+    
+    return await new DB().FindAll(AdminDataAccess .collection, query,projection);
   }
 
   async FindById(id: string) {

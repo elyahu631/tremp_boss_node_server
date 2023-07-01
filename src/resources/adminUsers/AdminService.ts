@@ -54,4 +54,7 @@ export async function deleteUserById(id: string) {
   return adminDataAccess.DeleteUserById(id);
 }
 
+export async function getAllUsers() {
+  return adminDataAccess.FindAllUsers({},{password: 0 });
+}
 

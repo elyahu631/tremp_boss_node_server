@@ -52,5 +52,12 @@ export async function addAdminUser(req: Request, res: Response): Promise<Respons
 }
 
 
-
+export async function getAllAdminUsers(req: Request, res: Response): Promise<Response> {
+  try {
+    const users = await AdminService.getAllUsers();
+    return res.status(200).json(users);
+  } catch (error: any) {
+    throw error;
+  }
+}
 

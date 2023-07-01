@@ -24,7 +24,7 @@ class DB {
   async FindAll(collection: string, query = {}, projection = {}) {
     try {
       await this.client.connect();
-      return await this.client.db(this.dbName).collection(collection).find(query, projection).toArray();
+      return await this.client.db(this.dbName).collection(collection).find(query, {projection}).toArray();
     } catch (error) {
       console.error(error);
     } finally {
