@@ -2,11 +2,24 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../../config/environment";
-
 import * as AdminService from './AdminService';
 import AdminModel from "./AdminModel";
-// import { validateUpdatedUser } from "./AdminValidation";
 
+interface MulterRequest extends Request {
+  file: any;
+}
+
+export function addAdminUser(req: MulterRequest, res: Response) {
+  try {
+    const newUser = new AdminModel(req.body);
+    newUser.photo_URL = req.file.path;
+    AdminService.createUser(newUser)
+      .then(() => res.status(201).json(newUser))
+      .catch((error: any) => res.status(500).json({ message: error.message }));
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
+  }
+}
 
 
 export async function loginAdmin(req: Request, res: Response): Promise<Response> {
@@ -42,16 +55,6 @@ export async function deleteAdminUserById(req: Request, res: Response): Promise<
   }
 }
 
-export async function addAdminUser(req: Request, res: Response): Promise<Response> {
-  try {
-    const newUser = await AdminService.createUser(new AdminModel(req.body));
-    return res.status(201).json(newUser);
-  } catch (error: any) {
-    return res.status(500).json({ message: error.message });
-  }
-}
-
-
 export async function getAllAdminUsers(req: Request, res: Response): Promise<Response> {
   try {
     const users = await AdminService.getAllUsers();
@@ -70,3 +73,6 @@ export async function markAdminUserAsDeleted(req: Request, res: Response): Promi
     throw error;
   }
 }
+
+
+
