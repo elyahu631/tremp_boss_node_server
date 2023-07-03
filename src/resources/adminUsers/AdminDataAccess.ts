@@ -31,6 +31,10 @@ class AdminDataAccess  {
       return error;
     }
   }
+
+  async UpdateUserDetails(id: string, updateData: Partial<AdminModel>) {
+    return await new DB().Update(AdminDataAccess.collection, id, updateData);
+  }  
 }
 
 export default AdminDataAccess ;

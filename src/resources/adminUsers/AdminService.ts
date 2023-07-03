@@ -61,3 +61,21 @@ export async function getAllUsers() {
 export async function markUserAsDeleted(id: string) {
   return adminDataAccess.UpdateUserDeletionStatus(id);
 }
+
+export async function updateUserDetails(id: string, userDetails: AdminModel) {
+ 
+  let updateData: Partial<AdminModel> = {
+    username: userDetails.username,
+    email: userDetails.email,
+    first_name: userDetails.first_name,
+    last_name: userDetails.last_name,
+    role: userDetails.role,
+    phone_number: userDetails.phone_number,
+    photo_URL: userDetails.photo_URL,
+    last_login_date: userDetails.last_login_date,
+  };
+
+  updateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
+
+  return adminDataAccess.UpdateUserDetails(id, updateData);
+}

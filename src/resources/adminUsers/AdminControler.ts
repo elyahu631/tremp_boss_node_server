@@ -5,9 +5,7 @@ import { JWT_SECRET } from "../../config/environment";
 
 import * as AdminService from './AdminService';
 import AdminModel from "./AdminModel";
-// import { validateUpdatedUser } from "./AdminValidation";
-
-
+import { validateAdminUpdates } from "./AdminValidation";
 
 export async function loginAdmin(req: Request, res: Response): Promise<Response> {
   const { username, password } = req.body;
@@ -70,3 +68,20 @@ export async function markAdminUserAsDeleted(req: Request, res: Response): Promi
     throw error;
   }
 }
+
+
+export async function updateAdminUserDetails(req: Request, res: Response): Promise<Response> {
+  try {
+    const { id } = req.params;
+    const userDetails = req.body;
+    if (!validateAdminUpdates(userDetails)){
+      return res.status(401).json({ error: 'Invalid data to update.' });
+    }
+    const updatedUser = await AdminService.updateUserDetails(id, userDetails);
+    return res.status(200).json([updatedUser,{ message: "User updated successfully" }]);
+  } catch (error: any) {
+      return res.status(500).json({ message: error.message });
+  }
+}
+
+

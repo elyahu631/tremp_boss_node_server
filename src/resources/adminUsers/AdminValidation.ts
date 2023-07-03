@@ -1,19 +1,28 @@
 
 // src/resources/adminUsers/AdminValidation.ts
 
-// import Joi from 'joi';
-// import UserModel from './AdminModel';
+import Joi from 'joi';
+import AdminModel from './AdminModel';
 
-// export function validateUpdatedUser(updatedUser: UserModel) : boolean{
+export function validateAdminUpdates(updateAdminUserDetails: AdminModel) : boolean{
 
-//   const { error } = schema.validate(updatedUser);
-//   if (error) {
-    
-//     console.log('====================================');
-//     console.log(error.details[0].message);
-//     console.log('====================================');
-
-//     return false;
-//   }
-//   return true;
-// }
+    const schema = Joi.object({
+      username: Joi.string(),
+      email: Joi.string().email(),
+      phone_number: Joi.string(),
+      first_name: Joi.string(),
+      last_name: Joi.string(),
+      role: Joi.string(),
+      photo_URL: Joi.string(),
+      last_login_date: Joi.string().isoDate().allow(null),
+      deleted: Joi.boolean()
+    });
+    const { error } = schema.validate(updateAdminUserDetails);
+    if (error) {
+      console.log('====================================');
+      console.log(error.details[0].message);
+      console.log('====================================');
+      return false;
+    }
+    return true;
+}
