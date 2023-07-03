@@ -85,3 +85,28 @@ export async function updateAdminUserDetails(req: Request, res: Response): Promi
 }
 
 
+export async function getUserFromToken(req: Request, res: Response): Promise<Response> {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(403).json({ message: 'No token provided' });
+    }
+
+    jwt.verify(token, JWT_SECRET, async (err, decoded: any) => {
+      if (err) {
+        return res.status(500).json({ message: 'Failed to authenticate token.' });
+      }
+
+      const user = await AdminService.getUserById(decoded.id);
+
+      if (!user) {
+        return res.status(404).json({ message: 'No user found.' });
+      }
+
+      return res.status(200).json(user);
+    });
+  } catch (error: any) {
+    throw error;
+  }
+}

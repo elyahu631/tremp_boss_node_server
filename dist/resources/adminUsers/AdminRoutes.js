@@ -11,6 +11,7 @@ const AdminControler_1 = require("./AdminControler");
 const adminRouter = express_1.default.Router();
 adminRouter.post("/login", AdminControler_1.loginAdmin);
 adminRouter.get("/all", auth_1.authenticateToken, AdminControler_1.getAllAdminUsers);
+adminRouter.get("/me", auth_1.authenticateToken, AdminControler_1.getUserFromToken);
 adminRouter.get("/:id", auth_1.authenticateToken, AdminControler_1.getAdminUserById);
 adminRouter.post("/add", auth_1.authenticateToken, AdminControler_1.addAdminUser);
 adminRouter.delete("/delete/:id", auth_1.authenticateToken, AdminControler_1.deleteAdminUserById);

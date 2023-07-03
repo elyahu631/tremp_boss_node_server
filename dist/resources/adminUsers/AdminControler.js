@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAdminUserDetails = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.addAdminUser = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
+exports.getUserFromToken = exports.updateAdminUserDetails = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.addAdminUser = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const AdminService = __importStar(require("./AdminService"));
@@ -133,4 +133,29 @@ function updateAdminUserDetails(req, res) {
     });
 }
 exports.updateAdminUserDetails = updateAdminUserDetails;
+function getUserFromToken(req, res) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+            if (!token) {
+                return res.status(403).json({ message: 'No token provided' });
+            }
+            jsonwebtoken_1.default.verify(token, environment_1.JWT_SECRET, (err, decoded) => __awaiter(this, void 0, void 0, function* () {
+                if (err) {
+                    return res.status(500).json({ message: 'Failed to authenticate token.' });
+                }
+                const user = yield AdminService.getUserById(decoded.id);
+                if (!user) {
+                    return res.status(404).json({ message: 'No user found.' });
+                }
+                return res.status(200).json(user);
+            }));
+        }
+        catch (error) {
+            throw error;
+        }
+    });
+}
+exports.getUserFromToken = getUserFromToken;
 //# sourceMappingURL=AdminControler.js.map
