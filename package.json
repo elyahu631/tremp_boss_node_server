@@ -1,4 +1,13 @@
 {
+  {
+    "name": "your-app-name",
+    "version": "1.0.0",
+    "description": "Your app description",
+    "main": "index.js",
+    "scripts": {
+      "start": "node index.js",
+      "build": "tsc"
+    },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/cors": "^2.8.13",
@@ -34,6 +43,6 @@
     "postinstall": "npm run build"
   },
   "engines": {
-    "node": ">=14 <15"
+    "node": "14.x"
   }
 }
