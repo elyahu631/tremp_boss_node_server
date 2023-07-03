@@ -46,6 +46,11 @@ class AdminDataAccess {
             }
         });
     }
+    UpdateUserDetails(id, updateData) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield new db_1.default().Update(AdminDataAccess.collection, id, updateData);
+        });
+    }
 }
 AdminDataAccess.collection = 'AdminUsers';
 exports.default = AdminDataAccess;

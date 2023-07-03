@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.createUser = void 0;
+exports.updateUserDetails = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.createUser = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const AdminDataAccess_1 = __importDefault(require("./AdminDataAccess"));
 const adminDataAccess = new AdminDataAccess_1.default();
@@ -78,4 +78,21 @@ function markUserAsDeleted(id) {
     });
 }
 exports.markUserAsDeleted = markUserAsDeleted;
+function updateUserDetails(id, userDetails) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let updateData = {
+            username: userDetails.username,
+            email: userDetails.email,
+            first_name: userDetails.first_name,
+            last_name: userDetails.last_name,
+            role: userDetails.role,
+            phone_number: userDetails.phone_number,
+            photo_URL: userDetails.photo_URL,
+            last_login_date: userDetails.last_login_date,
+        };
+        updateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
+        return adminDataAccess.UpdateUserDetails(id, updateData);
+    });
+}
+exports.updateUserDetails = updateUserDetails;
 //# sourceMappingURL=AdminService.js.map

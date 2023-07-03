@@ -35,12 +35,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.addAdminUser = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
+exports.updateAdminUserDetails = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.addAdminUser = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const AdminService = __importStar(require("./AdminService"));
 const AdminModel_1 = __importDefault(require("./AdminModel"));
-// import { validateUpdatedUser } from "./AdminValidation";
+const AdminValidation_1 = require("./AdminValidation");
 function loginAdmin(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { username, password } = req.body;
@@ -116,4 +116,21 @@ function markAdminUserAsDeleted(req, res) {
     });
 }
 exports.markAdminUserAsDeleted = markAdminUserAsDeleted;
+function updateAdminUserDetails(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { id } = req.params;
+            const userDetails = req.body;
+            if (!(0, AdminValidation_1.validateAdminUpdates)(userDetails)) {
+                return res.status(401).json({ error: 'Invalid data to update.' });
+            }
+            const updatedUser = yield AdminService.updateUserDetails(id, userDetails);
+            return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
+        }
+        catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    });
+}
+exports.updateAdminUserDetails = updateAdminUserDetails;
 //# sourceMappingURL=AdminControler.js.map
