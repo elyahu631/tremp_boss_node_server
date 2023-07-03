@@ -32,5 +32,8 @@
     "dev": "tsc-watch --onSuccess \"node ./dist/index.js\"",
     "build": "tsc",
     "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": ">=14 <15"
   }
 }
