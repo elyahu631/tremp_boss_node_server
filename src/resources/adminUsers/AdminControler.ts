@@ -1,11 +1,15 @@
 // src/resources/adminUsers/AdminController.ts
+
+
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../../config/environment";
 
+import { bucket } from "../../firebase/storage";
+import { JWT_SECRET } from "../../config/environment";
+import { validateAdminUpdates } from "./AdminValidation";
 import * as AdminService from './AdminService';
 import AdminModel from "./AdminModel";
-import { validateAdminUpdates } from "./AdminValidation";
+
 
 export async function loginAdmin(req: Request, res: Response): Promise<Response> {
   const { username, password } = req.body;
@@ -18,7 +22,6 @@ export async function loginAdmin(req: Request, res: Response): Promise<Response>
   const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
   return res.status(200).json({ user, token });
 }
-
 
 export async function getAdminUserById(req: Request, res: Response): Promise<Response> {
   try {
@@ -40,16 +43,6 @@ export async function deleteAdminUserById(req: Request, res: Response): Promise<
   }
 }
 
-export async function addAdminUser(req: Request, res: Response): Promise<Response> {
-  try {
-    const newUser = await AdminService.createUser(new AdminModel(req.body));
-    return res.status(201).json(newUser);
-  } catch (error: any) {
-    return res.status(500).json({ message: error.message });
-  }
-}
-
-
 export async function getAllAdminUsers(req: Request, res: Response): Promise<Response> {
   try {
     const users = await AdminService.getAllUsers();
@@ -69,7 +62,6 @@ export async function markAdminUserAsDeleted(req: Request, res: Response): Promi
   }
 }
 
-
 export async function updateAdminUserDetails(req: Request, res: Response): Promise<Response> {
   try {
     const { id } = req.params;
@@ -83,7 +75,6 @@ export async function updateAdminUserDetails(req: Request, res: Response): Promi
       return res.status(500).json({ message: error.message });
   }
 }
-
 
 export async function getUserFromToken(req: Request, res: Response): Promise<Response> {
   try {
@@ -108,5 +99,42 @@ export async function getUserFromToken(req: Request, res: Response): Promise<Res
     });
   } catch (error: any) {
     throw error;
+  }
+}
+
+export async function addAdminUser(req: Request, res: Response): Promise<Response> {
+  try {
+    const newUser = new AdminModel(req.body);
+    if(req.file) {
+      // upload the file to Firebase Cloud Storage
+      const blob = bucket.file(req.file.originalname);
+      const blobStream = blob.createWriteStream({
+        metadata: {
+          contentType: req.file.mimetype,
+        },
+      });
+      const blobPromise = new Promise((resolve, reject) => {
+        blobStream.on("error", (err) => {
+          reject(err);
+        });
+        blobStream.on("finish", async () => {
+          // Get URL of the uploaded file
+          const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURI(blob.name)}?alt=media`;
+          // Save the URL in user's photo_URL
+          newUser.photo_URL = publicUrl;
+          resolve(null);
+        });
+      });
+      blobStream.end(req.file.buffer);
+      await blobPromise;
+      // Save the new user
+      const savedUser = await AdminService.createUser(newUser);
+      res.status(201).json(savedUser);
+    } else {
+      const savedUser = await AdminService.createUser(newUser);
+      res.status(201).json(savedUser);
+    }
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
   }
 }
