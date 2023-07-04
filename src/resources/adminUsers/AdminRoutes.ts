@@ -28,12 +28,11 @@ const upload = multer({
 
 
 const adminRouter: Router = express.Router();
-
 adminRouter.post("/login", loginAdmin);
 adminRouter.get("/all", authenticateToken, getAllAdminUsers);
 adminRouter.get("/me", authenticateToken, getUserFromToken);
 adminRouter.get("/:id",authenticateToken, getAdminUserById);
-adminRouter.post("/add", authenticateToken, upload.single('profilePic'), addAdminUser);
+adminRouter.post("/add", authenticateToken, upload.single('photo_URL'), addAdminUser);
 adminRouter.delete("/delete/:id", authenticateToken, deleteAdminUserById);
 adminRouter.put("/markDeleted/:id", authenticateToken, markAdminUserAsDeleted);
 adminRouter.put("/updateAdmin/:id", authenticateToken, updateAdminUserDetails);

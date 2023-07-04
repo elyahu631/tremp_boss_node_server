@@ -1,4 +1,5 @@
 "use strict";
+// src/resources/adminUsers/AdminController.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -35,20 +36,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserFromToken = exports.updateAdminUserDetails = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.addAdminUser = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
+exports.addAdminUser = exports.getUserFromToken = exports.updateAdminUserDetails = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const path_1 = __importDefault(require("path"));
+const storage_1 = require("../../firebase/storage");
 const environment_1 = require("../../config/environment");
+const AdminValidation_1 = require("./AdminValidation");
 const AdminService = __importStar(require("./AdminService"));
 const AdminModel_1 = __importDefault(require("./AdminModel"));
-const AdminValidation_1 = require("./AdminValidation");
 function loginAdmin(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { username, password } = req.body;
         const user = yield AdminService.loginUser(username, password);
         if (!user) {
-            return res.status(401).json({ error: 'Invalid email or password.' });
+            return res.status(401).json({ error: "Invalid email or password." });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: "1h" });
         return res.status(200).json({ user, token });
     });
 }
@@ -79,18 +82,6 @@ function deleteAdminUserById(req, res) {
     });
 }
 exports.deleteAdminUserById = deleteAdminUserById;
-function addAdminUser(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const newUser = yield AdminService.createUser(new AdminModel_1.default(req.body));
-            return res.status(201).json(newUser);
-        }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
-        }
-    });
-}
-exports.addAdminUser = addAdminUser;
 function getAllAdminUsers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -108,7 +99,9 @@ function markAdminUserAsDeleted(req, res) {
         try {
             const { id } = req.params;
             yield AdminService.markUserAsDeleted(id);
-            return res.status(200).json({ message: "User deletion status successfully updated" });
+            return res
+                .status(200)
+                .json({ message: "User deletion status successfully updated" });
         }
         catch (error) {
             throw error;
@@ -122,10 +115,12 @@ function updateAdminUserDetails(req, res) {
             const { id } = req.params;
             const userDetails = req.body;
             if (!(0, AdminValidation_1.validateAdminUpdates)(userDetails)) {
-                return res.status(401).json({ error: 'Invalid data to update.' });
+                return res.status(401).json({ error: "Invalid data to update." });
             }
             const updatedUser = yield AdminService.updateUserDetails(id, userDetails);
-            return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
+            return res
+                .status(200)
+                .json([updatedUser, { message: "User updated successfully" }]);
         }
         catch (error) {
             return res.status(500).json({ message: error.message });
@@ -139,15 +134,17 @@ function getUserFromToken(req, res) {
         try {
             const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
             if (!token) {
-                return res.status(403).json({ message: 'No token provided' });
+                return res.status(403).json({ message: "No token provided" });
             }
             jsonwebtoken_1.default.verify(token, environment_1.JWT_SECRET, (err, decoded) => __awaiter(this, void 0, void 0, function* () {
                 if (err) {
-                    return res.status(500).json({ message: 'Failed to authenticate token.' });
+                    return res
+                        .status(500)
+                        .json({ message: "Failed to authenticate token." });
                 }
                 const user = yield AdminService.getUserById(decoded.id);
                 if (!user) {
-                    return res.status(404).json({ message: 'No user found.' });
+                    return res.status(404).json({ message: "No user found." });
                 }
                 return res.status(200).json(user);
             }));
@@ -158,4 +155,56 @@ function getUserFromToken(req, res) {
     });
 }
 exports.getUserFromToken = getUserFromToken;
+function addAdminUser(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log(6);
+        try {
+            const newUser = new AdminModel_1.default(req.body);
+            console.log(1);
+            if (req.file) {
+                console.log(2);
+                // Extract the original file extension
+                const originalExtension = path_1.default.extname(req.file.originalname);
+                // Combine the user's ID with the original file extension to create the new filename
+                const filename = `adminimages/${newUser.email}${originalExtension}`;
+                // upload the file to Firebase Cloud Storage
+                const blob = storage_1.bucket.file(filename);
+                console.log(3);
+                const blobStream = blob.createWriteStream({
+                    metadata: {
+                        contentType: req.file.mimetype,
+                    },
+                });
+                console.log(4);
+                const blobPromise = new Promise((resolve, reject) => {
+                    blobStream.on("error", (err) => {
+                        console.log("An error occurred during upload: ", err);
+                        reject(err);
+                    });
+                    blobStream.on("finish", () => __awaiter(this, void 0, void 0, function* () {
+                        console.log("Upload finished");
+                        // Get URL of the uploaded file
+                        const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${storage_1.bucket.name}/o/${encodeURIComponent(blob.name)}?alt=media`;
+                        // Save the URL in user's photo_URL
+                        console.log("Public URL: ", publicUrl);
+                        newUser.photo_URL = publicUrl;
+                        const savedUser = yield AdminService.createUser(newUser);
+                        res.status(201).json(savedUser);
+                    }));
+                });
+                blobStream.end(req.file.buffer);
+                yield blobPromise;
+            }
+            else {
+                const savedUser = yield AdminService.createUser(newUser);
+                res.status(201).json(savedUser);
+            }
+        }
+        catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: error.message });
+        }
+    });
+}
+exports.addAdminUser = addAdminUser;
 //# sourceMappingURL=AdminControler.js.map
