@@ -31,7 +31,7 @@ class AdminModel {
             last_name: joi_1.default.string().required(),
             role: joi_1.default.string().required(),
             account_activated: joi_1.default.boolean().required(),
-            photo_URL: joi_1.default.string().required(),
+            photo_URL: joi_1.default.string().optional(),
             createdAt: joi_1.default.string().isoDate().required(),
             updatedAt: joi_1.default.string().isoDate().required(),
             last_login_date: joi_1.default.string().isoDate().allow(null),

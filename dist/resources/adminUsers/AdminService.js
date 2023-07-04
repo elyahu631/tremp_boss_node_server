@@ -13,31 +13,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserDetails = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.createUser = void 0;
+exports.uploadImageToFirebaseAndUpdateUser = exports.updateUserDetails = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.getUserById = exports.createUser = exports.loginUser = exports.getCurrentTimeInIsrael = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const AdminDataAccess_1 = __importDefault(require("./AdminDataAccess"));
+const fileUpload_1 = require("../../firebase/fileUpload");
+const date_fns_tz_1 = require("date-fns-tz");
 const adminDataAccess = new AdminDataAccess_1.default();
 const saltRounds = 10;
-function createUser(user) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Check if user with this username or email already exists
-        const existingUsers = yield adminDataAccess.FindAllUsers({
-            $or: [
-                { username: user.username },
-                { email: user.email }
-            ]
-        });
-        if (existingUsers.length > 0) {
-            throw new Error("User with this username or email already exists.");
-        }
-        // Encrypt the user's password before saving to database
-        const salt = bcrypt_1.default.genSaltSync(saltRounds);
-        user.password = bcrypt_1.default.hashSync(user.password, salt);
-        // Insert the new user into the database
-        return adminDataAccess.InsertOne(user);
-    });
+function getCurrentTimeInIsrael() {
+    const timeZone = 'Asia/Jerusalem';
+    const loginDate = new Date();
+    // Convert the date in that timezone
+    const zonedDate = (0, date_fns_tz_1.utcToZonedTime)(loginDate, timeZone);
+    const loginDateISOString = (0, date_fns_tz_1.format)(zonedDate, 'yyyy-MM-dd\'T\'HH:mm:ssXXX', { timeZone });
+    return loginDateISOString;
 }
-exports.createUser = createUser;
+exports.getCurrentTimeInIsrael = getCurrentTimeInIsrael;
 function loginUser(username, password) {
     return __awaiter(this, void 0, void 0, function* () {
         const users = (yield adminDataAccess.FindAllUsers({
@@ -50,10 +41,33 @@ function loginUser(username, password) {
             // return null if user not found or password doesn't match
             return null;
         }
+        yield adminDataAccess.UpdateUserDetails(user._id.toString(), { last_login_date: getCurrentTimeInIsrael() });
         return user;
     });
 }
 exports.loginUser = loginUser;
+function createUser(user) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check if user with this username or email already exists
+        const existingUsers = yield adminDataAccess.FindAllUsers({
+            $or: [
+                { username: user.username },
+                { email: user.email },
+                { phone_number: user.phone_number },
+            ],
+        });
+        if (existingUsers.length > 0) {
+            throw new Error("User with this username or email already exists.");
+        }
+        // Encrypt the user's password before saving to database
+        const salt = bcrypt_1.default.genSaltSync(saltRounds);
+        user.password = bcrypt_1.default.hashSync(user.password, salt);
+        user.account_activated = (user.account_activated.toString() === 'true');
+        // Insert the new user into the database
+        return adminDataAccess.InsertOne(user);
+    });
+}
+exports.createUser = createUser;
 function getUserById(id) {
     return __awaiter(this, void 0, void 0, function* () {
         return adminDataAccess.FindById(id);
@@ -78,7 +92,7 @@ function markUserAsDeleted(id) {
     });
 }
 exports.markUserAsDeleted = markUserAsDeleted;
-function updateUserDetails(id, userDetails) {
+function updateUserDetails(id, userDetails, file) {
     return __awaiter(this, void 0, void 0, function* () {
         let updateData = {
             username: userDetails.username,
@@ -88,11 +102,27 @@ function updateUserDetails(id, userDetails) {
             role: userDetails.role,
             phone_number: userDetails.phone_number,
             photo_URL: userDetails.photo_URL,
-            last_login_date: userDetails.last_login_date,
+            account_activated: userDetails.account_activated,
+            password: userDetails.password,
+            updatedAt: getCurrentTimeInIsrael()
         };
         updateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
+        if (updateData.account_activated) {
+            updateData.account_activated = (updateData.account_activated.toString() === 'true');
+        }
+        if (file) {
+            const filePath = `adminimages/${id}`;
+            updateData.photo_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        }
         return adminDataAccess.UpdateUserDetails(id, updateData);
     });
 }
 exports.updateUserDetails = updateUserDetails;
+function uploadImageToFirebaseAndUpdateUser(file, filePath, userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const photo_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        return adminDataAccess.UpdateUserDetails(userId, { photo_URL });
+    });
+}
+exports.uploadImageToFirebaseAndUpdateUser = uploadImageToFirebaseAndUpdateUser;
 //# sourceMappingURL=AdminService.js.map

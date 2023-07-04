@@ -16,7 +16,10 @@ function validateAdminUpdates(updateAdminUserDetails) {
         role: joi_1.default.string(),
         photo_URL: joi_1.default.string(),
         last_login_date: joi_1.default.string().isoDate().allow(null),
-        deleted: joi_1.default.boolean()
+        deleted: joi_1.default.boolean(),
+        password: joi_1.default.string().min(8),
+        account_activated: joi_1.default.boolean(),
+        updatedAt: joi_1.default.string().isoDate().allow(null),
     });
     const { error } = schema.validate(updateAdminUserDetails);
     if (error) {

@@ -26,7 +26,7 @@ adminRouter.get("/:id", auth_1.authenticateToken, AdminControler_1.getAdminUserB
 adminRouter.post("/add", auth_1.authenticateToken, upload.single('photo_URL'), AdminControler_1.addAdminUser);
 adminRouter.delete("/delete/:id", auth_1.authenticateToken, AdminControler_1.deleteAdminUserById);
 adminRouter.put("/markDeleted/:id", auth_1.authenticateToken, AdminControler_1.markAdminUserAsDeleted);
-adminRouter.put("/updateAdmin/:id", auth_1.authenticateToken, AdminControler_1.updateAdminUserDetails);
+adminRouter.put("/updateAdmin/:id", auth_1.authenticateToken, upload.single('photo_URL'), AdminControler_1.updateAdminUserDetails);
 adminRouter.use(handleErrors_1.handleErrors);
 exports.default = adminRouter;
 //# sourceMappingURL=AdminRoutes.js.map

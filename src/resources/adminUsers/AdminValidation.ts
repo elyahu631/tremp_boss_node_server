@@ -15,7 +15,10 @@ export function validateAdminUpdates(updateAdminUserDetails: AdminModel) : boole
       role: Joi.string(),
       photo_URL: Joi.string(),
       last_login_date: Joi.string().isoDate().allow(null),
-      deleted: Joi.boolean()
+      deleted: Joi.boolean(),
+      password: Joi.string().min(8),
+      account_activated: Joi.boolean(),
+      updatedAt:Joi.string().isoDate().allow(null),
     });
     const { error } = schema.validate(updateAdminUserDetails);
     if (error) {

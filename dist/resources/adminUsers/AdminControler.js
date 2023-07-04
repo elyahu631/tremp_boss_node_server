@@ -38,8 +38,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addAdminUser = exports.getUserFromToken = exports.updateAdminUserDetails = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const path_1 = __importDefault(require("path"));
-const storage_1 = require("../../firebase/storage");
 const environment_1 = require("../../config/environment");
 const AdminValidation_1 = require("./AdminValidation");
 const AdminService = __importStar(require("./AdminService"));
@@ -49,7 +47,7 @@ function loginAdmin(req, res) {
         const { username, password } = req.body;
         const user = yield AdminService.loginUser(username, password);
         if (!user) {
-            return res.status(401).json({ error: "Invalid email or password." });
+            return res.status(401).json({ error: "Invalid user or password." });
         }
         const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: "1h" });
         return res.status(200).json({ user, token });
@@ -117,7 +115,7 @@ function updateAdminUserDetails(req, res) {
             if (!(0, AdminValidation_1.validateAdminUpdates)(userDetails)) {
                 return res.status(401).json({ error: "Invalid data to update." });
             }
-            const updatedUser = yield AdminService.updateUserDetails(id, userDetails);
+            const updatedUser = yield AdminService.updateUserDetails(id, userDetails, req.file);
             return res
                 .status(200)
                 .json([updatedUser, { message: "User updated successfully" }]);
@@ -157,48 +155,16 @@ function getUserFromToken(req, res) {
 exports.getUserFromToken = getUserFromToken;
 function addAdminUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(6);
         try {
             const newUser = new AdminModel_1.default(req.body);
-            console.log(1);
+            let userInsertion = yield AdminService.createUser(newUser);
+            let savedUser = userInsertion.insertedId;
             if (req.file) {
-                console.log(2);
-                // Extract the original file extension
-                const originalExtension = path_1.default.extname(req.file.originalname);
-                // Combine the user's ID with the original file extension to create the new filename
-                const filename = `adminimages/${newUser.email}${originalExtension}`;
-                // upload the file to Firebase Cloud Storage
-                const blob = storage_1.bucket.file(filename);
-                console.log(3);
-                const blobStream = blob.createWriteStream({
-                    metadata: {
-                        contentType: req.file.mimetype,
-                    },
-                });
-                console.log(4);
-                const blobPromise = new Promise((resolve, reject) => {
-                    blobStream.on("error", (err) => {
-                        console.log("An error occurred during upload: ", err);
-                        reject(err);
-                    });
-                    blobStream.on("finish", () => __awaiter(this, void 0, void 0, function* () {
-                        console.log("Upload finished");
-                        // Get URL of the uploaded file
-                        const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${storage_1.bucket.name}/o/${encodeURIComponent(blob.name)}?alt=media`;
-                        // Save the URL in user's photo_URL
-                        console.log("Public URL: ", publicUrl);
-                        newUser.photo_URL = publicUrl;
-                        const savedUser = yield AdminService.createUser(newUser);
-                        res.status(201).json(savedUser);
-                    }));
-                });
-                blobStream.end(req.file.buffer);
-                yield blobPromise;
+                const filePath = `adminimages/${userInsertion.insertedId}`;
+                yield AdminService.uploadImageToFirebaseAndUpdateUser(req.file, filePath, savedUser);
+                savedUser = yield AdminService.getUserById(savedUser); // Get updated user
             }
-            else {
-                const savedUser = yield AdminService.createUser(newUser);
-                res.status(201).json(savedUser);
-            }
+            return res.status(201).json(savedUser);
         }
         catch (error) {
             console.error(error);

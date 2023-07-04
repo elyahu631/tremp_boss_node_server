@@ -35,7 +35,7 @@ adminRouter.get("/:id",authenticateToken, getAdminUserById);
 adminRouter.post("/add", authenticateToken, upload.single('photo_URL'), addAdminUser);
 adminRouter.delete("/delete/:id", authenticateToken, deleteAdminUserById);
 adminRouter.put("/markDeleted/:id", authenticateToken, markAdminUserAsDeleted);
-adminRouter.put("/updateAdmin/:id", authenticateToken, updateAdminUserDetails);
+adminRouter.put("/updateAdmin/:id", authenticateToken, upload.single('photo_URL'), updateAdminUserDetails);
 
 adminRouter.use(handleErrors); 
 

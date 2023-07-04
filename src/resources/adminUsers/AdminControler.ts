@@ -2,9 +2,6 @@
 
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import path from "path";
-
-import { bucket } from "../../firebase/storage";
 import { JWT_SECRET } from "../../config/environment";
 import { validateAdminUpdates } from "./AdminValidation";
 import * as AdminService from "./AdminService";
@@ -18,7 +15,7 @@ export async function loginAdmin(
   const user = await AdminService.loginUser(username, password);
 
   if (!user) {
-    return res.status(401).json({ error: "Invalid email or password." });
+    return res.status(401).json({ error: "Invalid user or password." });
   }
 
   const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
@@ -88,7 +85,7 @@ export async function updateAdminUserDetails(
     if (!validateAdminUpdates(userDetails)) {
       return res.status(401).json({ error: "Invalid data to update." });
     }
-    const updatedUser = await AdminService.updateUserDetails(id, userDetails);
+    const updatedUser = await AdminService.updateUserDetails(id, userDetails, req.file);
     return res
       .status(200)
       .json([updatedUser, { message: "User updated successfully" }]);
@@ -97,30 +94,26 @@ export async function updateAdminUserDetails(
   }
 }
 
+
 export async function getUserFromToken(
   req: Request,
   res: Response
 ): Promise<Response> {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-
     if (!token) {
       return res.status(403).json({ message: "No token provided" });
     }
-
     jwt.verify(token, JWT_SECRET, async (err, decoded: any) => {
       if (err) {
         return res
           .status(500)
           .json({ message: "Failed to authenticate token." });
       }
-
       const user = await AdminService.getUserById(decoded.id);
-
       if (!user) {
         return res.status(404).json({ message: "No user found." });
       }
-
       return res.status(200).json(user);
     });
   } catch (error: any) {
@@ -128,60 +121,21 @@ export async function getUserFromToken(
   }
 }
 
+
 export async function addAdminUser(
   req: Request,
   res: Response
 ): Promise<Response> {
-  console.log(6);
-
   try {
     const newUser = new AdminModel(req.body);
-    console.log(1);
+    let userInsertion = await AdminService.createUser(newUser);
+    let savedUser = userInsertion.insertedId;
     if (req.file) {
-      console.log(2);
-
-      // Extract the original file extension
-      const originalExtension = path.extname(req.file.originalname);
-
-      // Combine the user's ID with the original file extension to create the new filename
-      const filename = `adminimages/${newUser.email}${originalExtension}`;
-
-      // upload the file to Firebase Cloud Storage
-      const blob = bucket.file(filename);
-      console.log(3);
-
-      const blobStream = blob.createWriteStream({
-        metadata: {
-          contentType: req.file.mimetype,
-        },
-      });
-      console.log(4);
-
-      const blobPromise = new Promise((resolve, reject) => {
-        blobStream.on("error", (err) => {
-          console.log("An error occurred during upload: ", err);
-          reject(err);
-        });
-        blobStream.on("finish", async () => {
-          console.log("Upload finished");
-          // Get URL of the uploaded file
-          const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${
-            bucket.name
-          }/o/${encodeURIComponent(blob.name)}?alt=media`;
-
-          // Save the URL in user's photo_URL
-          console.log("Public URL: ", publicUrl);
-          newUser.photo_URL = publicUrl;
-          const savedUser = await AdminService.createUser(newUser);
-          res.status(201).json(savedUser);
-        });
-      });
-      blobStream.end(req.file.buffer);
-      await blobPromise;
-    } else {
-      const savedUser = await AdminService.createUser(newUser);
-      res.status(201).json(savedUser);
+      const filePath = `adminimages/${userInsertion.insertedId}`;
+      await AdminService.uploadImageToFirebaseAndUpdateUser(req.file, filePath, savedUser);
+      savedUser = await AdminService.getUserById(savedUser); // Get updated user
     }
+    return res.status(201).json(savedUser);
   } catch (error: any) {
     console.error(error);
     return res.status(500).json({ message: error.message });

@@ -29,7 +29,7 @@ class AdminModel {
     phone_number?: string;
     photo_URL?: string;
     last_login_date?: string;
-    account_activated: boolean;
+    account_activated?: boolean;
     deleted?: boolean;
   }) {
     this.email = adminData.email;
@@ -57,7 +57,7 @@ class AdminModel {
       last_name: Joi.string().required(),
       role: Joi.string().required(),
       account_activated: Joi.boolean().required(),
-      photo_URL: Joi.string().required(),
+      photo_URL: Joi.string().optional(),
       createdAt: Joi.string().isoDate().required(),
       updatedAt: Joi.string().isoDate().required(),
       last_login_date: Joi.string().isoDate().allow(null),
