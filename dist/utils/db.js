@@ -101,6 +101,22 @@ class DB {
             }
         });
     }
+    UpdateWithOperation(collection, id, updateOperation) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield this.client.connect();
+                const result = yield this.client.db(this.dbName).collection(collection).updateOne({ _id: new mongodb_1.ObjectId(id) }, updateOperation);
+                console.log(result);
+                return result;
+            }
+            catch (error) {
+                return error;
+            }
+            finally {
+                yield this.client.close();
+            }
+        });
+    }
 }
 exports.default = DB;
 //# sourceMappingURL=db.js.map

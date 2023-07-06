@@ -53,3 +53,34 @@ export async function getTrempsByFilters(req: Request, res: Response): Promise<R
     return res.status(500).json({ message: `Server error: ${error.message}` });
   }
 }
+
+
+
+
+export async function addUserToTremp(req: Request, res: Response): Promise<Response> {
+  try {
+    const { tremp_id, user_id } = req.body;
+    const updatedTremp = await TrempService.addUserToTremp(tremp_id, user_id);
+    if (updatedTremp.matchedCount === 0) {
+      return res.status(404).json({ message: 'Tremp not found' });
+    }
+    if (updatedTremp.modifiedCount === 0) {
+      return res.status(400).json({ message: 'User not added to the tremp' });
+    }
+    return res.status(200).json({ message: 'User successfully added to the tremp' });
+  } catch (error) {
+    return res.status(500).json({ message: `Server error: ${error.message}` });
+  }
+}
+
+export async function approveUserInTremp(req: Request, res: Response): Promise<Response> {
+  const { tremp_id, creator_id, user_id, approval } = req.body;
+  try {
+    await TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
+    return res.status(200).json({ message: 'User approval status updated successfully' });
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+}
+
+

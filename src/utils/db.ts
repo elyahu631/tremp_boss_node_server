@@ -77,6 +77,23 @@ class DB {
       await this.client.close();
     }
   }
+
+  async UpdateWithOperation(collection: string, id: string, updateOperation: object) {
+    try {
+      await this.client.connect();
+      const result = await this.client.db(this.dbName).collection(collection).updateOne(
+        { _id: new ObjectId(id) }, 
+        updateOperation
+      );
+      console.log(result);
+      return result;
+    } catch (error) {
+      return error;
+    } finally {
+      await this.client.close();
+    }
+  }
+  
 }
 
 export default DB;

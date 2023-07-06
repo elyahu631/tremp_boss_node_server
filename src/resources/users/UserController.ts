@@ -27,7 +27,7 @@ export async function loginUser(req: Request, res: Response): Promise<Response> 
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
 
-  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '6h' });
   return res.status(200).json({ user, token });
 }
 

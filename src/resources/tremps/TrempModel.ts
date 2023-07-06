@@ -45,7 +45,7 @@ class TrempModel {
     this.to_root = trempData.to_root;
     this.note = trempData.note;
     this.seats_amount = trempData.seats_amount || 1;
-    this.users_in_tremp = trempData.users_in_tremp;
+    this.users_in_tremp = trempData.users_in_tremp || [];
     this.is_full = trempData.is_full || false;
     this.chat_id = trempData.chat_id ;
     this.active = trempData.active || true;

@@ -63,7 +63,7 @@ function loginUser(req, res) {
         if (!user) {
             return res.status(401).json({ error: 'Invalid email or password.' });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '6h' });
         return res.status(200).json({ user, token });
     });
 }

@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
@@ -88,4 +88,36 @@ function getTrempsByFilters(req, res) {
     });
 }
 exports.getTrempsByFilters = getTrempsByFilters;
+function addUserToTremp(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { tremp_id, user_id } = req.body;
+            const updatedTremp = yield TrempService.addUserToTremp(tremp_id, user_id);
+            if (updatedTremp.matchedCount === 0) {
+                return res.status(404).json({ message: 'Tremp not found' });
+            }
+            if (updatedTremp.modifiedCount === 0) {
+                return res.status(400).json({ message: 'User not added to the tremp' });
+            }
+            return res.status(200).json({ message: 'User successfully added to the tremp' });
+        }
+        catch (error) {
+            return res.status(500).json({ message: `Server error: ${error.message}` });
+        }
+    });
+}
+exports.addUserToTremp = addUserToTremp;
+function approveUserInTremp(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { tremp_id, creator_id, user_id, approval } = req.body;
+        try {
+            yield TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
+            return res.status(200).json({ message: 'User approval status updated successfully' });
+        }
+        catch (error) {
+            return res.status(400).json({ message: error.message });
+        }
+    });
+}
+exports.approveUserInTremp = approveUserInTremp;
 //# sourceMappingURL=TrempController.js.map

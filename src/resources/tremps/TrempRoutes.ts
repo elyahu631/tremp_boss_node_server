@@ -7,6 +7,9 @@ const tremprRouter = express.Router();
 
 tremprRouter.post("/add",authenticateToken, TrempController.createTremp);
 tremprRouter.post('/trempsByFilters',authenticateToken, TrempController.getTrempsByFilters);
+tremprRouter.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
+tremprRouter.put('/approveUserInTremp',authenticateToken ,TrempController.approveUserInTremp);
+
 tremprRouter.use(handleErrors); 
 
 
