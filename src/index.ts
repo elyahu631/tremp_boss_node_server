@@ -4,6 +4,7 @@ import { PORT } from './config/environment';
 import userRoutes from './resources/users/UserRoutes';  
 import adminRouter from './resources/adminUsers/AdminRoutes';  
 import tremprRouter from './resources/tremps/TrempRoutes';
+import { getAllUsers } from './resources/adminUsers/AdminService';
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,7 @@ app.use(express.json());
 app.get('/', async (req: Request, res: Response) => {
   res.send('server runinig');
 });
+
 
 app.use('/api/users', userRoutes);
 app.use('/api/adminUsers', adminRouter); 

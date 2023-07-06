@@ -51,7 +51,6 @@ export async function createUser(user: AdminModel) {
   }
 
   // Encrypt the user's password before saving to database
-  
   user.password = await hashPassword(user.password);
 
   user.account_activated = (user.account_activated.toString() === 'true');

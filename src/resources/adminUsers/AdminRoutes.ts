@@ -14,6 +14,7 @@ import {
   updateAdminUserDetails,
   getUserFromToken,
 } from "./AdminController";
+import { getAllUsers } from "./AdminService";
 // src/resources/adminUsers/AdminRouter.ts
 
 // multer middleware for file upload handling
@@ -28,6 +29,19 @@ const upload = multer({
 
 
 const adminRouter: Router = express.Router();
+adminRouter.get('/stream', async (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  setInterval(async () => {
+    let users = await getAllUsers();
+    users = users.map(user => ({...user, password: "12345678"}));
+    res.write(`data: ${JSON.stringify(users)}\n\n`);
+  }, 15000); // send updates every 3 seconds
+});
+
 adminRouter.post("/login", loginAdmin);
 adminRouter.get("/all", authenticateToken, getAllAdminUsers);
 adminRouter.get("/me", authenticateToken, getUserFromToken);
