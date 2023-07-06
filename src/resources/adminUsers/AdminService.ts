@@ -4,21 +4,16 @@ import bcrypt from "bcrypt";
 import AdminModel from "./AdminModel";
 import AdminDataAccess from "./AdminDataAccess";
 import { uploadImageToFirebase } from "../../firebase/fileUpload";
-import { utcToZonedTime, format } from 'date-fns-tz';
+import { getCurrentTimeInIsrael } from "../../utils/TimeService";
 
 
 const adminDataAccess = new AdminDataAccess();
 const saltRounds = 10;
 
-export function getCurrentTimeInIsrael(): string {
-  const timeZone = 'Asia/Jerusalem';
-  const loginDate = new Date();
 
-  // Convert the date in that timezone
-  const zonedDate = utcToZonedTime(loginDate, timeZone);
-  const loginDateISOString = format(zonedDate, 'yyyy-MM-dd\'T\'HH:mm:ssXXX', { timeZone });
-
-  return loginDateISOString;
+export async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(saltRounds);
+  return bcrypt.hash(password, salt);
 }
 
 export async function loginUser(username: string, password: string) {
@@ -56,8 +51,8 @@ export async function createUser(user: AdminModel) {
   }
 
   // Encrypt the user's password before saving to database
-  const salt = bcrypt.genSaltSync(saltRounds);
-  user.password = bcrypt.hashSync(user.password, salt);
+  
+  user.password = await hashPassword(user.password);
 
   user.account_activated = (user.account_activated.toString() === 'true');
   // Insert the new user into the database
@@ -73,7 +68,7 @@ export async function deleteUserById(id: string) {
 }
 
 export async function getAllUsers() {
-  return adminDataAccess.FindAllUsers({}, { password: 0 });
+  return adminDataAccess.FindAllUsers();
 }
 
 export async function markUserAsDeleted(id: string) {
@@ -86,32 +81,36 @@ export async function updateUserDetails(
   file?: Express.Multer.File
 ) {
   let updateData: Partial<AdminModel> = {
-    username: userDetails.username,
-    email: userDetails.email,
-    first_name: userDetails.first_name,
-    last_name: userDetails.last_name,
-    role: userDetails.role,
-    phone_number: userDetails.phone_number,
-    photo_URL: userDetails.photo_URL,
-    account_activated: userDetails.account_activated,
-    password: userDetails.password,
-    updatedAt:  getCurrentTimeInIsrael()
+    ...userDetails,
+    updatedAt: getCurrentTimeInIsrael(),
   };
 
-  updateData = Object.fromEntries(
-    Object.entries(updateData).filter(([_, v]) => v !== undefined)
-  );
-
-  if (updateData.account_activated) {
-    updateData.account_activated = (updateData.account_activated.toString() === 'true');
+  // If account_activated is defined, ensure it is a boolean
+  if (updateData.account_activated !== undefined) {
+    updateData.account_activated = Boolean(updateData.account_activated);
   }
 
+  // If a new password is provided, hash it before storing
+  if (updateData.password) {
+    updateData.password = await hashPassword(updateData.password);
+  }
+
+  // If a file is provided, upload it and update photo_URL
   if (file) {
-    const filePath = `adminimages/${id}`;
-    updateData.photo_URL = await uploadImageToFirebase(file, filePath);
+    try {
+      const filePath = `adminimages/${id}`;
+      updateData.photo_URL = await uploadImageToFirebase(file, filePath);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    }
   }
 
-  return adminDataAccess.UpdateUserDetails(id, updateData);
+  try {
+    return await adminDataAccess.UpdateUserDetails(id, updateData);
+  } catch (error) {
+    console.error("Error updating user details:", error);
+    throw(error);
+  }
 }
 
 export async function uploadImageToFirebaseAndUpdateUser(

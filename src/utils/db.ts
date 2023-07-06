@@ -69,6 +69,7 @@ class DB {
     try {
       await this.client.connect();
       const result = await this.client.db(this.dbName).collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: updatedDocument });
+      console.log(result);
       return result;
     } catch (error) {
       return error;

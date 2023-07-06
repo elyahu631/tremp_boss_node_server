@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
+const TimeService_1 = require("../../utils/TimeService");
 class AdminModel {
     constructor(adminData) {
         this.email = adminData.email;
@@ -16,8 +17,8 @@ class AdminModel {
         this.phone_number = adminData.phone_number;
         this.photo_URL = adminData.photo_URL;
         this.account_activated = adminData.account_activated;
-        this.createdAt = adminData.createdAt || new Date().toISOString();
-        this.updatedAt = adminData.updatedAt || new Date().toISOString();
+        this.createdAt = adminData.createdAt || (0, TimeService_1.getCurrentTimeInIsrael)();
+        this.updatedAt = adminData.updatedAt || (0, TimeService_1.getCurrentTimeInIsrael)();
         this.last_login_date = adminData.last_login_date;
         this.deleted = adminData.deleted || false;
     }

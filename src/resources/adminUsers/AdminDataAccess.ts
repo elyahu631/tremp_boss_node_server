@@ -26,8 +26,12 @@ class AdminDataAccess  {
   
   async UpdateUserDeletionStatus(id: string) {
     try {
-      return await new DB().Update(AdminDataAccess.collection, id, { deleted: true });
-    } catch (error) {
+      console.log(id)
+      return await new DB().Update(AdminDataAccess.collection, id, { 
+        deleted: true,
+        account_activated: false
+      });
+          } catch (error) {
       return error;
     }
   }

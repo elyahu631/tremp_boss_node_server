@@ -83,7 +83,8 @@ exports.deleteAdminUserById = deleteAdminUserById;
 function getAllAdminUsers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const users = yield AdminService.getAllUsers();
+            let users = yield AdminService.getAllUsers();
+            users = users.map(user => (Object.assign(Object.assign({}, user), { password: "12345678" })));
             return res.status(200).json(users);
         }
         catch (error) {

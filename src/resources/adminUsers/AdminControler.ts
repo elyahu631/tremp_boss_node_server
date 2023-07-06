@@ -53,7 +53,8 @@ export async function getAllAdminUsers(
   res: Response
 ): Promise<Response> {
   try {
-    const users = await AdminService.getAllUsers();
+    let users = await AdminService.getAllUsers();
+    users = users.map(user => ({...user, password: "12345678"}));
     return res.status(200).json(users);
   } catch (error: any) {
     throw error;
@@ -94,7 +95,6 @@ export async function updateAdminUserDetails(
   }
 }
 
-
 export async function getUserFromToken(
   req: Request,
   res: Response
@@ -120,7 +120,6 @@ export async function getUserFromToken(
     throw error;
   }
 }
-
 
 export async function addAdminUser(
   req: Request,

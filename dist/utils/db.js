@@ -90,6 +90,7 @@ class DB {
             try {
                 yield this.client.connect();
                 const result = yield this.client.db(this.dbName).collection(collection).updateOne({ _id: new mongodb_1.ObjectId(id) }, { $set: updatedDocument });
+                console.log(result);
                 return result;
             }
             catch (error) {

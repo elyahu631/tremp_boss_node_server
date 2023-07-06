@@ -1,6 +1,7 @@
 // src/resources/adminUsers/AdminModel.ts
 
 import Joi from "joi";
+import { getCurrentTimeInIsrael } from "../../utils/TimeService";
 
 class AdminModel {
   username?: string;
@@ -41,8 +42,8 @@ class AdminModel {
     this.phone_number = adminData.phone_number;
     this.photo_URL = adminData.photo_URL;
     this.account_activated = adminData.account_activated;
-    this.createdAt = adminData.createdAt || new Date().toISOString();
-    this.updatedAt = adminData.updatedAt || new Date().toISOString();
+    this.createdAt = adminData.createdAt || getCurrentTimeInIsrael();
+    this.updatedAt = adminData.updatedAt || getCurrentTimeInIsrael();
     this.last_login_date = adminData.last_login_date;
     this.deleted = adminData.deleted || false;
   }
