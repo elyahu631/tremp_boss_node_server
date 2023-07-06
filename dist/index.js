@@ -17,6 +17,7 @@ const cors_1 = __importDefault(require("cors"));
 const environment_1 = require("./config/environment");
 const UserRoutes_1 = __importDefault(require("./resources/users/UserRoutes"));
 const AdminRoutes_1 = __importDefault(require("./resources/adminUsers/AdminRoutes"));
+const TrempRoutes_1 = __importDefault(require("./resources/tremps/TrempRoutes"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -25,5 +26,6 @@ app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 }));
 app.use('/api/users', UserRoutes_1.default);
 app.use('/api/adminUsers', AdminRoutes_1.default);
+app.use("/api/tremps", TrempRoutes_1.default);
 app.listen(environment_1.PORT, () => console.log(`Server running on http://localhost:${environment_1.PORT}`));
 //# sourceMappingURL=index.js.map

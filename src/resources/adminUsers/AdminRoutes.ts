@@ -13,7 +13,7 @@ import {
   markAdminUserAsDeleted,
   updateAdminUserDetails,
   getUserFromToken,
-} from "./AdminControler";
+} from "./AdminController";
 // src/resources/adminUsers/AdminRouter.ts
 
 // multer middleware for file upload handling
