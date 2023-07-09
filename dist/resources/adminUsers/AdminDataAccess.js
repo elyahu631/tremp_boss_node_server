@@ -39,7 +39,6 @@ class AdminDataAccess {
     UpdateUserDeletionStatus(id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                console.log(id);
                 return yield new db_1.default().Update(AdminDataAccess.collection, id, {
                     deleted: true,
                     account_activated: false

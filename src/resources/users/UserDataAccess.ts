@@ -26,6 +26,21 @@ class UserDataAccess  {
   async Update(id: string, updatedUser: UserModel) {
     return await new DB().Update(UserDataAccess .collection, id, updatedUser);
   }
+
+  async UpdateUserDeletionStatus(id: string) {
+    try {
+      return await new DB().Update(UserDataAccess.collection, id, { 
+        deleted: true,
+        status: "inactive"
+      });
+          } catch (error) {
+      return error;
+    }
+  }
+
+  async UpdateUserDetails(id: string, updateData: Partial<UserModel>) {
+    return await new DB().Update(UserDataAccess.collection, id, updateData);
+  }  
 }
 
 export default UserDataAccess ;

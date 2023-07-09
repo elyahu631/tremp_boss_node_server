@@ -94,7 +94,7 @@ function updateUserDetails(id, userDetails, file) {
         let updateData = Object.assign(Object.assign({}, userDetails), { updatedAt: (0, TimeService_1.getCurrentTimeInIsrael)() });
         // If account_activated is defined, ensure it is a boolean
         if (updateData.account_activated !== undefined) {
-            updateData.account_activated = Boolean(updateData.account_activated);
+            updateData.account_activated = "" + updateData.account_activated === "true";
         }
         // If a new password is provided, hash it before storing
         if (updateData.password) {

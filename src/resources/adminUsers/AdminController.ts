@@ -18,7 +18,7 @@ export async function loginAdmin(
     return res.status(401).json({ error: "Invalid user or password." });
   }
 
-  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" });
+  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "8h" });
   return res.status(200).json({ user, token });
 }
 

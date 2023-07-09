@@ -1,5 +1,5 @@
 // src/resources/users/UserRoutes.ts
-
+import multer from "multer";
 import express, { Router } from "express";
 import { authenticateToken } from "../../middleware/auth";
 import {handleErrors} from "../../middleware/handleErrors";
@@ -11,16 +11,30 @@ import {
   deleteUserById,
   updateUser,
   addUser,
+  getAllUsers,
+  markUserAsDeleted,
+  AdminAddUser,
 } from "./UserController";
+// multer middleware for file upload handling
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // limit file size to 5MB
+  },
+});
 
-const router: Router = express.Router();
+const usersRouter: Router = express.Router();
 
-router.post("/register", registerUser);
-router.post("/login", loginUser);
-router.get("/:id", authenticateToken, getUserById);
-router.delete("/delete/:id", authenticateToken, deleteUserById);
-router.put("/update/:id", authenticateToken, updateUser);
-router.post("/add", addUser);
-router.use(handleErrors); 
+usersRouter.post("/register", registerUser);
+usersRouter.post("/login", loginUser);
+usersRouter.get("/all", authenticateToken, getAllUsers);
+usersRouter.get("/:id", authenticateToken, getUserById);
+usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
+usersRouter.put("/markDeleted/:id", authenticateToken, markUserAsDeleted);
+usersRouter.put("/update/:id", authenticateToken, updateUser);
+usersRouter.post("/add", addUser);
+usersRouter.post("/admin-add-user",authenticateToken,upload.single('photo_URL'),AdminAddUser);
 
-export default router;
+usersRouter.use(handleErrors); 
+
+export default usersRouter;

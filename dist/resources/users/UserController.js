@@ -35,11 +35,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
+exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
 const UserValidation_1 = require("./UserValidation");
+const UserModel_1 = __importDefault(require("./UserModel"));
 function registerUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -123,4 +124,51 @@ function addUser(req, res) {
     });
 }
 exports.addUser = addUser;
+function getAllUsers(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const users = yield UserService.getAllUsers();
+            return res.status(200).json(users);
+        }
+        catch (error) {
+            throw error;
+        }
+    });
+}
+exports.getAllUsers = getAllUsers;
+function markUserAsDeleted(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { id } = req.params;
+            yield UserService.markUserAsDeleted(id);
+            return res
+                .status(200)
+                .json({ message: "User deletion status successfully updated" });
+        }
+        catch (error) {
+            throw error;
+        }
+    });
+}
+exports.markUserAsDeleted = markUserAsDeleted;
+function AdminAddUser(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const newUser = new UserModel_1.default(req.body);
+            let userInsertion = yield UserService.createUser(newUser);
+            let savedUser = userInsertion.insertedId;
+            if (req.file) {
+                const filePath = `usersimages/${userInsertion.insertedId}`;
+                yield UserService.uploadImageToFirebaseAndUpdateUser(req.file, filePath, savedUser);
+                savedUser = yield UserService.getUserById(savedUser); // Get updated user
+            }
+            return res.status(201).json(savedUser);
+        }
+        catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: error.message });
+        }
+    });
+}
+exports.AdminAddUser = AdminAddUser;
 //# sourceMappingURL=UserController.js.map

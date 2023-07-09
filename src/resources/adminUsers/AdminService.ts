@@ -86,7 +86,7 @@ export async function updateUserDetails(
 
   // If account_activated is defined, ensure it is a boolean
   if (updateData.account_activated !== undefined) {
-    updateData.account_activated = Boolean(updateData.account_activated);
+    updateData.account_activated = ""+updateData.account_activated === "true";
   }
 
   // If a new password is provided, hash it before storing
