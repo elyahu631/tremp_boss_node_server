@@ -30,11 +30,11 @@ const express_1 = __importDefault(require("express"));
 const TrempController = __importStar(require("./TrempController"));
 const handleErrors_1 = require("../../middleware/handleErrors");
 const auth_1 = require("../../middleware/auth");
-const tremprRouter = express_1.default.Router();
-tremprRouter.post("/add", auth_1.authenticateToken, TrempController.createTremp);
-tremprRouter.post('/trempsByFilters', auth_1.authenticateToken, TrempController.getTrempsByFilters);
-tremprRouter.put('/join-ride', auth_1.authenticateToken, TrempController.addUserToTremp);
-tremprRouter.put('/approveUserInTremp', auth_1.authenticateToken, TrempController.approveUserInTremp);
-tremprRouter.use(handleErrors_1.handleErrors);
-exports.default = tremprRouter;
+const trempRoutes = express_1.default.Router();
+trempRoutes.post("/add", auth_1.authenticateToken, TrempController.createTremp);
+trempRoutes.post('/trempsByFilters', auth_1.authenticateToken, TrempController.getTrempsByFilters);
+trempRoutes.put('/join-ride', auth_1.authenticateToken, TrempController.addUserToTremp);
+trempRoutes.put('/approveUserInTremp', auth_1.authenticateToken, TrempController.approveUserInTremp);
+trempRoutes.use(handleErrors_1.handleErrors);
+exports.default = trempRoutes;
 //# sourceMappingURL=TrempRoutes.js.map

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/resources/adminUsers/AdminRouter.ts
+// src/resources/adminUsers/adminRoutes.ts
 const multer_1 = __importDefault(require("multer"));
 const express_1 = __importDefault(require("express"));
 const auth_1 = require("../../middleware/auth");
@@ -16,15 +16,15 @@ const upload = (0, multer_1.default)({
         fileSize: 5 * 1024 * 1024, // limit file size to 5MB
     },
 });
-const adminRouter = express_1.default.Router();
-adminRouter.post("/login", AdminController_1.loginAdmin);
-adminRouter.get("/all", auth_1.authenticateToken, AdminController_1.getAllAdminUsers);
-adminRouter.get("/me", auth_1.authenticateToken, AdminController_1.getUserFromToken);
-adminRouter.get("/:id", auth_1.authenticateToken, AdminController_1.getAdminUserById);
-adminRouter.post("/add", auth_1.authenticateToken, upload.single('photo_URL'), AdminController_1.addAdminUser);
-adminRouter.delete("/delete/:id", auth_1.authenticateToken, AdminController_1.deleteAdminUserById);
-adminRouter.put("/markDeleted/:id", auth_1.authenticateToken, AdminController_1.markAdminUserAsDeleted);
-adminRouter.put("/updateAdmin/:id", auth_1.authenticateToken, upload.single('photo_URL'), AdminController_1.updateAdminUserDetails);
-adminRouter.use(handleErrors_1.handleErrors);
-exports.default = adminRouter;
+const adminRoutes = express_1.default.Router();
+adminRoutes.post("/login", AdminController_1.loginAdmin);
+adminRoutes.get("/all", auth_1.authenticateToken, AdminController_1.getAllAdminUsers);
+adminRoutes.get("/me", auth_1.authenticateToken, AdminController_1.getUserFromToken);
+adminRoutes.get("/:id", auth_1.authenticateToken, AdminController_1.getAdminUserById);
+adminRoutes.post("/add", auth_1.authenticateToken, upload.single('photo_URL'), AdminController_1.addAdminUser);
+adminRoutes.delete("/delete/:id", auth_1.authenticateToken, AdminController_1.deleteAdminUserById);
+adminRoutes.put("/markDeleted/:id", auth_1.authenticateToken, AdminController_1.markAdminUserAsDeleted);
+adminRoutes.put("/updateAdmin/:id", auth_1.authenticateToken, upload.single('photo_URL'), AdminController_1.updateAdminUserDetails);
+adminRoutes.use(handleErrors_1.handleErrors);
+exports.default = adminRoutes;
 //# sourceMappingURL=AdminRoutes.js.map

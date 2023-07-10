@@ -1,4 +1,4 @@
-// src/resources/adminUsers/AdminRouter.ts
+// src/resources/adminUsers/adminRoutes.ts
 import multer from "multer";
 import express, { Router } from "express";
 import { authenticateToken } from "../../middleware/auth";
@@ -23,16 +23,16 @@ const upload = multer({
   },
 });
 
-const adminRouter: Router = express.Router();
-adminRouter.post("/login", loginAdmin);
-adminRouter.get("/all", authenticateToken, getAllAdminUsers);
-adminRouter.get("/me", authenticateToken, getUserFromToken);
-adminRouter.get("/:id",authenticateToken, getAdminUserById);
-adminRouter.post("/add", authenticateToken, upload.single('photo_URL'), addAdminUser);
-adminRouter.delete("/delete/:id", authenticateToken, deleteAdminUserById);
-adminRouter.put("/markDeleted/:id", authenticateToken, markAdminUserAsDeleted);
-adminRouter.put("/updateAdmin/:id", authenticateToken, upload.single('photo_URL'), updateAdminUserDetails);
+const adminRoutes: Router = express.Router();
+adminRoutes.post("/login", loginAdmin);
+adminRoutes.get("/all", authenticateToken, getAllAdminUsers);
+adminRoutes.get("/me", authenticateToken, getUserFromToken);
+adminRoutes.get("/:id",authenticateToken, getAdminUserById);
+adminRoutes.post("/add", authenticateToken, upload.single('photo_URL'), addAdminUser);
+adminRoutes.delete("/delete/:id", authenticateToken, deleteAdminUserById);
+adminRoutes.put("/markDeleted/:id", authenticateToken, markAdminUserAsDeleted);
+adminRoutes.put("/updateAdmin/:id", authenticateToken, upload.single('photo_URL'), updateAdminUserDetails);
 
-adminRouter.use(handleErrors); 
+adminRoutes.use(handleErrors); 
 
-export default adminRouter;
+export default adminRoutes;

@@ -3,14 +3,14 @@ import * as TrempController from "./TrempController";
 import { handleErrors } from "../../middleware/handleErrors";
 import { authenticateToken } from "../../middleware/auth";
 
-const tremprRouter = express.Router();
+const trempRoutes = express.Router();
 
-tremprRouter.post("/add",authenticateToken, TrempController.createTremp);
-tremprRouter.post('/trempsByFilters',authenticateToken, TrempController.getTrempsByFilters);
-tremprRouter.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
-tremprRouter.put('/approveUserInTremp',authenticateToken ,TrempController.approveUserInTremp);
+trempRoutes.post("/add",authenticateToken, TrempController.createTremp);
+trempRoutes.post('/trempsByFilters',authenticateToken, TrempController.getTrempsByFilters);
+trempRoutes.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
+trempRoutes.put('/approveUserInTremp',authenticateToken ,TrempController.approveUserInTremp);
 
-tremprRouter.use(handleErrors); 
+trempRoutes.use(handleErrors); 
 
 
-export default tremprRouter;
+export default trempRoutes;
