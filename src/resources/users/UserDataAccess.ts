@@ -6,8 +6,8 @@ import UserModel  from './UserModel';
 class UserDataAccess  {
   static collection = 'Users';
 
-  async FindAllUsers(query = {}) {
-    return await new DB().FindAll(UserDataAccess .collection, query);
+  async FindAllUsers(query = {},projection = {}) {
+    return await new DB().FindAll(UserDataAccess .collection, query,projection);
   }
 
   async FindById(id: string) {

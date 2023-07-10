@@ -117,9 +117,7 @@ function updateAdminUserDetails(req, res) {
                 return res.status(401).json({ error: "Invalid data to update." });
             }
             const updatedUser = yield AdminService.updateUserDetails(id, userDetails, req.file);
-            return res
-                .status(200)
-                .json([updatedUser, { message: "User updated successfully" }]);
+            return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
         }
         catch (error) {
             return res.status(500).json({ message: error.message });

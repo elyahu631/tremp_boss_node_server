@@ -3,6 +3,8 @@ import Joi from 'joi';
 import UserModel from './UserModel';
 
 export function validateUpdatedUser(updatedUser: UserModel) : boolean{
+  console.log(updatedUser);
+
   const schema = Joi.object({
     user_email: Joi.string().email().optional(),
     phone_number: Joi.string().optional(),

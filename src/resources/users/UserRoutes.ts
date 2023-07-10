@@ -14,6 +14,7 @@ import {
   getAllUsers,
   markUserAsDeleted,
   AdminAddUser,
+  updateUserDetails,
 } from "./UserController";
 // multer middleware for file upload handling
 const upload = multer({
@@ -34,6 +35,7 @@ usersRouter.put("/markDeleted/:id", authenticateToken, markUserAsDeleted);
 usersRouter.put("/update/:id", authenticateToken, updateUser);
 usersRouter.post("/add", addUser);
 usersRouter.post("/admin-add-user",authenticateToken,upload.single('photo_URL'),AdminAddUser);
+usersRouter.put("/update-user/:id", authenticateToken, upload.single('photo_URL'), updateUserDetails);
 
 usersRouter.use(handleErrors); 
 

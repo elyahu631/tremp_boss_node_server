@@ -26,6 +26,7 @@ usersRouter.put("/markDeleted/:id", auth_1.authenticateToken, UserController_1.m
 usersRouter.put("/update/:id", auth_1.authenticateToken, UserController_1.updateUser);
 usersRouter.post("/add", UserController_1.addUser);
 usersRouter.post("/admin-add-user", auth_1.authenticateToken, upload.single('photo_URL'), UserController_1.AdminAddUser);
+usersRouter.put("/update-user/:id", auth_1.authenticateToken, upload.single('photo_URL'), UserController_1.updateUserDetails);
 usersRouter.use(handleErrors_1.handleErrors);
 exports.default = usersRouter;
 //# sourceMappingURL=UserRoutes.js.map

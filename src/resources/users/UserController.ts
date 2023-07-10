@@ -22,7 +22,7 @@ export async function registerUser(req: Request, res: Response): Promise<Respons
 export async function loginUser(req: Request, res: Response): Promise<Response> {
   const { user_email, password } = req.body;
   const user = await UserService.loginUser(user_email, password);
-  
+
   if (!user) {
     return res.status(401).json({ error: 'Invalid email or password.' });
   }
@@ -55,13 +55,13 @@ export async function updateUser(req: Request, res: Response): Promise<Response>
   try {
     const { id } = req.params;
     const updatedUser = req.body;
-    if (!validateUpdatedUser(updatedUser)){
-        return res.status(401).json({ error: 'Invalid data to update.' });
+    if (!validateUpdatedUser(updatedUser)) {
+      return res.status(401).json({ error: 'Invalid data to update.' });
     }
     await UserService.updateUser(id, updatedUser);
     return res.status(200).json({ message: "User updated successfully" });
   } catch (error: any) {
-   
+    return res.status(500).json({ message: error.message });
   }
 }
 
@@ -77,7 +77,8 @@ export async function addUser(req: Request, res: Response): Promise<Response> {
 
 export async function getAllUsers(req: Request, res: Response): Promise<Response> {
   try {
-    const users = await UserService.getAllUsers();
+    let users = await UserService.getAllUsers();
+    users = users.map(user => ({ ...user, password: "user1234" }));
     return res.status(200).json(users);
   } catch (error: any) {
     throw error;
@@ -99,12 +100,11 @@ export async function markUserAsDeleted(
   }
 }
 
-
 export async function AdminAddUser(
   req: Request,
   res: Response
 ): Promise<Response> {
-  try {    
+  try {
     const newUser = new UserModel(req.body);
     let userInsertion = await UserService.createUser(newUser);
     let savedUser = userInsertion.insertedId;
@@ -116,6 +116,20 @@ export async function AdminAddUser(
     return res.status(201).json(savedUser);
   } catch (error: any) {
     console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
+export async function updateUserDetails(req: Request, res: Response): Promise<Response> {
+  try {
+    const { id } = req.params;
+    const userDetails = req.body;
+    if (!validateUpdatedUser(userDetails)) {
+      return res.status(401).json({ error: "Invalid data to update." });
+    }
+    const updatedUser = await UserService.updateUserDetails(id, userDetails, req.file);
+    return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
+  } catch (error: any) {
     return res.status(500).json({ message: error.message });
   }
 }

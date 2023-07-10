@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
+exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
@@ -107,6 +107,7 @@ function updateUser(req, res) {
             return res.status(200).json({ message: "User updated successfully" });
         }
         catch (error) {
+            return res.status(500).json({ message: error.message });
         }
     });
 }
@@ -127,7 +128,8 @@ exports.addUser = addUser;
 function getAllUsers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const users = yield UserService.getAllUsers();
+            let users = yield UserService.getAllUsers();
+            users = users.map(user => (Object.assign(Object.assign({}, user), { password: "user1234" })));
             return res.status(200).json(users);
         }
         catch (error) {
@@ -171,4 +173,21 @@ function AdminAddUser(req, res) {
     });
 }
 exports.AdminAddUser = AdminAddUser;
+function updateUserDetails(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { id } = req.params;
+            const userDetails = req.body;
+            if (!(0, UserValidation_1.validateUpdatedUser)(userDetails)) {
+                return res.status(401).json({ error: "Invalid data to update." });
+            }
+            const updatedUser = yield UserService.updateUserDetails(id, userDetails, req.file);
+            return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
+        }
+        catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    });
+}
+exports.updateUserDetails = updateUserDetails;
 //# sourceMappingURL=UserController.js.map

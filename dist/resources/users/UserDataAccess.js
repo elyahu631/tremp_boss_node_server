@@ -15,9 +15,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
 class UserDataAccess {
-    FindAllUsers(query = {}) {
+    FindAllUsers(query = {}, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().FindAll(UserDataAccess.collection, query);
+            return yield new db_1.default().FindAll(UserDataAccess.collection, query, projection);
         });
     }
     FindById(id) {

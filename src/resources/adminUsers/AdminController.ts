@@ -54,7 +54,7 @@ export async function getAllAdminUsers(
 ): Promise<Response> {
   try {
     let users = await AdminService.getAllUsers();
-    users = users.map(user => ({...user, password: "12345678"}));
+    users = users.map(user => ({ ...user, password: "12345678" }));
     return res.status(200).json(users);
   } catch (error: any) {
     throw error;
@@ -76,10 +76,7 @@ export async function markAdminUserAsDeleted(
   }
 }
 
-export async function updateAdminUserDetails(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function updateAdminUserDetails(req: Request, res: Response): Promise<Response> {
   try {
     const { id } = req.params;
     const userDetails = req.body;
@@ -87,9 +84,7 @@ export async function updateAdminUserDetails(
       return res.status(401).json({ error: "Invalid data to update." });
     }
     const updatedUser = await AdminService.updateUserDetails(id, userDetails, req.file);
-    return res
-      .status(200)
-      .json([updatedUser, { message: "User updated successfully" }]);
+    return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
   } catch (error: any) {
     return res.status(500).json({ message: error.message });
   }
