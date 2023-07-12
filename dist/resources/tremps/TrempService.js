@@ -24,19 +24,19 @@ function createTremp(tremp) {
 exports.createTremp = createTremp;
 function getTrempsByFilters(filters) {
     return __awaiter(this, void 0, void 0, function* () {
+        const userId = new mongodb_1.ObjectId(filters.creator_id);
         const query = {
             deleted: false,
-            creator_id: { $ne: filters.creator_id },
+            creator_id: { $ne: userId },
             tremp_time: { $gt: filters.tremp_time },
             tremp_type: filters.type_of_tremp,
             users_in_tremp: {
                 $not: {
-                    $elemMatch: {
-                        user_id: filters.creator_id
-                    }
+                    $elemMatch: { user_id: userId }
                 }
-            }
+            },
         };
+        console.log(filters.creator_id);
         return yield trempDataAccess.FindTrempsByFilters(query);
     });
 }
