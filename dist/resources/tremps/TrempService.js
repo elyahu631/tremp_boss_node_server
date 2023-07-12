@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTrempById = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const mongodb_1 = require("mongodb");
@@ -98,4 +98,10 @@ function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
     });
 }
 exports.approveUserInTremp = approveUserInTremp;
+function getTrempById(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return trempDataAccess.FindByID(id);
+    });
+}
+exports.getTrempById = getTrempById;
 //# sourceMappingURL=TrempService.js.map

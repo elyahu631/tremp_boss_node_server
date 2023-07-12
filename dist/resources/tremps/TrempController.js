@@ -39,6 +39,7 @@ exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
+const admin = __importStar(require("firebase-admin"));
 function createTremp(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tremp = req.body;
@@ -99,6 +100,25 @@ function addUserToTremp(req, res) {
             if (updatedTremp.modifiedCount === 0) {
                 return res.status(400).json({ message: 'User not added to the tremp' });
             }
+            // Get the creator ID of the tremp
+            const tremp = yield TrempService.getTrempById(tremp_id);
+            const creatorId = tremp.creator_id;
+            // Get the creator's FCM token from the database
+            const creator = yield UserService.getUserById(creatorId);
+            const fcmToken = creator.notification_token;
+            // Send the notification to the creator
+            const message = {
+                token: fcmToken,
+                notification: {
+                    title: 'New User Joined Drive',
+                    body: 'A user has joined your drive.',
+                },
+                data: {
+                    tremp_id: tremp_id,
+                    user_id: user_id,
+                },
+            };
+            yield admin.messaging().send(message);
             return res.status(200).json({ message: 'User successfully added to the tremp' });
         }
         catch (error) {

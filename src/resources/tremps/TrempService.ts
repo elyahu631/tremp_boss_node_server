@@ -98,3 +98,6 @@ export async function approveUserInTremp(tremp_id: string, creator_id: string, u
   return result;
 }
 
+export async function getTrempById(id: string) {
+  return trempDataAccess.FindByID(id);
+}

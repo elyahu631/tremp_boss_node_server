@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import * as TrempService from "./TrempService";
 import * as UserService from "../users/UserService";
 import TrempModel from "./TrempModel";
+import * as admin from 'firebase-admin';
 
 export async function createTremp(req: Request, res: Response): Promise<Response> {
   const tremp: TrempModel = req.body;
@@ -67,6 +68,29 @@ export async function addUserToTremp(req: Request, res: Response): Promise<Respo
     if (updatedTremp.modifiedCount === 0) {
       return res.status(400).json({ message: 'User not added to the tremp' });
     }
+
+    // Get the creator ID of the tremp
+    const tremp = await TrempService.getTrempById(tremp_id);
+    const creatorId = tremp.creator_id;
+
+    // Get the creator's FCM token from the database
+    const creator = await UserService.getUserById(creatorId);
+    const fcmToken = creator.notification_token;
+
+    // Send the notification to the creator
+    const message = {
+      token: fcmToken,
+      notification: {
+        title: 'New User Joined Drive',
+        body: 'A user has joined your drive.',
+      },
+      data: {
+        tremp_id: tremp_id,
+        user_id: user_id,
+      },
+    };
+    await admin.messaging().send(message);
+
     return res.status(200).json({ message: 'User successfully added to the tremp' });
   } catch (error) {
     return res.status(500).json({ message: `Server error: ${error.message}` });
