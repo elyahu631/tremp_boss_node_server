@@ -4,6 +4,16 @@ import * as TrempService from "./TrempService";
 import * as UserService from "../users/UserService";
 import TrempModel from "./TrempModel";
 import * as admin from 'firebase-admin';
+import { FIREBASE_ENV } from "../../config/environment";
+
+admin.initializeApp({
+  credential: admin.credential.cert({
+    "projectId": FIREBASE_ENV.project_id,
+    "privateKey": FIREBASE_ENV.private_key,
+    "clientEmail": FIREBASE_ENV.client_email,
+  }),
+  databaseURL: 'https://fcm.googleapis.com/fcm/send',
+});
 
 export async function createTremp(req: Request, res: Response): Promise<Response> {
   const tremp: TrempModel = req.body;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FIREBASE_ENV = exports.JWT_SECRET = exports.PORT = exports.DB_NAME = exports.DB_URI = void 0;
+exports.SERVER_KEY = exports.FIREBASE_ENV = exports.JWT_SECRET = exports.PORT = exports.DB_NAME = exports.DB_URI = void 0;
 // src/config/environment.ts
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -23,4 +23,5 @@ exports.FIREBASE_ENV = {
     auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL || "",
     client_x509_cert_url: process.env.CLIENT_X509_CERT_URL || "",
 };
+exports.SERVER_KEY = process.env.SERVER_KEY || "";
 //# sourceMappingURL=environment.js.map

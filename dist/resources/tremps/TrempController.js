@@ -40,6 +40,15 @@ const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const admin = __importStar(require("firebase-admin"));
+const environment_1 = require("../../config/environment");
+admin.initializeApp({
+    credential: admin.credential.cert({
+        "projectId": environment_1.FIREBASE_ENV.project_id,
+        "privateKey": environment_1.FIREBASE_ENV.private_key,
+        "clientEmail": environment_1.FIREBASE_ENV.client_email,
+    }),
+    databaseURL: 'https://fcm.googleapis.com/fcm/send',
+});
 function createTremp(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tremp = req.body;
