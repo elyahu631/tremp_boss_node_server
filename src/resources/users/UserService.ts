@@ -42,6 +42,9 @@ export async function loginUser(user_email: string, password: string) {
     // return null if user not found or password doesn't match
     return null;
   }
+  // Update the last_login_date field when the user logs in successfully
+  user.last_login_date = new Date().toISOString();
+  await userDataAccess.UpdateUserDetails(user._id.toString(), user);
 
   return user;
 }

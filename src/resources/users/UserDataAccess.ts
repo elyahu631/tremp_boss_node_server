@@ -1,6 +1,7 @@
 // src/resources/users/UserDataAccess.ts
 
 import DB from '../../utils/db';
+import { UserInterface } from './UserInterface';
 import UserModel  from './UserModel';
 
 class UserDataAccess  {
@@ -38,7 +39,7 @@ class UserDataAccess  {
     }
   }
 
-  async UpdateUserDetails(id: string, updateData: Partial<UserModel>) {
+  async UpdateUserDetails(id: string, updateData: Partial<UserInterface>) {
     return await new DB().Update(UserDataAccess.collection, id, updateData);
   }  
 }

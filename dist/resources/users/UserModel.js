@@ -38,6 +38,10 @@ class UserModel {
             throw new Error(error.details[0].message);
         }
     }
+    static fromUserDocument(userDocument) {
+        // This creates a new UserModel and copies all properties from the userDocument to it
+        return new UserModel(userDocument);
+    }
 }
 exports.default = UserModel;
 //# sourceMappingURL=UserModel.js.map

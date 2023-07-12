@@ -2,6 +2,7 @@
 
 import Joi from 'joi';
 import { ObjectId } from 'mongodb';
+import { UserInterface } from './UserInterface';
 
 class UserModel {
   user_email?: string;
@@ -70,6 +71,13 @@ class UserModel {
     if (error) {
       throw new Error(error.details[0].message);
     }
+  }
+
+
+  
+  static fromUserDocument(userDocument: UserInterface): UserModel {
+    // This creates a new UserModel and copies all properties from the userDocument to it
+    return new UserModel(userDocument);
   }
   
 }

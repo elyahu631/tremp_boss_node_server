@@ -49,38 +49,33 @@ admin.initializeApp({
     }),
     databaseURL: 'https://fcm.googleapis.com/fcm/send',
 });
+const validateTrempData = (tremp) => {
+    tremp.validateTremp();
+    const { creator_id, tremp_time, from_root, to_root } = tremp;
+    if (!creator_id || !tremp_time || !from_root || !to_root) {
+        throw new Error("Missing required tremp data");
+    }
+    if (new Date(tremp_time) < new Date()) {
+        throw new Error("Tremp time has already passed");
+    }
+    if (from_root.name === to_root.name) {
+        throw new Error("The 'from' and 'to' locations cannot be the same");
+    }
+};
 function createTremp(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const tremp = req.body;
-        const newTremp = new TrempModel_1.default(tremp);
-        // Validate tremp before further processing
         try {
-            newTremp.validateTremp();
-        }
-        catch (error) {
-            return res.status(400).json({ message: `Validation failed: ${error.message}` });
-        }
-        const { creator_id, tremp_time, from_root, to_root } = newTremp;
-        try {
-            // Check if the user exists
-            const user = yield UserService.getUserById(creator_id.toString());
-            console.log(user);
+            const newTremp = new TrempModel_1.default(req.body);
+            validateTrempData(newTremp);
+            const user = yield UserService.getUserById(newTremp.creator_id.toString());
             if (!user) {
                 throw new Error("Creator user does not exist");
-            }
-            // Check if tremp_time has not passed
-            if (new Date(tremp_time) < new Date()) {
-                throw new Error("Tremp time has already passed");
-            }
-            // Check if 'from' and 'to' locations are not the same
-            if (from_root.name === to_root.name) {
-                throw new Error("The 'from' and 'to' locations cannot be the same");
             }
             const result = yield TrempService.createTremp(newTremp);
             return res.status(200).json(result);
         }
         catch (error) {
-            return res.status(400).json({ message: error.message });
+            return res.status(400).json({ message: `Validation failed: ${error.message}` });
         }
     });
 }
@@ -102,6 +97,10 @@ function addUserToTremp(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { tremp_id, user_id } = req.body;
+            // validate user input
+            if (!tremp_id || !user_id) {
+                return res.status(400).json({ message: 'Tremp ID and User ID are required' });
+            }
             const updatedTremp = yield TrempService.addUserToTremp(tremp_id, user_id);
             if (updatedTremp.matchedCount === 0) {
                 return res.status(404).json({ message: 'Tremp not found' });
@@ -115,27 +114,37 @@ function addUserToTremp(req, res) {
             // Get the creator's FCM token from the database
             const creator = yield UserService.getUserById(creatorId);
             const fcmToken = creator.notification_token;
-            // Send the notification to the creator
-            const message = {
-                token: fcmToken,
-                notification: {
-                    title: 'New User Joined Drive',
-                    body: 'A user has joined your drive.',
-                },
-                data: {
-                    tremp_id: tremp_id,
-                    user_id: user_id,
-                },
-            };
-            yield admin.messaging().send(message);
+            if (fcmToken) {
+                // Send the notification to the creator
+                yield sendNotificationToUser(fcmToken, tremp_id, user_id);
+            }
+            else {
+                console.log('User does not have a valid FCM token');
+            }
             return res.status(200).json({ message: 'User successfully added to the tremp' });
         }
         catch (error) {
-            return res.status(500).json({ message: `Server error: ${error.message}` });
+            return res.status(500).json({ message: `Error adding user to Tremp: ${error.message}` });
         }
     });
 }
 exports.addUserToTremp = addUserToTremp;
+function sendNotificationToUser(fcmToken, tremp_id, user_id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const message = {
+            token: fcmToken,
+            notification: {
+                title: 'New User Joined Drive',
+                body: 'A user has joined your drive.',
+            },
+            data: {
+                tremp_id,
+                user_id,
+            },
+        };
+        yield admin.messaging().send(message);
+    });
+}
 function approveUserInTremp(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { tremp_id, creator_id, user_id, approval } = req.body;

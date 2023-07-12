@@ -15,42 +15,40 @@ admin.initializeApp({
   databaseURL: 'https://fcm.googleapis.com/fcm/send',
 });
 
-export async function createTremp(req: Request, res: Response): Promise<Response> {
-  const tremp: TrempModel = req.body;
-  const newTremp = new TrempModel(tremp);
-  // Validate tremp before further processing
-  try {
-    newTremp.validateTremp();
-  } catch (error) {
-    return res.status(400).json({ message: `Validation failed: ${error.message}` });
+const validateTrempData = (tremp: TrempModel) => {
+  tremp.validateTremp();
+
+  const { creator_id, tremp_time, from_root, to_root } = tremp;
+
+  if (!creator_id || !tremp_time || !from_root || !to_root) {
+    throw new Error("Missing required tremp data");
   }
 
-  const { creator_id, tremp_time, from_root, to_root } = newTremp;
+  if (new Date(tremp_time) < new Date()) {
+    throw new Error("Tremp time has already passed");
+  }
 
+  if (from_root.name === to_root.name) {
+    throw new Error("The 'from' and 'to' locations cannot be the same");
+  }
+}
+
+export async function createTremp(req: Request, res: Response): Promise<Response> {
   try {
-    // Check if the user exists
-    const user = await UserService.getUserById(creator_id.toString());
-    console.log(user
-      );
-    
+    const newTremp = new TrempModel(req.body);
+
+    validateTrempData(newTremp);
+
+    const user = await UserService.getUserById(newTremp.creator_id.toString());
     if (!user) {
       throw new Error("Creator user does not exist");
     }
 
-    // Check if tremp_time has not passed
-    if (new Date(tremp_time) < new Date()) {
-      throw new Error("Tremp time has already passed");
-    }
-
-    // Check if 'from' and 'to' locations are not the same
-    if (from_root.name === to_root.name) {
-      throw new Error("The 'from' and 'to' locations cannot be the same");
-    }
-
     const result = await TrempService.createTremp(newTremp);
     return res.status(200).json(result);
-  } catch (error: any) {
-    return res.status(400).json({ message: error.message });
+
+  } catch (error) {
+    return res.status(400).json({ message: `Validation failed: ${error.message}` });
   }
 }
 
@@ -65,12 +63,15 @@ export async function getTrempsByFilters(req: Request, res: Response): Promise<R
   }
 }
 
-
-
-
 export async function addUserToTremp(req: Request, res: Response): Promise<Response> {
   try {
     const { tremp_id, user_id } = req.body;
+
+    // validate user input
+    if (!tremp_id || !user_id) {
+      return res.status(400).json({ message: 'Tremp ID and User ID are required' });
+    }
+
     const updatedTremp = await TrempService.addUserToTremp(tremp_id, user_id);
     if (updatedTremp.matchedCount === 0) {
       return res.status(404).json({ message: 'Tremp not found' });
@@ -87,24 +88,32 @@ export async function addUserToTremp(req: Request, res: Response): Promise<Respo
     const creator = await UserService.getUserById(creatorId);
     const fcmToken = creator.notification_token;
 
-    // Send the notification to the creator
-    const message = {
-      token: fcmToken,
-      notification: {
-        title: 'New User Joined Drive',
-        body: 'A user has joined your drive.',
-      },
-      data: {
-        tremp_id: tremp_id,
-        user_id: user_id,
-      },
-    };
-    await admin.messaging().send(message);
+    if (fcmToken) {
+      // Send the notification to the creator
+      await sendNotificationToUser(fcmToken, tremp_id, user_id);
+    } else {
+      console.log('User does not have a valid FCM token');
+    }
 
     return res.status(200).json({ message: 'User successfully added to the tremp' });
   } catch (error) {
-    return res.status(500).json({ message: `Server error: ${error.message}` });
+    return res.status(500).json({ message: `Error adding user to Tremp: ${error.message}` });
   }
+}
+
+async function sendNotificationToUser(fcmToken: string, tremp_id: string, user_id: string) {
+  const message = {
+    token: fcmToken,
+    notification: {
+      title: 'New User Joined Drive',
+      body: 'A user has joined your drive.',
+    },
+    data: {
+      tremp_id,
+      user_id,
+    },
+  };
+  await admin.messaging().send(message);
 }
 
 export async function approveUserInTremp(req: Request, res: Response): Promise<Response> {
