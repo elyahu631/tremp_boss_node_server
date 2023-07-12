@@ -40,7 +40,7 @@ function addUserToTremp(tremp_id, user_id) {
         console.log(user_id);
         let id = new mongodb_1.ObjectId(user_id);
         console.log(id);
-        const user = { user_id: id, is_approved: "pending" };
+        const user = { user_id: new mongodb_1.ObjectId(user_id), is_approved: "pending" };
         const query = ({ $push: { users_in_tremp: user } });
         return yield trempDataAccess.addUserToTremp(tremp_id, query);
     });
