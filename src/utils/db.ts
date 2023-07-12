@@ -21,10 +21,10 @@ class DB {
     }
   }
 
-  async FindAll(collection: string, query = {}, projection = {}) {
+  async FindAll(collection: string, query = {}, projection = {}, sort = {}) {
     try {
       await this.client.connect();
-      return await this.client.db(this.dbName).collection(collection).find(query, {projection}).toArray();
+      return await this.client.db(this.dbName).collection(collection).find(query, {projection}).sort(sort).toArray();;
     } catch (error) {
       console.error(error);
     } finally {

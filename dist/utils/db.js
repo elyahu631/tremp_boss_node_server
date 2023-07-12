@@ -29,11 +29,12 @@ class DB {
             }
         });
     }
-    FindAll(collection, query = {}, projection = {}) {
+    FindAll(collection, query = {}, projection = {}, sort = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 yield this.client.connect();
-                return yield this.client.db(this.dbName).collection(collection).find(query, { projection }).toArray();
+                return yield this.client.db(this.dbName).collection(collection).find(query, { projection }).sort(sort).toArray();
+                ;
             }
             catch (error) {
                 console.error(error);

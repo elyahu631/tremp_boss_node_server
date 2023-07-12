@@ -14,8 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
+const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const mongodb_1 = require("mongodb");
 const trempDataAccess = new TrempDataAccess_1.default();
+const userDataAccess = new UserDataAccess_1.default();
 function createTremp(tremp) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield trempDataAccess.insertTremp(tremp);
@@ -27,6 +29,7 @@ function getTrempsByFilters(filters) {
         const userId = new mongodb_1.ObjectId(filters.creator_id);
         const query = {
             deleted: false,
+            is_full: false,
             creator_id: { $ne: userId },
             tremp_time: { $gt: filters.tremp_time },
             tremp_type: filters.type_of_tremp,
@@ -36,8 +39,27 @@ function getTrempsByFilters(filters) {
                 }
             },
         };
-        console.log(filters.creator_id);
-        return yield trempDataAccess.FindTrempsByFilters(query);
+        let tremps = yield trempDataAccess.FindTrempsByFilters(query);
+        // Get all unique user IDs
+        let uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))];
+        console.log(uniqueUserIds);
+        // Fetch all users in one operation
+        let users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, photo_URL: 1 });
+        console.log(users);
+        // Convert users array to a map for efficient access
+        let usersMap = new Map(users.map(user => [user._id.toString(), user]));
+        // Add user details to tremps
+        tremps.forEach(tremp => {
+            let user = usersMap.get(tremp.creator_id.toString());
+            if (user) {
+                tremp.creator = {
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    photo_URL: user.photo_URL
+                };
+            }
+        });
+        return tremps;
     });
 }
 exports.getTrempsByFilters = getTrempsByFilters;

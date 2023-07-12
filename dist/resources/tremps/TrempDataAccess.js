@@ -22,7 +22,22 @@ class TrempDataAccess {
     }
     FindTrempsByFilters(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(query);
+            const projection = {
+                _id: 1,
+                creator_id: 1,
+                group_id: 1,
+                tremp_type: 1,
+                tremp_time: 1,
+                from_root: 1,
+                to_root: 1,
+                note: 1,
+                seats_amount: 1,
+            };
+            return yield db.FindAll(TrempDataAccess.collection, query, projection, { tremp_time: 1 });
+        });
+    }
+    FindAll(query = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
             return yield db.FindAll(TrempDataAccess.collection, query);
         });
     }

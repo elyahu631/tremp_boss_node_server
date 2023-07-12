@@ -1,9 +1,11 @@
 // src/resources/tremps/trempService.ts
 import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
+import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
 
 const trempDataAccess = new TrempDataAccess();
+const userDataAccess = new UserDataAccess();
 
 export async function createTremp(tremp: TrempModel) {
   return await trempDataAccess.insertTremp(tremp);
@@ -13,17 +15,49 @@ export async function getTrempsByFilters(filters: any) {
   const userId = new ObjectId(filters.creator_id);
   const query = {
     deleted: false,
-    creator_id: { $ne: userId},
+    is_full: false,
+    creator_id: { $ne: userId },
     tremp_time: { $gt: filters.tremp_time },
     tremp_type: filters.type_of_tremp,
-    users_in_tremp: { 
-      $not: { 
+    users_in_tremp: {
+      $not: {
         $elemMatch: { user_id: userId }
-      } 
+      }
     },
   };
-  console.log(filters.creator_id);
-  return await trempDataAccess.FindTrempsByFilters(query);
+
+  let tremps = await trempDataAccess.FindTrempsByFilters(query);
+
+  
+
+  // Get all unique user IDs
+  let uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];
+  console.log(uniqueUserIds);
+
+  // Fetch all users in one operation
+  let users = await userDataAccess.FindAllUsers(
+    { _id: { $in: uniqueUserIds } },
+    { first_name: 1, last_name: 1, photo_URL: 1 }
+  );
+
+  console.log(users);
+  
+  // Convert users array to a map for efficient access
+  let usersMap = new Map(users.map(user => [user._id.toString(), user]));
+
+  // Add user details to tremps
+  tremps.forEach(tremp => {
+    let user = usersMap.get(tremp.creator_id.toString());
+    if (user) {
+      tremp.creator = {
+        first_name: user.first_name,
+        last_name: user.last_name,
+        photo_URL: user.photo_URL
+      };
+    }
+  });
+
+  return tremps;
 }
 
 export async function addUserToTremp(tremp_id: string, user_id: string) {
