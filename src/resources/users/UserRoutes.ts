@@ -16,14 +16,9 @@ import {
   AdminAddUser,
   updateUserDetails,
 } from "./UserController";
+import multerConfig from "../../config/multerConfig";
 // multer middleware for file upload handling
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // limit file size to 5MB
-  },
-});
-
+const upload = multer(multerConfig); 
 const usersRouter: Router = express.Router();
 
 usersRouter.post("/register", registerUser);
@@ -36,6 +31,7 @@ usersRouter.put("/update/:id", authenticateToken, updateUser);
 usersRouter.post("/add", addUser);
 usersRouter.post("/admin-add-user",authenticateToken,upload.single('photo_URL'),AdminAddUser);
 usersRouter.put("/update-user/:id", authenticateToken, upload.single('photo_URL'), updateUserDetails);
+// usersRouter.post("/add-notification-token", addNotificationToken);
 
 usersRouter.use(handleErrors); 
 

@@ -14,14 +14,9 @@ import {
   updateAdminUserDetails,
   getUserFromToken,
 } from "./AdminController";
+import multerConfig from "../../config/multerConfig";
 
-// multer middleware for file upload handling
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // limit file size to 5MB
-  },
-});
+const upload = multer(multerConfig); 
 
 const adminRoutes: Router = express.Router();
 adminRoutes.post("/login", loginAdmin);

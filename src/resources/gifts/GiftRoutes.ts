@@ -11,7 +11,7 @@ import {
   addGift,
   updateGiftDetails
 } from "./GiftController";
-const upload = multer(multerConfig); // use the configuration from the separate file
+const upload = multer(multerConfig); 
 
 
 const giftRoutes: Router = express.Router();

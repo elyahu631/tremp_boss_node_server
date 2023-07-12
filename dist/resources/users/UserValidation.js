@@ -16,7 +16,8 @@ function validateUpdatedUser(updatedUser) {
         last_name: joi_1.default.string().optional(),
         gender: joi_1.default.string().valid('M', 'F').optional(),
         status: joi_1.default.string().valid('active', 'inactive').optional(),
-        deleted: joi_1.default.boolean().optional()
+        deleted: joi_1.default.boolean().optional(),
+        notification_token: joi_1.default.string().optional(),
     });
     const { error } = schema.validate(updatedUser);
     if (error) {

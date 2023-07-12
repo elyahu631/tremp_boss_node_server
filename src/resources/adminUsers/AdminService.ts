@@ -67,7 +67,7 @@ export async function deleteUserById(id: string) {
 }
 
 export async function getAllUsers() {
-  return adminDataAccess.FindAllUsers();
+  return adminDataAccess.FindAllUsers({deleted:false});
 }
 
 export async function markUserAsDeleted(id: string) {

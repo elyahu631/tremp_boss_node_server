@@ -18,6 +18,8 @@ class UserModel {
   last_login_date?: string;
   status?: string;
   deleted ?: boolean;
+  notification_token ?: string;
+
 
   constructor(userData: {
     user_email?: string;
@@ -34,6 +36,7 @@ class UserModel {
     groups?: ObjectId[];
     status?: string;
     deleted ?: boolean;
+    notification_token ?: string;
   }) {
     this.user_email = userData.user_email;
     this.password = userData.password;
@@ -49,6 +52,7 @@ class UserModel {
     this.groups = userData.groups || [new ObjectId("64743b14b165e7102c90dd32")];
     this.status = userData.status || "active"; 
     this.deleted = userData.deleted || false; 
+    this.notification_token = userData.notification_token  || "";
   }
 
   validateUser() {

@@ -9,13 +9,9 @@ const express_1 = __importDefault(require("express"));
 const auth_1 = require("../../middleware/auth");
 const handleErrors_1 = require("../../middleware/handleErrors");
 const UserController_1 = require("./UserController");
+const multerConfig_1 = __importDefault(require("../../config/multerConfig"));
 // multer middleware for file upload handling
-const upload = (0, multer_1.default)({
-    storage: multer_1.default.memoryStorage(),
-    limits: {
-        fileSize: 5 * 1024 * 1024, // limit file size to 5MB
-    },
-});
+const upload = (0, multer_1.default)(multerConfig_1.default);
 const usersRouter = express_1.default.Router();
 usersRouter.post("/register", UserController_1.registerUser);
 usersRouter.post("/login", UserController_1.loginUser);
@@ -27,6 +23,7 @@ usersRouter.put("/update/:id", auth_1.authenticateToken, UserController_1.update
 usersRouter.post("/add", UserController_1.addUser);
 usersRouter.post("/admin-add-user", auth_1.authenticateToken, upload.single('photo_URL'), UserController_1.AdminAddUser);
 usersRouter.put("/update-user/:id", auth_1.authenticateToken, upload.single('photo_URL'), UserController_1.updateUserDetails);
+// usersRouter.post("/add-notification-token", addNotificationToken);
 usersRouter.use(handleErrors_1.handleErrors);
 exports.default = usersRouter;
 //# sourceMappingURL=UserRoutes.js.map

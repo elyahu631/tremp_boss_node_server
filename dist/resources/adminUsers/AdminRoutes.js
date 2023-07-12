@@ -9,13 +9,8 @@ const express_1 = __importDefault(require("express"));
 const auth_1 = require("../../middleware/auth");
 const handleErrors_1 = require("../../middleware/handleErrors");
 const AdminController_1 = require("./AdminController");
-// multer middleware for file upload handling
-const upload = (0, multer_1.default)({
-    storage: multer_1.default.memoryStorage(),
-    limits: {
-        fileSize: 5 * 1024 * 1024, // limit file size to 5MB
-    },
-});
+const multerConfig_1 = __importDefault(require("../../config/multerConfig"));
+const upload = (0, multer_1.default)(multerConfig_1.default);
 const adminRoutes = express_1.default.Router();
 adminRoutes.post("/login", AdminController_1.loginAdmin);
 adminRoutes.get("/all", auth_1.authenticateToken, AdminController_1.getAllAdminUsers);

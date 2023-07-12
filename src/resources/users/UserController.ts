@@ -134,3 +134,16 @@ export async function updateUserDetails(req: Request, res: Response): Promise<Re
   }
 }
 
+export async function addNotificationToken(req: Request, res: Response): Promise<Response> {
+  try {
+    const { id } = req.params;
+    const userDetails = req.body;
+    if (!validateUpdatedUser(userDetails)) {
+      return res.status(401).json({ error: "Invalid data to update." });
+    }
+    const updatedUser = await UserService.updateUserDetails(id, userDetails, req.file);
+    return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
+  } catch (error: any) {
+    return res.status(500).json({ message: error.message });
+  }
+}

@@ -7,10 +7,7 @@ import { validateAdminUpdates } from "./AdminValidation";
 import * as AdminService from "./AdminService";
 import AdminModel from "./AdminModel";
 
-export async function loginAdmin(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function loginAdmin(req: Request,res: Response): Promise<Response> {
   const { username, password } = req.body;
   const user = await AdminService.loginUser(username, password);
 
@@ -18,14 +15,11 @@ export async function loginAdmin(
     return res.status(401).json({ error: "Invalid user or password." });
   }
 
-  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "8h" });
+  const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "8h" });// change it to 1h
   return res.status(200).json({ user, token });
 }
 
-export async function getAdminUserById(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function getAdminUserById(req: Request,res: Response): Promise<Response> {
   try {
     const { id } = req.params;
     const user = await AdminService.getUserById(id);
@@ -35,10 +29,7 @@ export async function getAdminUserById(
   }
 }
 
-export async function deleteAdminUserById(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function deleteAdminUserById(req: Request,res: Response): Promise<Response> {
   try {
     const { id } = req.params;
     await AdminService.deleteUserById(id);
@@ -48,10 +39,7 @@ export async function deleteAdminUserById(
   }
 }
 
-export async function getAllAdminUsers(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function getAllAdminUsers(req: Request,res: Response): Promise<Response> {
   try {
     let users = await AdminService.getAllUsers();
     users = users.map(user => ({ ...user, password: "12345678" }));
@@ -61,10 +49,7 @@ export async function getAllAdminUsers(
   }
 }
 
-export async function markAdminUserAsDeleted(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function markAdminUserAsDeleted(req: Request, res: Response): Promise<Response> {
   try {
     const { id } = req.params;
     await AdminService.markUserAsDeleted(id);
@@ -90,10 +75,7 @@ export async function updateAdminUserDetails(req: Request, res: Response): Promi
   }
 }
 
-export async function getUserFromToken(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function getUserFromToken(req: Request,res: Response): Promise<Response> {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -116,10 +98,7 @@ export async function getUserFromToken(
   }
 }
 
-export async function addAdminUser(
-  req: Request,
-  res: Response
-): Promise<Response> {
+export async function addAdminUser(req: Request,res: Response): Promise<Response> {
   try {
     const newUser = new AdminModel(req.body);
     let userInsertion = await AdminService.createUser(newUser);

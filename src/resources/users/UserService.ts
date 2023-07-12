@@ -64,7 +64,7 @@ export async function addUser(user_email: string, password: string) {
 }
 
 export async function getAllUsers() {
-  return userDataAccess.FindAllUsers(); // assuming this method returns all users when an empty object is passed
+  return userDataAccess.FindAllUsers({deleted:false}); 
 }
 
 export async function markUserAsDeleted(id: string) {

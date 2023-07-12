@@ -13,7 +13,8 @@ export function validateUpdatedUser(updatedUser: UserModel) : boolean{
     last_name: Joi.string().optional(),
     gender: Joi.string().valid('M', 'F').optional(),
     status: Joi.string().valid('active', 'inactive').optional(),
-    deleted: Joi.boolean().optional()
+    deleted: Joi.boolean().optional(),
+    notification_token: Joi.string().optional(),
   });
 
   const { error } = schema.validate(updatedUser);

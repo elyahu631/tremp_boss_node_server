@@ -79,7 +79,7 @@ function deleteUserById(id) {
 exports.deleteUserById = deleteUserById;
 function getAllUsers() {
     return __awaiter(this, void 0, void 0, function* () {
-        return adminDataAccess.FindAllUsers();
+        return adminDataAccess.FindAllUsers({ deleted: false });
     });
 }
 exports.getAllUsers = getAllUsers;

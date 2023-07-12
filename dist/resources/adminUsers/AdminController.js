@@ -49,7 +49,7 @@ function loginAdmin(req, res) {
         if (!user) {
             return res.status(401).json({ error: "Invalid user or password." });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: "8h" });
+        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: "8h" }); // change it to 1h
         return res.status(200).json({ user, token });
     });
 }

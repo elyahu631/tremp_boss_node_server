@@ -19,6 +19,7 @@ const UserRoutes_1 = __importDefault(require("./resources/users/UserRoutes"));
 const AdminRoutes_1 = __importDefault(require("./resources/adminUsers/AdminRoutes"));
 const TrempRoutes_1 = __importDefault(require("./resources/tremps/TrempRoutes"));
 const GiftRoutes_1 = __importDefault(require("./resources/gifts/GiftRoutes"));
+const GroupRoutes_1 = __importDefault(require("./resources/groups/GroupRoutes"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -29,5 +30,6 @@ app.use('/api/users', UserRoutes_1.default);
 app.use('/api/adminUsers', AdminRoutes_1.default);
 app.use("/api/tremps", TrempRoutes_1.default);
 app.use('/api/gifts', GiftRoutes_1.default);
+app.use('/api/groups', GroupRoutes_1.default);
 app.listen(environment_1.PORT, () => console.log(`Server running on http://localhost:${environment_1.PORT}`));
 //# sourceMappingURL=index.js.map

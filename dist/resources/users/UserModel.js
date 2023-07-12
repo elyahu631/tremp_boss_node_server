@@ -22,6 +22,7 @@ class UserModel {
         this.groups = userData.groups || [new mongodb_1.ObjectId("64743b14b165e7102c90dd32")];
         this.status = userData.status || "active";
         this.deleted = userData.deleted || false;
+        this.notification_token = userData.notification_token || "";
     }
     validateUser() {
         const schema = joi_1.default.object({

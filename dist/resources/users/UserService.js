@@ -86,7 +86,7 @@ function addUser(user_email, password) {
 exports.addUser = addUser;
 function getAllUsers() {
     return __awaiter(this, void 0, void 0, function* () {
-        return userDataAccess.FindAllUsers(); // assuming this method returns all users when an empty object is passed
+        return userDataAccess.FindAllUsers({ deleted: false });
     });
 }
 exports.getAllUsers = getAllUsers;
