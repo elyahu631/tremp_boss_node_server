@@ -21,7 +21,9 @@ export async function getTrempsByFilters(filters: any) {
 }
 
 export async function addUserToTremp(tremp_id: string, user_id: string) {
-  let id = new ObjectId(user_id);
+  console.log(user_id);
+  let id =  new ObjectId(user_id);
+  console.log(id);
   const user = { user_id: id, is_approved: "pending" };
   const query = ({ $push: { users_in_tremp: user } });
   return await trempDataAccess.addUserToTremp(tremp_id, query);
