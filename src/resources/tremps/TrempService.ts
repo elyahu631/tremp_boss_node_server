@@ -11,17 +11,24 @@ export async function createTremp(tremp: TrempModel) {
 
 export async function getTrempsByFilters(filters: any) {
   const query = {
-    deleted:false,
+    deleted: false,
     creator_id: { $ne: filters.creator_id },
     tremp_time: { $gt: filters.tremp_time },
     tremp_type: filters.type_of_tremp,
-    'users_in_tremp.user_id': { $ne: filters.creator_id },
+    users_in_tremp: {
+      $not: {
+        $elemMatch: {
+          user_id: filters.creator_id
+        }
+      }
+    }
   };
   return await trempDataAccess.FindTrempsByFilters(query);
 }
 
 export async function addUserToTremp(tremp_id: string, user_id: string) {
-  const user = { user_id: new ObjectId(user_id), is_approved: "pending" };
+  let id = new ObjectId(user_id);
+  const user = { user_id: id, is_approved: "pending" };
   const query = ({ $push: { users_in_tremp: user } });
   return await trempDataAccess.addUserToTremp(tremp_id, query);
 }
