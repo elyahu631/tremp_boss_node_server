@@ -20,4 +20,4 @@ export interface Tremp {
 export interface UserInTremp {
   user_id: ObjectId;
   is_approved: string;
-}
+}  
