@@ -6,10 +6,12 @@ import adminRoutes from './resources/adminUsers/AdminRoutes';
 import trempRoutes from './resources/tremps/TrempRoutes';
 import giftRoutes from './resources/gifts/GiftRoutes';
 import groupRoutes from './resources/groups/GroupRoutes';
+import { jsonErrorHandler } from './middleware/jsonErrorHandler';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(jsonErrorHandler);
 
 app.get('/', async (req: Request, res: Response) => {
   res.send('server runinig');

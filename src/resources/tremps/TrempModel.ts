@@ -3,14 +3,11 @@
 import Joi from "joi";
 import { ObjectId } from "mongodb";
 import { getCurrentTimeInIsrael } from "../../utils/TimeService";
+import { UserInTremp } from "./TrempInterfaces";
+
 interface Coordinate {
   latitude: number;
   longitude: number;
-}
-
-interface UserInTremp {
-  user_id: ObjectId;
-  is_approved: string;
 }
 
 class TrempModel {

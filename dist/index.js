@@ -20,9 +20,11 @@ const AdminRoutes_1 = __importDefault(require("./resources/adminUsers/AdminRoute
 const TrempRoutes_1 = __importDefault(require("./resources/tremps/TrempRoutes"));
 const GiftRoutes_1 = __importDefault(require("./resources/gifts/GiftRoutes"));
 const GroupRoutes_1 = __importDefault(require("./resources/groups/GroupRoutes"));
+const jsonErrorHandler_1 = require("./middleware/jsonErrorHandler");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+app.use(jsonErrorHandler_1.jsonErrorHandler);
 app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.send('server runinig');
 }));

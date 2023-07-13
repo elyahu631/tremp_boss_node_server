@@ -35,12 +35,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+const mongodb_1 = require("mongodb");
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const admin = __importStar(require("firebase-admin"));
 const environment_1 = require("../../config/environment");
+const HttpException_1 = require("../../middleware/HttpException");
 admin.initializeApp({
     credential: admin.credential.cert({
         "projectId": environment_1.FIREBASE_ENV.project_id,
@@ -71,6 +73,8 @@ function createTremp(req, res) {
             if (!user) {
                 throw new Error("Creator user does not exist");
             }
+            newTremp.creator_id = new mongodb_1.ObjectId(newTremp.creator_id);
+            newTremp.group_id = new mongodb_1.ObjectId(newTremp.group_id);
             const result = yield TrempService.createTremp(newTremp);
             return res.status(200).json(result);
         }
@@ -158,4 +162,27 @@ function approveUserInTremp(req, res) {
     });
 }
 exports.approveUserInTremp = approveUserInTremp;
+function getUserTremps(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id, type_of_tremp } = req.body;
+            // validate user input
+            if (!user_id || !type_of_tremp) {
+                throw new HttpException_1.BadRequestException('User ID and type of ride are required');
+            }
+            const tremps = yield TrempService.getUserTremps(user_id, type_of_tremp);
+            if (!tremps) {
+                throw new HttpException_1.NotFoundException("No Tremps found for this user and ride type");
+            }
+            res.status(200).json({
+                status: true,
+                data: tremps
+            });
+        }
+        catch (err) {
+            next(err); // Pass the error to handleErrors middleware
+        }
+    });
+}
+exports.getUserTremps = getUserTremps;
 //# sourceMappingURL=TrempController.js.map

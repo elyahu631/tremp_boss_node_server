@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempById = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getUserTremps = exports.getTrempById = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const mongodb_1 = require("mongodb");
@@ -41,7 +41,7 @@ function getTrempsByFilters(filters) {
         };
         let tremps = yield trempDataAccess.FindTrempsByFilters(query);
         // Get all unique user IDs
-        let uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))];
+        let uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))]; ///
         console.log(uniqueUserIds);
         // Fetch all users in one operation
         let users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, photo_URL: 1 });
@@ -81,11 +81,11 @@ function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
             throw new Error('Tremp does not exist');
         }
         // Check if the user making the request is the creator of the tremp
-        if (tremp.creator_id.toString() !== creator_id) {
+        if (tremp.creator_id !== creator_id) {
             throw new Error('Only the creator of the tremp can approve or disapprove participants');
         }
         // Find the user in the tremp
-        const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id.toString() === user_id);
+        const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id === user_id);
         // Check if the user is a participant in the tremp
         if (userIndex === -1) {
             throw new Error('User is not a participant in this tremp');
@@ -104,4 +104,43 @@ function getTrempById(id) {
     });
 }
 exports.getTrempById = getTrempById;
+function getUserTremps(user_id, type_of_tremp) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const userId = new mongodb_1.ObjectId(user_id);
+        const query = {
+            $or: [
+                { creator_id: userId },
+                { "users_in_tremp.user_id": userId }
+            ],
+            tremp_type: type_of_tremp,
+            deleted: false
+        };
+        const tremps = yield trempDataAccess.FindAll(query);
+        console.log(tremps);
+        const trempsMapped = tremps.map(tremp => {
+            const approvalStatus = getApprovalStatus(tremp, userId, type_of_tremp);
+            return Object.assign(Object.assign({}, tremp), { approvalStatus });
+        });
+        return trempsMapped;
+    });
+}
+exports.getUserTremps = getUserTremps;
+function getApprovalStatus(tremp, userId, type_of_tremp) {
+    if (tremp.creator_id.equals(userId)) {
+        if (tremp.users_in_tremp.length === 0) {
+            return (type_of_tremp === 'hitchhiker') ? 'no bidders' : 'no applicants';
+        }
+        else {
+            const pending = tremp.users_in_tremp.some((user) => user.is_approved === 'pending');
+            return pending ? 'awaiting approval' : 'all approved';
+        }
+    }
+    else {
+        const userInTremp = tremp.users_in_tremp.find((user) => user.user_id.equals(userId));
+        if (userInTremp) {
+            return (userInTremp.is_approved === 'approved') ? 'approved' : 'awaiting approval';
+        }
+    }
+    return ''; // default value, if none of the conditions are met
+}
 //# sourceMappingURL=TrempService.js.map

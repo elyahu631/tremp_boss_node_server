@@ -3,6 +3,7 @@ import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
+import { Tremp, UserInTremp } from './TrempInterfaces';
 
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
@@ -28,10 +29,8 @@ export async function getTrempsByFilters(filters: any) {
 
   let tremps = await trempDataAccess.FindTrempsByFilters(query);
 
-  
-
   // Get all unique user IDs
-  let uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];
+  let uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];///
   console.log(uniqueUserIds);
 
   // Fetch all users in one operation
@@ -41,7 +40,7 @@ export async function getTrempsByFilters(filters: any) {
   );
 
   console.log(users);
-  
+
   // Convert users array to a map for efficient access
   let usersMap = new Map(users.map(user => [user._id.toString(), user]));
 
@@ -77,12 +76,12 @@ export async function approveUserInTremp(tremp_id: string, creator_id: string, u
   }
 
   // Check if the user making the request is the creator of the tremp
-  if (tremp.creator_id.toString() !== creator_id) {
+  if (tremp.creator_id !== creator_id) {
     throw new Error('Only the creator of the tremp can approve or disapprove participants');
   }
 
   // Find the user in the tremp
-  const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id.toString() === user_id);
+  const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id === user_id);
 
   // Check if the user is a participant in the tremp
   if (userIndex === -1) {
@@ -100,4 +99,45 @@ export async function approveUserInTremp(tremp_id: string, creator_id: string, u
 
 export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
+}
+
+export async function getUserTremps(user_id: string, type_of_tremp: string) {
+  const userId = new ObjectId(user_id);
+
+  const query = {
+    $or: [
+      { creator_id: userId },
+      { "users_in_tremp.user_id": userId }
+    ],
+    tremp_type: type_of_tremp,
+    deleted: false
+  };
+
+  const tremps: Tremp[] = await trempDataAccess.FindAll(query) as any;
+  console.log(tremps);
+
+  const trempsMapped = tremps.map(tremp => {
+    const approvalStatus = getApprovalStatus(tremp, userId, type_of_tremp);
+    return { ...tremp, approvalStatus };
+  });
+
+  return trempsMapped;
+}
+
+function getApprovalStatus(tremp: Tremp, userId: ObjectId, type_of_tremp: string): string {
+  if (tremp.creator_id.equals(userId)) {
+    if (tremp.users_in_tremp.length === 0) {
+      return (type_of_tremp === 'hitchhiker') ? 'no bidders' : 'no applicants';
+    } else {
+      const pending = tremp.users_in_tremp.some((user: UserInTremp) => user.is_approved === 'pending');
+      return pending ? 'awaiting approval' : 'all approved';
+    }
+  } else {
+    const userInTremp = tremp.users_in_tremp.find((user: UserInTremp) => user.user_id.equals(userId));
+    if (userInTremp) {
+      return (userInTremp.is_approved === 'approved') ? 'approved' : 'awaiting approval';
+    }
+  }
+
+  return ''; // default value, if none of the conditions are met
 }

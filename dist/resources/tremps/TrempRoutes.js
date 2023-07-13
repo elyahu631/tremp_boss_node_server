@@ -35,6 +35,7 @@ trempRoutes.post("/add", auth_1.authenticateToken, TrempController.createTremp);
 trempRoutes.post('/trempsByFilters', auth_1.authenticateToken, TrempController.getTrempsByFilters);
 trempRoutes.put('/join-ride', auth_1.authenticateToken, TrempController.addUserToTremp);
 trempRoutes.put('/approveUserInTremp', auth_1.authenticateToken, TrempController.approveUserInTremp);
+trempRoutes.post("/user-tremps", TrempController.getUserTremps);
 trempRoutes.use(handleErrors_1.handleErrors);
 exports.default = trempRoutes;
 //# sourceMappingURL=TrempRoutes.js.map

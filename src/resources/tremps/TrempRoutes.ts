@@ -9,7 +9,7 @@ trempRoutes.post("/add",authenticateToken, TrempController.createTremp);
 trempRoutes.post('/trempsByFilters',authenticateToken, TrempController.getTrempsByFilters);
 trempRoutes.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
 trempRoutes.put('/approveUserInTremp',authenticateToken ,TrempController.approveUserInTremp);
-
+trempRoutes.post("/user-tremps", TrempController.getUserTremps);
 trempRoutes.use(handleErrors); 
 
 

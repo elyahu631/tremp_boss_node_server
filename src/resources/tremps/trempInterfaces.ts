@@ -11,3 +11,13 @@ export interface UserInTrempUpdateQuery {
   };
 }
 
+export interface Tremp {
+  creator_id: ObjectId;
+  users_in_tremp: UserInTremp[];
+  [key: string]: any;
+}
+
+export interface UserInTremp {
+  user_id: ObjectId;
+  is_approved: string;
+}

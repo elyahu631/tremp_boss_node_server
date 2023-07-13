@@ -1,10 +1,12 @@
+import { ObjectId } from 'mongodb';
 // src/resources/tremps/trempControler.ts
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as TrempService from "./TrempService";
 import * as UserService from "../users/UserService";
 import TrempModel from "./TrempModel";
 import * as admin from 'firebase-admin';
 import { FIREBASE_ENV } from "../../config/environment";
+import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 
 admin.initializeApp({
   credential: admin.credential.cert({
@@ -36,17 +38,17 @@ const validateTrempData = (tremp: TrempModel) => {
 export async function createTremp(req: Request, res: Response): Promise<Response> {
   try {
     const newTremp = new TrempModel(req.body);
-
     validateTrempData(newTremp);
-
     const user = await UserService.getUserById(newTremp.creator_id.toString());
     if (!user) {
       throw new Error("Creator user does not exist");
     }
 
+    newTremp.creator_id = new ObjectId (newTremp.creator_id)
+    newTremp.group_id = new ObjectId (newTremp.group_id)
+
     const result = await TrempService.createTremp(newTremp);
     return res.status(200).json(result);
-
   } catch (error) {
     return res.status(400).json({ message: `Validation failed: ${error.message}` });
   }
@@ -127,3 +129,25 @@ export async function approveUserInTremp(req: Request, res: Response): Promise<R
 }
 
 
+export async function getUserTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id, type_of_tremp } = req.body;
+
+    // validate user input
+    if (!user_id || !type_of_tremp) {
+      throw new BadRequestException('User ID and type of ride are required');
+    }
+
+    const tremps = await TrempService.getUserTremps(user_id, type_of_tremp);
+    if (!tremps) {
+      throw new NotFoundException("No Tremps found for this user and ride type");
+    }
+    
+    res.status(200).json({
+      status: true, 
+      data: tremps
+    });
+  } catch (err) {
+    next(err);  // Pass the error to handleErrors middleware
+  }
+}
