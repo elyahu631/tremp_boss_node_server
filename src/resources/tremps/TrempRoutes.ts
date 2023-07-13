@@ -5,6 +5,7 @@ import { authenticateToken } from "../../middleware/auth";
 
 const trempRoutes = express.Router();
 
+
 trempRoutes.post("/add",authenticateToken, TrempController.createTremp);
 trempRoutes.post('/trempsByFilters',authenticateToken, TrempController.getTrempsByFilters);
 trempRoutes.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
