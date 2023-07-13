@@ -2,7 +2,7 @@
 import { ObjectId } from 'mongodb';
 import DB from '../../utils/db';
 import TrempModel from './TrempModel';
-import { UserInTrempUpdateQuery } from './TrempInterfaces';
+import { UserInTrempUpdateQuery } from './t';
 const db = new DB();
 class TrempDataAccess {
   static collection = 'Tremps';

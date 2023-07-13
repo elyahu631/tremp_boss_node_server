@@ -3,7 +3,7 @@ import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
-import { Tremp, UserInTremp } from './TrempInterfaces';
+import { Tremp, UserInTremp } from './t';
 
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
