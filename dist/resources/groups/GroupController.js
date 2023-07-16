@@ -38,76 +38,85 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getGroupById = exports.getAllGroups = void 0;
 const GroupService = __importStar(require("./GroupService"));
 const GroupModel_1 = __importDefault(require("./GroupModel"));
-function getAllGroups(req, res) {
+const HttpException_1 = require("../../middleware/HttpException");
+function getAllGroups(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const groups = yield GroupService.getAllGroups();
-            return res.status(200).json(groups);
+            res.status(200).json({ status: true, data: groups });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getAllGroups = getAllGroups;
-function getGroupById(req, res) {
+function getGroupById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const group = yield GroupService.getGroupById(id);
-            return res.status(200).json(group);
+            if (!group) {
+                throw new HttpException_1.NotFoundException('Group not found');
+            }
+            res.status(200).json({ status: true, data: group });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getGroupById = getGroupById;
-function deleteGroupById(req, res) {
+function deleteGroupById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             yield GroupService.deleteGroupById(id);
-            return res.status(200).json({ message: "Group successfully deleted" });
+            res.status(200).json({ status: true, message: "Group successfully deleted" });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.deleteGroupById = deleteGroupById;
-function markGroupAsDeleted(req, res) {
+function markGroupAsDeleted(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             yield GroupService.markGroupAsDeleted(id);
-            return res.status(200).json({ message: "Group deletion status successfully updated" });
+            res.status(200).json({ status: true, message: "Group deletion status successfully updated" });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.markGroupAsDeleted = markGroupAsDeleted;
-function updateGroupDetails(req, res) {
+function updateGroupDetails(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const groupDetails = req.body;
-            const updatedGroup = yield GroupService.updateGroupDetails(id, groupDetails);
-            return res.status(200).json([updatedGroup, { message: "Group updated successfully" }]);
+            const updatedGroup = yield GroupService.updateGroupDetails(id, groupDetails, req.file);
+            res.status(200).json({ status: true, data: updatedGroup, message: "Group updated successfully" });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.updateGroupDetails = updateGroupDetails;
-function addGroup(req, res) {
+function addGroup(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log(req.body);
-            const newGroup = new GroupModel_1.default(req.body);
+            let groupData = req.body;
+            if (Array.isArray(groupData.image_URL)) {
+                // handle the case where image_URL is an array
+                // here I'm taking the first element, but you may want to do something else
+                groupData.image_URL = groupData.image_URL[0];
+            }
+            const newGroup = new GroupModel_1.default(groupData);
             const groupInsertion = yield GroupService.addGroup(newGroup);
             let savedGroup = groupInsertion.insertedId;
             if (req.file) {
@@ -115,11 +124,10 @@ function addGroup(req, res) {
                 yield GroupService.uploadImageToFirebaseAndUpdateUser(req.file, filePath, savedGroup);
                 savedGroup = yield GroupService.getGroupById(savedGroup); // Get updated user
             }
-            return res.status(201).json(savedGroup);
+            res.status(201).json({ status: true, data: savedGroup });
         }
-        catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }

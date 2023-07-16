@@ -39,60 +39,62 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateGiftDetails = exports.addGift = exports.markGiftAsDeleted = exports.deleteGiftById = exports.getGiftById = exports.getAllGifts = void 0;
 const GiftService = __importStar(require("./GiftService"));
 const GiftModel_1 = __importDefault(require("./GiftModel"));
-function getAllGifts(req, res) {
+const HttpException_1 = require("../../middleware/HttpException");
+function getAllGifts(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const gifts = yield GiftService.getAllGifts();
-            return res.status(200).json(gifts);
+            res.status(200).json({ status: true, data: gifts });
         }
         catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(new HttpException_1.InternalServerException(error.message));
         }
     });
 }
 exports.getAllGifts = getAllGifts;
-function getGiftById(req, res) {
+function getGiftById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const gift = yield GiftService.getGiftById(id);
-            return res.status(200).json(gift);
+            if (!gift) {
+                throw new HttpException_1.NotFoundException('Gift not found');
+            }
+            res.status(200).json({ status: true, data: gift });
         }
         catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(new HttpException_1.InternalServerException(error.message));
         }
     });
 }
 exports.getGiftById = getGiftById;
-function deleteGiftById(req, res) {
+function deleteGiftById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             yield GiftService.deleteGiftById(id);
-            return res.status(200).json({ message: "Gift successfully deleted" });
+            res.status(200).json({ status: true, message: "Gift successfully deleted" });
         }
         catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(new HttpException_1.InternalServerException(error.message));
         }
     });
 }
 exports.deleteGiftById = deleteGiftById;
-function markGiftAsDeleted(req, res) {
+function markGiftAsDeleted(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             yield GiftService.markGiftAsDeleted(id);
-            return res
-                .status(200)
-                .json({ message: "Gift deletion status successfully updated" });
+            res.status(200).json({ status: true, message: "Gift deletion status successfully updated" });
         }
         catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(new HttpException_1.InternalServerException(error.message));
         }
     });
 }
 exports.markGiftAsDeleted = markGiftAsDeleted;
-function addGift(req, res) {
+function addGift(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const newGift = new GiftModel_1.default(req.body);
@@ -103,27 +105,24 @@ function addGift(req, res) {
                 yield GiftService.uploadImageToFirebaseAndUpdateGift(req.file, filePath, savedGift);
                 savedGift = yield GiftService.getGiftById(savedGift); // Get updated gift
             }
-            return res.status(201).json(savedGift);
+            res.status(201).json({ status: true, data: savedGift });
         }
-        catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.addGift = addGift;
-function updateGiftDetails(req, res) {
+function updateGiftDetails(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const giftDetails = req.body;
-            console.log(giftDetails);
             const updatedGift = yield GiftService.UpdateGiftDetails(id, giftDetails, req.file);
-            console.log(updatedGift);
-            return res.status(200).json([updatedGift, { message: "gift updated successfully" }]);
+            res.status(200).json({ status: true, data: updatedGift, message: "Gift updated successfully" });
         }
         catch (error) {
-            return res.status(500).json({ message: error.message });
+            next(new HttpException_1.InternalServerException(error.message));
         }
     });
 }

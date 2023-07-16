@@ -1,6 +1,8 @@
 // src/resources/gifts/GiftService.ts
 
+import { MongoError } from "mongodb";
 import { uploadImageToFirebase } from "../../firebase/fileUpload";
+import { BadRequestException, InternalServerException } from "../../middleware/HttpException";
 import GiftDataAccess from "./GiftDataAccess";
 import GiftModel from "./GiftModel";
 
@@ -29,11 +31,9 @@ export async function addGift(gift: GiftModel) {
   });
 
   if (existingGifts.length > 0) {
-    throw new Error("Gift with this name already exists.");
+    throw new BadRequestException("Gift with this name already exists.");
   }
-  console.log(gift);
-  
-  // Insert the new gift into the database
+    // Insert the new gift into the database
   return giftDataAccess.InsertOne(gift);
 }
 
@@ -51,21 +51,24 @@ export async function UpdateGift(id: string, updatedGift: GiftModel) {
 }
 
 export async function UpdateGiftDetails(id: string, giftDetails: GiftModel, file?: Express.Multer.File) {
-
   // If a file is provided, upload it and update photo_URL
   if (file) {
     try {
       const filePath = `usersimages/${id}`;
       giftDetails.gift_image = await uploadImageToFirebase(file, filePath);
     } catch (error) {
-      console.error("Error uploading image:", error);
+      throw new InternalServerException("Error uploading image: " + error);
     }
   }
-
   try {
-    return await giftDataAccess.UpdateGift(id, giftDetails);
-  } catch (error) {
-    console.error("Error updating user details:", error);
-    throw (error);
+    const res =  await giftDataAccess.UpdateGift(id, giftDetails);
+    return res
+  } catch (error) {    
+    if (error instanceof MongoError && error.code === 11000) {
+      // This error code stands for 'Duplicate Key Error'
+      const keyValue = (error as any).keyValue;
+      throw new BadRequestException(`Gift with this ${Object.keys(keyValue)[0]} already exists.`);
+    }   
+    throw new BadRequestException("Error updating user details: "+  error);
   }
 }

@@ -36,6 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+// src/resources/tremps/trempControler.ts
 const mongodb_1 = require("mongodb");
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
@@ -64,71 +65,67 @@ const validateTrempData = (tremp) => {
         throw new Error("The 'from' and 'to' locations cannot be the same");
     }
 };
-function createTremp(req, res) {
+function createTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const newTremp = new TrempModel_1.default(req.body);
-            validateTrempData(newTremp);
+            newTremp.validateTremp();
             const user = yield UserService.getUserById(newTremp.creator_id.toString());
             if (!user) {
-                throw new Error("Creator user does not exist");
+                throw new HttpException_1.NotFoundException("Creator user does not exist");
             }
             newTremp.creator_id = new mongodb_1.ObjectId(newTremp.creator_id);
             newTremp.group_id = new mongodb_1.ObjectId(newTremp.group_id);
             const result = yield TrempService.createTremp(newTremp);
-            return res.status(200).json(result);
+            res.status(200).json({ status: true, data: result });
         }
-        catch (error) {
-            return res.status(400).json({ message: `Validation failed: ${error.message}` });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.createTremp = createTremp;
-function getTrempsByFilters(req, res) {
+function getTrempsByFilters(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const filters = req.body;
             const tremps = yield TrempService.getTrempsByFilters(filters);
-            return res.status(200).json(tremps);
+            res.status(200).json({ status: true, data: tremps });
         }
-        catch (error) {
-            return res.status(500).json({ message: `Server error: ${error.message}` });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getTrempsByFilters = getTrempsByFilters;
-function addUserToTremp(req, res) {
+function addUserToTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { tremp_id, user_id } = req.body;
-            // validate user input
             if (!tremp_id || !user_id) {
-                return res.status(400).json({ message: 'Tremp ID and User ID are required' });
+                throw new HttpException_1.BadRequestException('Tremp ID and User ID are required');
             }
             const updatedTremp = yield TrempService.addUserToTremp(tremp_id, user_id);
             if (updatedTremp.matchedCount === 0) {
-                return res.status(404).json({ message: 'Tremp not found' });
+                throw new HttpException_1.NotFoundException('Tremp not found');
             }
             if (updatedTremp.modifiedCount === 0) {
-                return res.status(400).json({ message: 'User not added to the tremp' });
+                throw new HttpException_1.BadRequestException('User not added to the tremp');
             }
-            // Get the creator ID of the tremp
             const tremp = yield TrempService.getTrempById(tremp_id);
             const creatorId = tremp.creator_id;
-            // Get the creator's FCM token from the database
             const creator = yield UserService.getUserById(creatorId);
             const fcmToken = creator.notification_token;
             if (fcmToken) {
-                // Send the notification to the creator
                 yield sendNotificationToUser(fcmToken, tremp_id, user_id);
             }
             else {
                 console.log('User does not have a valid FCM token');
             }
-            return res.status(200).json({ message: 'User successfully added to the tremp' });
+            res.status(200).json({ status: true, message: 'User successfully added to the tremp' });
         }
-        catch (error) {
-            return res.status(500).json({ message: `Error adding user to Tremp: ${error.message}` });
+        catch (err) {
+            next(err);
         }
     });
 }
@@ -149,15 +146,15 @@ function sendNotificationToUser(fcmToken, tremp_id, user_id) {
         yield admin.messaging().send(message);
     });
 }
-function approveUserInTremp(req, res) {
+function approveUserInTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { tremp_id, creator_id, user_id, approval } = req.body;
         try {
+            const { tremp_id, creator_id, user_id, approval } = req.body;
             yield TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
-            return res.status(200).json({ message: 'User approval status updated successfully' });
+            res.status(200).json({ status: true, message: 'User approval status updated successfully' });
         }
-        catch (error) {
-            return res.status(400).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
@@ -166,7 +163,6 @@ function getUserTremps(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { user_id, type_of_tremp } = req.body;
-            // validate user input
             if (!user_id || !type_of_tremp) {
                 throw new HttpException_1.BadRequestException('User ID and type of ride are required');
             }
@@ -174,13 +170,10 @@ function getUserTremps(req, res, next) {
             if (!tremps) {
                 throw new HttpException_1.NotFoundException("No Tremps found for this user and ride type");
             }
-            res.status(200).json({
-                status: true,
-                data: tremps
-            });
+            res.status(200).json({ status: true, data: tremps });
         }
         catch (err) {
-            next(err); // Pass the error to handleErrors middleware
+            next(err);
         }
     });
 }

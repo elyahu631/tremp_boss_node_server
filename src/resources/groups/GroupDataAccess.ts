@@ -22,9 +22,9 @@ class GroupDataAccess {
   }
 
   async InsertOne(group: GroupModel) {
-    if (typeof group.locations === 'string') {
+    if (typeof group.location === 'string') {
       try {
-        group.locations = JSON.parse(group.locations);
+        group.location = JSON.parse(group.location);
       } catch (error) {
         console.error('Error parsing locations:', error);
         // Handle the error appropriately for your application.

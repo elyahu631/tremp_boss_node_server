@@ -5,6 +5,8 @@ import AdminModel from "./AdminModel";
 import AdminDataAccess from "./AdminDataAccess";
 import { uploadImageToFirebase } from "../../firebase/fileUpload";
 import { getCurrentTimeInIsrael } from "../../utils/TimeService";
+import { BadRequestException, InternalServerException } from "../../middleware/HttpException";
+import { MongoError } from "mongodb";
 
 
 const adminDataAccess = new AdminDataAccess();
@@ -47,7 +49,7 @@ export async function createUser(user: AdminModel) {
   });
 
   if (existingUsers.length > 0) {
-    throw new Error("User with this username or email already exists.");
+    throw new BadRequestException("User with this username or email already exists.");
   }
 
   // Encrypt the user's password before saving to database
@@ -74,11 +76,7 @@ export async function markUserAsDeleted(id: string) {
   return adminDataAccess.UpdateUserDeletionStatus(id);
 }
 
-export async function updateUserDetails(
-  id: string,
-  userDetails: AdminModel,
-  file?: Express.Multer.File
-) {
+export async function updateUserDetails(id: string,userDetails: AdminModel,file?: Express.Multer.File) {
   let updateData: Partial<AdminModel> = {
     ...userDetails,
     updatedAt: getCurrentTimeInIsrael(),
@@ -100,15 +98,19 @@ export async function updateUserDetails(
       const filePath = `adminimages/${id}`;
       updateData.photo_URL = await uploadImageToFirebase(file, filePath);
     } catch (error) {
-      console.error("Error uploading image:", error);
+      throw new InternalServerException("Error uploading image: " + error);
     }
   }
-
   try {
-    return await adminDataAccess.UpdateUserDetails(id, updateData);
-  } catch (error) {
-    console.error("Error updating user details:", error);
-    throw(error);
+    const res = await adminDataAccess.UpdateUserDetails(id, updateData);
+    return res    
+  } catch (error) {    
+    if (error instanceof MongoError && error.code === 11000) {
+      // This error code stands for 'Duplicate Key Error'
+      const keyValue = (error as any).keyValue;
+      throw new BadRequestException(`User with this ${Object.keys(keyValue)[0]} already exists.`);
+    }   
+    throw new BadRequestException("Error updating user details: "+  error);
   }
 }
 

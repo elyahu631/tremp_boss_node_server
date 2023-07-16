@@ -41,119 +41,123 @@ const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
 const UserValidation_1 = require("./UserValidation");
 const UserModel_1 = __importDefault(require("./UserModel"));
-function registerUser(req, res) {
+const HttpException_1 = require("../../middleware/HttpException");
+function registerUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { user_email, password } = req.body;
             const result = yield UserService.registerUser(user_email, password);
             if (!result) {
-                return res.status(500).json({ message: "Failed to register user" });
+                throw new HttpException_1.UnauthorizedException("Failed to register user");
             }
-            return res.status(201).json({ message: "User registered successfully" });
+            res.status(201).json({ status: true, message: "User registered successfully" });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.registerUser = registerUser;
-function loginUser(req, res) {
+function loginUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { user_email, password } = req.body;
-        const user = yield UserService.loginUser(user_email, password);
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid email or password.' });
+        try {
+            const { user_email, password } = req.body;
+            const user = yield UserService.loginUser(user_email, password);
+            if (!user) {
+                throw new HttpException_1.UnauthorizedException('Invalid email or password.');
+            }
+            const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '6h' });
+            res.status(200).json({ status: true, data: { user, token } });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '6h' });
-        return res.status(200).json({ user, token });
+        catch (err) {
+            next(err);
+        }
     });
 }
 exports.loginUser = loginUser;
-function getUserById(req, res) {
+function getUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const user = yield UserService.getUserById(id);
-            return res.status(200).json(user);
+            res.status(200).json({ status: true, data: user });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getUserById = getUserById;
-function deleteUserById(req, res) {
+function deleteUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             yield UserService.deleteUserById(id);
-            return res.status(200).json({ message: "User successfully deleted" });
+            res.status(200).json({ status: true, message: "User successfully deleted" });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.deleteUserById = deleteUserById;
-function updateUser(req, res) {
+function updateUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const updatedUser = req.body;
             if (!(0, UserValidation_1.validateUpdatedUser)(updatedUser)) {
-                return res.status(401).json({ error: 'Invalid data to update.' });
+                throw new HttpException_1.BadRequestException('Invalid data to update.');
             }
-            yield UserService.updateUser(id, updatedUser);
-            return res.status(200).json({ message: "User updated successfully" });
+            const user = yield UserService.updateUser(id, updatedUser);
+            res.status(200).json({ status: true, message: "User updated successfully", data: user });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.updateUser = updateUser;
-function addUser(req, res) {
+function addUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { user_email, password } = req.body;
             const result = yield UserService.addUser(user_email, password);
-            return res.status(201).json(result);
+            res.status(201).json({ status: true, data: result });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.addUser = addUser;
-function getAllUsers(req, res) {
+function getAllUsers(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let users = yield UserService.getAllUsers();
             users = users.map(user => (Object.assign(Object.assign({}, user), { password: "user1234" })));
-            return res.status(200).json(users);
+            res.status(200).json({ status: true, data: users });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getAllUsers = getAllUsers;
-function markUserAsDeleted(req, res) {
+function markUserAsDeleted(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             yield UserService.markUserAsDeleted(id);
-            return res
-                .status(200)
-                .json({ message: "User deletion status successfully updated" });
+            res.status(200).json({ status: true, message: "User deletion status successfully updated" });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.markUserAsDeleted = markUserAsDeleted;
-function AdminAddUser(req, res) {
+function AdminAddUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const newUser = new UserModel_1.default(req.body);
@@ -164,45 +168,44 @@ function AdminAddUser(req, res) {
                 yield UserService.uploadImageToFirebaseAndUpdateUser(req.file, filePath, savedUser);
                 savedUser = yield UserService.getUserById(savedUser); // Get updated user
             }
-            return res.status(201).json(savedUser);
+            res.status(201).json({ status: true, data: savedUser });
         }
-        catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.AdminAddUser = AdminAddUser;
-function updateUserDetails(req, res) {
+function updateUserDetails(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const userDetails = req.body;
             if (!(0, UserValidation_1.validateUpdatedUser)(userDetails)) {
-                return res.status(401).json({ error: "Invalid data to update." });
+                throw new HttpException_1.BadRequestException('Invalid data to update.');
             }
             const updatedUser = yield UserService.updateUserDetails(id, userDetails, req.file);
-            return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
+            res.status(200).json({ status: true, message: "User updated successfully", data: updatedUser });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.updateUserDetails = updateUserDetails;
-function addNotificationToken(req, res) {
+function addNotificationToken(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
             const userDetails = req.body;
             if (!(0, UserValidation_1.validateUpdatedUser)(userDetails)) {
-                return res.status(401).json({ error: "Invalid data to update." });
+                throw new HttpException_1.BadRequestException('Invalid data to update.');
             }
             const updatedUser = yield UserService.updateUserDetails(id, userDetails, req.file);
-            return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
+            res.status(200).json({ status: true, message: "User updated successfully", data: updatedUser });
         }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }

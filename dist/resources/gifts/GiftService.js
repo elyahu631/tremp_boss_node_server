@@ -14,7 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateGiftDetails = exports.UpdateGift = exports.uploadImageToFirebaseAndUpdateGift = exports.addGift = exports.markGiftAsDeleted = exports.deleteGiftById = exports.getGiftById = exports.getAllGifts = void 0;
+const mongodb_1 = require("mongodb");
 const fileUpload_1 = require("../../firebase/fileUpload");
+const HttpException_1 = require("../../middleware/HttpException");
 const GiftDataAccess_1 = __importDefault(require("./GiftDataAccess"));
 const giftDataAccess = new GiftDataAccess_1.default();
 function getAllGifts() {
@@ -48,9 +50,8 @@ function addGift(gift) {
             gift_name: gift.gift_name
         });
         if (existingGifts.length > 0) {
-            throw new Error("Gift with this name already exists.");
+            throw new HttpException_1.BadRequestException("Gift with this name already exists.");
         }
-        console.log(gift);
         // Insert the new gift into the database
         return giftDataAccess.InsertOne(gift);
     });
@@ -78,15 +79,20 @@ function UpdateGiftDetails(id, giftDetails, file) {
                 giftDetails.gift_image = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
-                console.error("Error uploading image:", error);
+                throw new HttpException_1.InternalServerException("Error uploading image: " + error);
             }
         }
         try {
-            return yield giftDataAccess.UpdateGift(id, giftDetails);
+            const res = yield giftDataAccess.UpdateGift(id, giftDetails);
+            return res;
         }
         catch (error) {
-            console.error("Error updating user details:", error);
-            throw (error);
+            if (error instanceof mongodb_1.MongoError && error.code === 11000) {
+                // This error code stands for 'Duplicate Key Error'
+                const keyValue = error.keyValue;
+                throw new HttpException_1.BadRequestException(`Gift with this ${Object.keys(keyValue)[0]} already exists.`);
+            }
+            throw new HttpException_1.BadRequestException("Error updating user details: " + error);
         }
     });
 }

@@ -36,140 +36,157 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addAdminUser = exports.getUserFromToken = exports.updateAdminUserDetails = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
+exports.updateAdminUserDetails = exports.addAdminUser = exports.getUserFromToken = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const AdminValidation_1 = require("./AdminValidation");
 const AdminService = __importStar(require("./AdminService"));
 const AdminModel_1 = __importDefault(require("./AdminModel"));
-function loginAdmin(req, res) {
+const HttpException_1 = require("../../middleware/HttpException");
+function loginAdmin(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { username, password } = req.body;
-        const user = yield AdminService.loginUser(username, password);
-        if (!user) {
-            return res.status(401).json({ error: "Invalid user or password." });
+        try {
+            const { username, password } = req.body;
+            if (!username || !password) {
+                throw new HttpException_1.BadRequestException('Username and password are required');
+            }
+            const user = yield AdminService.loginUser(username, password);
+            if (!user) {
+                throw new HttpException_1.UnauthorizedException("Invalid user or password.");
+            }
+            const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: "8h" });
+            res.status(200).json({ status: true, data: { user, token } });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: "8h" }); // change it to 1h
-        return res.status(200).json({ user, token });
+        catch (err) {
+            next(err);
+        }
     });
 }
 exports.loginAdmin = loginAdmin;
-function getAdminUserById(req, res) {
+function getAdminUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
+            if (!id) {
+                throw new HttpException_1.BadRequestException('User ID is required');
+            }
             const user = yield AdminService.getUserById(id);
-            return res.status(200).json(user);
+            if (!user) {
+                throw new HttpException_1.NotFoundException("User not found.");
+            }
+            res.status(200).json({ status: true, data: user });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getAdminUserById = getAdminUserById;
-function deleteAdminUserById(req, res) {
+function deleteAdminUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
+            if (!id) {
+                throw new HttpException_1.BadRequestException('User ID is required');
+            }
             yield AdminService.deleteUserById(id);
-            return res.status(200).json({ message: "User successfully deleted" });
+            res.status(200).json({ status: true, data: { message: "User successfully deleted" } });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.deleteAdminUserById = deleteAdminUserById;
-function getAllAdminUsers(req, res) {
+function getAllAdminUsers(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             let users = yield AdminService.getAllUsers();
-            users = users.map(user => (Object.assign(Object.assign({}, user), { password: "12345678" })));
-            return res.status(200).json(users);
+            users = users.map(user => (Object.assign(Object.assign({}, user), { password: "admin123" })));
+            res.status(200).json({ status: true, data: users });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getAllAdminUsers = getAllAdminUsers;
-function markAdminUserAsDeleted(req, res) {
+function markAdminUserAsDeleted(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { id } = req.params;
+            if (!id) {
+                throw new HttpException_1.BadRequestException('User ID is required');
+            }
             yield AdminService.markUserAsDeleted(id);
-            return res
-                .status(200)
-                .json({ message: "User deletion status successfully updated" });
+            res.status(200).json({ status: true, data: { message: "User deletion status successfully updated" } });
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.markAdminUserAsDeleted = markAdminUserAsDeleted;
-function updateAdminUserDetails(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const { id } = req.params;
-            const userDetails = req.body;
-            if (!(0, AdminValidation_1.validateAdminUpdates)(userDetails)) {
-                return res.status(401).json({ error: "Invalid data to update." });
-            }
-            const updatedUser = yield AdminService.updateUserDetails(id, userDetails, req.file);
-            return res.status(200).json([updatedUser, { message: "User updated successfully" }]);
-        }
-        catch (error) {
-            return res.status(500).json({ message: error.message });
-        }
-    });
-}
-exports.updateAdminUserDetails = updateAdminUserDetails;
-function getUserFromToken(req, res) {
+function getUserFromToken(req, res, next) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
             if (!token) {
-                return res.status(403).json({ message: "No token provided" });
+                throw new HttpException_1.ForbiddenException("No token provided");
             }
             jsonwebtoken_1.default.verify(token, environment_1.JWT_SECRET, (err, decoded) => __awaiter(this, void 0, void 0, function* () {
                 if (err) {
-                    return res
-                        .status(500)
-                        .json({ message: "Failed to authenticate token." });
+                    throw new HttpException_1.UnauthorizedException("Failed to authenticate token.");
                 }
                 const user = yield AdminService.getUserById(decoded.id);
                 if (!user) {
-                    return res.status(404).json({ message: "No user found." });
+                    throw new HttpException_1.NotFoundException("No user found.");
                 }
-                return res.status(200).json(user);
+                res.status(200).json({ status: true, data: user });
             }));
         }
-        catch (error) {
-            throw error;
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.getUserFromToken = getUserFromToken;
-function addAdminUser(req, res) {
+function addAdminUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const newUser = new AdminModel_1.default(req.body);
             let userInsertion = yield AdminService.createUser(newUser);
             let savedUser = userInsertion.insertedId;
+            console.log(savedUser);
             if (req.file) {
                 const filePath = `adminimages/${userInsertion.insertedId}`;
                 yield AdminService.uploadImageToFirebaseAndUpdateUser(req.file, filePath, savedUser);
                 savedUser = yield AdminService.getUserById(savedUser); // Get updated user
             }
-            return res.status(201).json(savedUser);
+            res.status(201).json({ status: true, data: savedUser });
         }
-        catch (error) {
-            console.error(error);
-            return res.status(500).json({ message: error.message });
+        catch (err) {
+            next(err);
         }
     });
 }
 exports.addAdminUser = addAdminUser;
+function updateAdminUserDetails(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { id } = req.params;
+            const userDetails = req.body;
+            if (!(0, AdminValidation_1.validateAdminUpdates)(userDetails)) {
+                throw new HttpException_1.BadRequestException("Invalid data to update.");
+            }
+            const updatedUser = yield AdminService.updateUserDetails(id, userDetails, req.file);
+            res.status(200).json({ status: true, data: updatedUser });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.updateAdminUserDetails = updateAdminUserDetails;
 //# sourceMappingURL=AdminController.js.map

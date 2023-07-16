@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const multer_1 = __importDefault(require("multer"));
 const express_1 = __importDefault(require("express"));
 const auth_1 = require("../../middleware/auth");
+const handleErrors_1 = require("../../middleware/handleErrors");
 const multerConfig_1 = __importDefault(require("../../config/multerConfig"));
 const GiftController_1 = require("./GiftController");
 const upload = (0, multer_1.default)(multerConfig_1.default);
@@ -17,5 +18,6 @@ giftRoutes.delete("/delete/:id", auth_1.authenticateToken, GiftController_1.dele
 giftRoutes.put("/markDeleted/:id", auth_1.authenticateToken, GiftController_1.markGiftAsDeleted);
 giftRoutes.post("/add-gift", auth_1.authenticateToken, upload.single('gift_image'), GiftController_1.addGift);
 giftRoutes.put("/update-gift/:id", auth_1.authenticateToken, upload.single('gift_image'), GiftController_1.updateGiftDetails);
+giftRoutes.use(handleErrors_1.handleErrors);
 exports.default = giftRoutes;
 //# sourceMappingURL=GiftRoutes.js.map

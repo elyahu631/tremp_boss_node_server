@@ -34,9 +34,9 @@ class GroupDataAccess {
     }
     InsertOne(group) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (typeof group.locations === 'string') {
+            if (typeof group.location === 'string') {
                 try {
-                    group.locations = JSON.parse(group.locations);
+                    group.location = JSON.parse(group.location);
                 }
                 catch (error) {
                     console.error('Error parsing locations:', error);

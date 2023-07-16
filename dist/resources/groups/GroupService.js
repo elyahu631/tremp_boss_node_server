@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadImageToFirebaseAndUpdateUser = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getGroupById = exports.getAllGroups = void 0;
 const GroupDataAccess_1 = __importDefault(require("./GroupDataAccess"));
 const fileUpload_1 = require("../../firebase/fileUpload");
+const HttpException_1 = require("../../middleware/HttpException");
+const mongodb_1 = require("mongodb");
 const groupDataAccess = new GroupDataAccess_1.default();
 function getAllGroups() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -46,15 +48,37 @@ function addGroup(group) {
             group_name: group.group_name
         });
         if (existingGroups.length > 0) {
-            throw new Error("Group with this name already exists.");
+            throw new HttpException_1.BadRequestException("Group with this name already exists.");
         }
         return groupDataAccess.InsertOne(group);
     });
 }
 exports.addGroup = addGroup;
-function updateGroupDetails(id, groupDetails) {
+function updateGroupDetails(id, groupDetails, file) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield groupDataAccess.UpdateGroup(id, groupDetails);
+        // If a file is provided, upload it and update photo_URL
+        console.log(file);
+        if (file) {
+            try {
+                const filePath = `groupsimages/${id}`;
+                groupDetails.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+            }
+            catch (error) {
+                throw new HttpException_1.InternalServerException("Error uploading image: " + error);
+            }
+        }
+        try {
+            const res = yield groupDataAccess.UpdateGroup(id, groupDetails);
+            return res;
+        }
+        catch (error) {
+            if (error instanceof mongodb_1.MongoError && error.code === 11000) {
+                // This error code stands for 'Duplicate Key Error'
+                const keyValue = error.keyValue;
+                throw new HttpException_1.BadRequestException(`group with this ${Object.keys(keyValue)[0]} already exists.`);
+            }
+            throw new HttpException_1.BadRequestException("Error updating user details: " + error);
+        }
     });
 }
 exports.updateGroupDetails = updateGroupDetails;

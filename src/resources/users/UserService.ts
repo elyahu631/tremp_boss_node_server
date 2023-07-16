@@ -5,6 +5,8 @@ import UserModel from "./UserModel";
 import UserDataAccess from "./UserDataAccess";
 import { uploadImageToFirebase } from '../../firebase/fileUpload';
 import { getCurrentTimeInIsrael } from '../../utils/TimeService';
+import { BadRequestException } from '../../middleware/HttpException';
+import { MongoError } from 'mongodb';
 
 const userDataAccess = new UserDataAccess();
 const saltRounds = 10;
@@ -87,15 +89,14 @@ export async function createUser(user: UserModel) {
   // Check if user with this username or email already exists
   const existingUsers = await userDataAccess.FindAllUsers({
     $or: [
-      { email: user.user_email },
+      { user_email: user.user_email },
     ],
   });
-
   if (!user.user_email) {
-    throw new Error("email field is empty.");
+    throw new BadRequestException("email field is empty.");
   }
   else if (existingUsers.length > 0) {
-    throw new Error("User with this email already exists.");
+    throw new BadRequestException("User with this email already exists.");
   }
 
   // Encrypt the user's password before saving to database
@@ -127,9 +128,14 @@ export async function updateUserDetails(id: string, userDetails: UserModel, file
   }
 
   try {
-    return await userDataAccess.UpdateUserDetails(id, updateData);
-  } catch (error) {
-    console.error("Error updating user details:", error);
-    throw (error);
+    const res = await userDataAccess.UpdateUserDetails(id, updateData);
+    return res    
+  } catch (error) {    
+    if (error instanceof MongoError && error.code === 11000) {
+      // This error code stands for 'Duplicate Key Error'
+      const keyValue = (error as any).keyValue;
+      throw new BadRequestException(`User with this ${Object.keys(keyValue)[0]} already exists.`);
+    }   
+    throw new BadRequestException("Error updating user details: "+  error);
   }
 }

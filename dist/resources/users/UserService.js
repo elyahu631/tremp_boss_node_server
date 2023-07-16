@@ -19,6 +19,8 @@ const UserModel_1 = __importDefault(require("./UserModel"));
 const UserDataAccess_1 = __importDefault(require("./UserDataAccess"));
 const fileUpload_1 = require("../../firebase/fileUpload");
 const TimeService_1 = require("../../utils/TimeService");
+const HttpException_1 = require("../../middleware/HttpException");
+const mongodb_1 = require("mongodb");
 const userDataAccess = new UserDataAccess_1.default();
 const saltRounds = 10;
 function hashPassword(password) {
@@ -111,14 +113,14 @@ function createUser(user) {
         // Check if user with this username or email already exists
         const existingUsers = yield userDataAccess.FindAllUsers({
             $or: [
-                { email: user.user_email },
+                { user_email: user.user_email },
             ],
         });
         if (!user.user_email) {
-            throw new Error("email field is empty.");
+            throw new HttpException_1.BadRequestException("email field is empty.");
         }
         else if (existingUsers.length > 0) {
-            throw new Error("User with this email already exists.");
+            throw new HttpException_1.BadRequestException("User with this email already exists.");
         }
         // Encrypt the user's password before saving to database
         user.password = yield hashPassword(user.password);
@@ -145,11 +147,16 @@ function updateUserDetails(id, userDetails, file) {
             }
         }
         try {
-            return yield userDataAccess.UpdateUserDetails(id, updateData);
+            const res = yield userDataAccess.UpdateUserDetails(id, updateData);
+            return res;
         }
         catch (error) {
-            console.error("Error updating user details:", error);
-            throw (error);
+            if (error instanceof mongodb_1.MongoError && error.code === 11000) {
+                // This error code stands for 'Duplicate Key Error'
+                const keyValue = error.keyValue;
+                throw new HttpException_1.BadRequestException(`User with this ${Object.keys(keyValue)[0]} already exists.`);
+            }
+            throw new HttpException_1.BadRequestException("Error updating user details: " + error);
         }
     });
 }

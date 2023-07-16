@@ -1,6 +1,8 @@
 import GroupDataAccess from "./GroupDataAccess";
 import GroupModel from "./GroupModel";
 import { uploadImageToFirebase } from '../../firebase/fileUpload';
+import { BadRequestException, InternalServerException } from "../../middleware/HttpException";
+import { MongoError } from "mongodb";
 
 const groupDataAccess = new GroupDataAccess();
 
@@ -26,15 +28,37 @@ export async function addGroup(group: GroupModel) {
   });
 
   if (existingGroups.length > 0) {
-    throw new Error("Group with this name already exists.");
+    throw new BadRequestException("Group with this name already exists.");
   }
   
   return groupDataAccess.InsertOne(group);
 }
 
-export async function updateGroupDetails(id: string, groupDetails: GroupModel) {
-  return await groupDataAccess.UpdateGroup(id, groupDetails);
+
+export async function updateGroupDetails(id: string, groupDetails: GroupModel, file?: Express.Multer.File) {
+  // If a file is provided, upload it and update photo_URL
+  console.log(file);
+  if (file) {
+    try {
+      const filePath = `groupsimages/${id}`;      
+      groupDetails.image_URL = await uploadImageToFirebase(file, filePath);
+    } catch (error) {
+      throw new InternalServerException("Error uploading image: " + error);
+    }
+  }
+  try {
+    const res =  await groupDataAccess.UpdateGroup(id, groupDetails);
+    return res
+  } catch (error) {    
+    if (error instanceof MongoError && error.code === 11000) {
+      // This error code stands for 'Duplicate Key Error'
+      const keyValue = (error as any).keyValue;
+      throw new BadRequestException(`group with this ${Object.keys(keyValue)[0]} already exists.`);
+    }   
+    throw new BadRequestException("Error updating user details: "+  error);
+  }
 }
+
 
 export async function uploadImageToFirebaseAndUpdateUser(file: Express.Multer.File,filePath: string,groupId: string
 ) {

@@ -18,6 +18,8 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const AdminDataAccess_1 = __importDefault(require("./AdminDataAccess"));
 const fileUpload_1 = require("../../firebase/fileUpload");
 const TimeService_1 = require("../../utils/TimeService");
+const HttpException_1 = require("../../middleware/HttpException");
+const mongodb_1 = require("mongodb");
 const adminDataAccess = new AdminDataAccess_1.default();
 const saltRounds = 10;
 function hashPassword(password) {
@@ -55,7 +57,7 @@ function createUser(user) {
             ],
         });
         if (existingUsers.length > 0) {
-            throw new Error("User with this username or email already exists.");
+            throw new HttpException_1.BadRequestException("User with this username or email already exists.");
         }
         // Encrypt the user's password before saving to database
         user.password = yield hashPassword(user.password);
@@ -107,15 +109,20 @@ function updateUserDetails(id, userDetails, file) {
                 updateData.photo_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
-                console.error("Error uploading image:", error);
+                throw new HttpException_1.InternalServerException("Error uploading image: " + error);
             }
         }
         try {
-            return yield adminDataAccess.UpdateUserDetails(id, updateData);
+            const res = yield adminDataAccess.UpdateUserDetails(id, updateData);
+            return res;
         }
         catch (error) {
-            console.error("Error updating user details:", error);
-            throw (error);
+            if (error instanceof mongodb_1.MongoError && error.code === 11000) {
+                // This error code stands for 'Duplicate Key Error'
+                const keyValue = error.keyValue;
+                throw new HttpException_1.BadRequestException(`User with this ${Object.keys(keyValue)[0]} already exists.`);
+            }
+            throw new HttpException_1.BadRequestException("Error updating user details: " + error);
         }
     });
 }

@@ -37,7 +37,7 @@ class DB {
                 ;
             }
             catch (error) {
-                console.error(error);
+                throw error;
             }
             finally {
                 yield this.client.close();
@@ -51,7 +51,7 @@ class DB {
                 return yield this.client.db(this.dbName).collection(collection).findOne({ _id: new mongodb_1.ObjectId(id) });
             }
             catch (error) {
-                return error;
+                throw error;
             }
             finally {
                 yield this.client.close();
@@ -65,7 +65,7 @@ class DB {
                 return yield this.client.db(this.dbName).collection(collection).deleteOne({ _id: new mongodb_1.ObjectId(id) });
             }
             catch (error) {
-                return error;
+                throw error;
             }
             finally {
                 yield this.client.close();
@@ -94,7 +94,7 @@ class DB {
                 return result;
             }
             catch (error) {
-                return error;
+                throw error;
             }
             finally {
                 yield this.client.close();
@@ -110,7 +110,7 @@ class DB {
                 return result;
             }
             catch (error) {
-                return error;
+                throw error;
             }
             finally {
                 yield this.client.close();

@@ -26,7 +26,7 @@ class DB {
       await this.client.connect();
       return await this.client.db(this.dbName).collection(collection).find(query, {projection}).sort(sort).toArray();;
     } catch (error) {
-      console.error(error);
+      throw error
     } finally {
       await this.client.close();
     }
@@ -37,7 +37,7 @@ class DB {
       await this.client.connect();
       return await this.client.db(this.dbName).collection(collection).findOne({ _id: new ObjectId(id) });
     } catch (error) {
-      return error;
+      throw error;
     } finally {
       await this.client.close();
     }
@@ -48,7 +48,7 @@ class DB {
       await this.client.connect();
       return await this.client.db(this.dbName).collection(collection).deleteOne({ _id: new ObjectId(id) });
     } catch (error) {
-      return error;
+      throw error;
     } finally {
       await this.client.close();
     }
@@ -71,7 +71,7 @@ class DB {
       const result = await this.client.db(this.dbName).collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: updatedDocument });
       return result;
     } catch (error) {
-      return error;
+      throw error;
     } finally {
       await this.client.close();
     }
@@ -87,7 +87,7 @@ class DB {
       console.log(result);
       return result;
     } catch (error) {
-      return error;
+      throw error;
     } finally {
       await this.client.close();
     }

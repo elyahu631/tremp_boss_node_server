@@ -2,6 +2,7 @@
 import multer from "multer";
 import express, { Router } from "express";
 import { authenticateToken } from "../../middleware/auth";
+import {handleErrors} from "../../middleware/handleErrors";
 import multerConfig from "../../config/multerConfig"; 
 import {
   getAllGifts,
@@ -22,5 +23,6 @@ giftRoutes.delete("/delete/:id", authenticateToken, deleteGiftById);
 giftRoutes.put("/markDeleted/:id", authenticateToken, markGiftAsDeleted);
 giftRoutes.post("/add-gift", authenticateToken, upload.single('gift_image'), addGift);
 giftRoutes.put("/update-gift/:id", authenticateToken, upload.single('gift_image'), updateGiftDetails);
+giftRoutes.use(handleErrors); 
 
 export default giftRoutes;
