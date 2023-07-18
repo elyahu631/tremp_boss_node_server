@@ -98,7 +98,7 @@ export async function approveUserInTremp(req: Request, res: Response, next: Next
     }
     res.status(200).json({ status: true, message: 'User approval status updated successfully' });
   } catch (err) {
-    next(err);321
+    next(err);
   }
 }
 
