@@ -6,10 +6,10 @@ class DB {
   client: MongoClient;
   dbName: string;
 
-  constructor() {   
+  constructor() {
     this.client = new MongoClient(DB_URI);
-    this.dbName = DB_NAME; 
-    this.connect();  
+    this.dbName = DB_NAME;
+    this.connect();
   }
 
   async connect() {
@@ -24,7 +24,7 @@ class DB {
   async FindAll(collection: string, query = {}, projection = {}, sort = {}) {
     try {
       await this.client.connect();
-      return await this.client.db(this.dbName).collection(collection).find(query, {projection}).sort(sort).toArray();;
+      return await this.client.db(this.dbName).collection(collection).find(query, { projection }).sort(sort).toArray();;
     } catch (error) {
       throw error
     } finally {
@@ -81,7 +81,7 @@ class DB {
     try {
       await this.client.connect();
       const result = await this.client.db(this.dbName).collection(collection).updateOne(
-        { _id: new ObjectId(id) }, 
+        { _id: new ObjectId(id) },
         updateOperation
       );
       console.log(result);
@@ -92,7 +92,32 @@ class DB {
       await this.client.close();
     }
   }
-  
+
+
+
+  //Summary data about the information in the database
+  async CountCollection(collection: string, query = {}, projection = {}) {
+    try {
+      await this.client.connect();
+      return this.client.db(this.dbName).collection(collection).countDocuments(query, projection)
+    } catch (error) {
+      throw error;
+    } finally {
+      await this.client.close();
+    }
+  }
+
+  async aggregate(collection: string, pipeline = [{}]) {
+    try {
+      await this.client.connect();
+      return await this.client.db(this.dbName).collection(collection).aggregate(pipeline).toArray();
+    } catch (error) {
+      throw error;
+    } finally {
+      await this.client.close();
+    }
+  }
+
 }
 
 export default DB;

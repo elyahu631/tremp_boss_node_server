@@ -4,6 +4,7 @@ import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
 import { Tremp, UserInTremp } from './TrempInterfaces';
+import { sendNotificationToUser } from '../../services/sendNotification';
 
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
@@ -69,31 +70,24 @@ export async function addUserToTremp(tremp_id: string, user_id: string) {
 export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: boolean): Promise<any> {
   // Fetch the tremp using tremp_id
   const tremp = await trempDataAccess.FindByID(tremp_id);
-
   // Check if the tremp exists
   if (!tremp) {
     throw new Error('Tremp does not exist');
   }
-
   // Check if the user making the request is the creator of the tremp
   if (tremp.creator_id !== creator_id) {
     throw new Error('Only the creator of the tremp can approve or disapprove participants');
   }
-
   // Find the user in the tremp
   const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id === user_id);
-
   // Check if the user is a participant in the tremp
   if (userIndex === -1) {
     throw new Error('User is not a participant in this tremp');
   }
-
   // Update the user's approval status
   tremp.users_in_tremp[userIndex].is_approved = approval ? 'approved' : 'denied';
-
   // Update the tremp in the database
   const result = await trempDataAccess.Update(tremp_id, tremp);
-
   return result;
 }
 
@@ -140,4 +134,39 @@ function getApprovalStatus(tremp: Tremp, userId: ObjectId, type_of_tremp: string
   }
 
   return ''; // default value, if none of the conditions are met
+}
+
+export async function deleteTremp(tremp_id: string, user_id: string) {
+  const userId = new ObjectId(user_id);
+  const tremp = await trempDataAccess.FindByID(tremp_id);
+  // Check if the tremp exists
+  if (!tremp) {
+    throw new Error('Tremp does not exist');
+  }
+  // Check if the user requesting the delete is the creator of the tremp
+  if (!tremp.creator_id.equals(userId)) {
+    throw new Error('Only the creator of the tremp can delete it');
+  }
+  
+  // Find users in the tremp who need to be notified
+  const usersToNotify = tremp.users_in_tremp.filter((user: UserInTremp) => user.is_approved === 'approved' || 'pending');
+
+  if (usersToNotify.length > 0) {
+    // Send notifications to all approved users
+    // You'll need to fetch these users from the user database to get their notification tokens
+    const userTokens = await userDataAccess.FindAllUsers(
+      { _id: { $in: usersToNotify.map((u: UserInTremp) => new ObjectId(u.user_id)) } },
+      { notification_token: 1 }
+    );
+    for (const userToken of userTokens) {
+      if (userToken.notification_token) {
+        // Use your notification function here
+        await sendNotificationToUser(userToken.notification_token, "Tremp cancellation notice",
+         "The tremp you joined has been cancelled.", { tremp_id: tremp_id, user_id: user_id });
+      }
+    }
+  }
+
+  // Delete the tremp
+  return await trempDataAccess.Update(tremp_id, { deleted: true });
 }

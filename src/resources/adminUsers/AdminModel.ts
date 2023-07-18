@@ -1,7 +1,7 @@
 // src/resources/adminUsers/AdminModel.ts
 
 import Joi from "joi";
-import { getCurrentTimeInIsrael } from "../../utils/TimeService";
+import { getCurrentTimeInIsrael } from "../../services/TimeService";
 
 class AdminModel {
   username?: string;
@@ -10,12 +10,12 @@ class AdminModel {
   last_name?: string;
   password?: string;
   role?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   phone_number?: string;
   photo_URL?: string;
   account_activated: boolean;
-  last_login_date?: string;
+  last_login_date?: Date;
   deleted?: boolean;
 
   constructor(adminData: {
@@ -25,11 +25,11 @@ class AdminModel {
     last_name?: string;
     password?: string;
     role?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
     phone_number?: string;
     photo_URL?: string;
-    last_login_date?: string;
+    last_login_date?: Date;
     account_activated?: boolean;
     deleted?: boolean;
   }) {
@@ -59,9 +59,9 @@ class AdminModel {
       role: Joi.string().required(),
       account_activated: Joi.boolean().required(),
       photo_URL: Joi.string().optional(),
-      createdAt: Joi.string().isoDate().required(),
-      updatedAt: Joi.string().isoDate().required(),
-      last_login_date: Joi.string().isoDate().allow(null),
+      createdAt: Joi.date().required(),
+      updatedAt: Joi.date().required(),
+      last_login_date: Joi.date().required().allow(null),
       deleted: Joi.boolean().required()
     });
 

@@ -5,8 +5,8 @@ export interface UserInterface  {
   user_email?: string;
   password?: string;
   coins?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   phone_number?: string;
   photo_URL?: string;
   first_name?: string;

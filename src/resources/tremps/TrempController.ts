@@ -4,18 +4,8 @@ import { NextFunction, Request, Response } from "express";
 import * as TrempService from "./TrempService";
 import * as UserService from "../users/UserService";
 import TrempModel from "./TrempModel";
-import * as admin from 'firebase-admin';
-import { FIREBASE_ENV } from "../../config/environment";
 import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
-
-admin.initializeApp({
-  credential: admin.credential.cert({
-    "projectId": FIREBASE_ENV.project_id,
-    "privateKey": FIREBASE_ENV.private_key,
-    "clientEmail": FIREBASE_ENV.client_email,
-  }),
-  databaseURL: 'https://fcm.googleapis.com/fcm/send',
-});
+import { sendNotificationToUser } from '../../services/sendNotification';
 
 const validateTrempData = (tremp: TrempModel) => {
   tremp.validateTremp();
@@ -38,13 +28,14 @@ const validateTrempData = (tremp: TrempModel) => {
 export async function createTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const newTremp = new TrempModel(req.body);
-    newTremp.validateTremp();
+    validateTrempData(newTremp);
     const user = await UserService.getUserById(newTremp.creator_id.toString());
     if (!user) {
       throw new NotFoundException("Creator user does not exist");
     }
-    newTremp.creator_id = new ObjectId (newTremp.creator_id)
-    newTremp.group_id = new ObjectId (newTremp.group_id)
+    newTremp.creator_id = new ObjectId(newTremp.creator_id)
+    newTremp.group_id = new ObjectId(newTremp.group_id)
+    newTremp.tremp_time = new Date(newTremp.tremp_time)
     const result = await TrempService.createTremp(newTremp);
     res.status(200).json({ status: true, data: result });
   } catch (err) {
@@ -81,7 +72,8 @@ export async function addUserToTremp(req: Request, res: Response, next: NextFunc
     const creator = await UserService.getUserById(creatorId);
     const fcmToken = creator.notification_token;
     if (fcmToken) {
-      await sendNotificationToUser(fcmToken, tremp_id, user_id);
+      await sendNotificationToUser(fcmToken, 'New User Joined Drive',
+       'A user has joined your drive.', { tremp_id, user_id });
     } else {
       console.log('User does not have a valid FCM token');
     }
@@ -91,28 +83,22 @@ export async function addUserToTremp(req: Request, res: Response, next: NextFunc
   }
 }
 
-async function sendNotificationToUser(fcmToken: string, tremp_id: string, user_id: string) {
-  const message = {
-    token: fcmToken,
-    notification: {
-      title: 'New User Joined Drive',
-      body: 'A user has joined your drive.',
-    },
-    data: {
-      tremp_id,
-      user_id,
-    },
-  };
-  await admin.messaging().send(message);
-}
 
 export async function approveUserInTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { tremp_id, creator_id, user_id, approval } = req.body;
     await TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
+    const user_in_tremp = await UserService.getUserById(user_id);
+    const fcmToken = user_in_tremp.notification_token;
+    if (fcmToken) {
+      await sendNotificationToUser(fcmToken, "The creator answered", 
+      "The creator of the ride has answered your request", { creator_id, approval, tremp_id, user_id });
+    } else {
+      console.log('User does not have a valid FCM token');
+    }
     res.status(200).json({ status: true, message: 'User approval status updated successfully' });
   } catch (err) {
-    next(err);
+    next(err);321
   }
 }
 
@@ -127,6 +113,22 @@ export async function getUserTremps(req: Request, res: Response, next: NextFunct
       throw new NotFoundException("No Tremps found for this user and ride type");
     }
     res.status(200).json({ status: true, data: tremps });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { tremp_id, user_id } = req.body;
+    if (!tremp_id || !user_id) {
+      throw new BadRequestException('Tremp ID and User ID are required');
+    }
+    const result = await TrempService.deleteTremp(tremp_id, user_id);
+    if (result.modifiedCount === 0) {
+      throw new BadRequestException('Tremp could not be deleted');
+    }
+    res.status(200).json({ status: true, message: 'Tremp successfully deleted' });
   } catch (err) {
     next(err);
   }

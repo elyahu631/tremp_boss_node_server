@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import AdminModel from "./AdminModel";
 import AdminDataAccess from "./AdminDataAccess";
 import { uploadImageToFirebase } from "../../firebase/fileUpload";
-import { getCurrentTimeInIsrael } from "../../utils/TimeService";
+import { getCurrentTimeInIsrael } from "../../services/TimeService";
 import { BadRequestException, InternalServerException } from "../../middleware/HttpException";
 import { MongoError } from "mongodb";
 

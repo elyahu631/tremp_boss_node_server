@@ -1,5 +1,5 @@
 "use strict";
-// src/resources/kpis/KpiService.ts
+// src/resources/kpis/KpiController.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -13,29 +13,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDriverStatistics = exports.getHitchhikerStatistics = void 0;
+exports.getTotalTrempsByGender = exports.getTotalTremps = void 0;
 const KpiDataAccess_1 = __importDefault(require("./KpiDataAccess"));
 const kpiDataAccess = new KpiDataAccess_1.default();
-function getHitchhikerStatistics() {
+function getTotalTremps(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const openedHitchhikers = yield kpiDataAccess.countTrempsByType('hitchhiker');
-        const approvedHitchhikers = yield kpiDataAccess.countApprovedHitchhikers();
-        return {
-            openedHitchhikers,
-            approvedHitchhikers
-        };
+        try {
+            const statistics = yield kpiDataAccess.getTotalTremps();
+            res.status(200).json({ status: true, data: statistics });
+        }
+        catch (err) {
+            next(err);
+        }
     });
 }
-exports.getHitchhikerStatistics = getHitchhikerStatistics;
-function getDriverStatistics() {
+exports.getTotalTremps = getTotalTremps;
+function getTotalTrempsByGender(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const openedDrivers = yield kpiDataAccess.countTrempsByType('driver');
-        const approvedDrivers = yield kpiDataAccess.countApprovedDrivers();
-        return {
-            openedDrivers,
-            approvedDrivers
-        };
+        try {
+            const statistics = yield kpiDataAccess.getTotalTrempsByGender();
+            res.status(200).json({ status: true, data: statistics });
+        }
+        catch (err) {
+            next(err);
+        }
     });
 }
-exports.getDriverStatistics = getDriverStatistics;
-//# sourceMappingURL=KpiServies.js.map
+exports.getTotalTrempsByGender = getTotalTrempsByGender;
+//# sourceMappingURL=KpiController.js.map

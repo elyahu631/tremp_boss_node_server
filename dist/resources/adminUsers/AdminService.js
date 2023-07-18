@@ -17,7 +17,7 @@ exports.uploadImageToFirebaseAndUpdateUser = exports.updateUserDetails = exports
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const AdminDataAccess_1 = __importDefault(require("./AdminDataAccess"));
 const fileUpload_1 = require("../../firebase/fileUpload");
-const TimeService_1 = require("../../utils/TimeService");
+const TimeService_1 = require("../../services/TimeService");
 const HttpException_1 = require("../../middleware/HttpException");
 const mongodb_1 = require("mongodb");
 const adminDataAccess = new AdminDataAccess_1.default();

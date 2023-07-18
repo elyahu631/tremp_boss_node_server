@@ -3,7 +3,7 @@
 // src/middleware/handleErrors.ts
 
 import { NextFunction, Request, Response } from "express";
-import { HttpException } from "../utils/HttpException";
+import { HttpException } from "./HttpException";
 
 export const handleErrors = (
   err: HttpException,

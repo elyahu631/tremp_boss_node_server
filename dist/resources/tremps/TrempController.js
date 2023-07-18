@@ -35,23 +35,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempControler.ts
 const mongodb_1 = require("mongodb");
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
-const admin = __importStar(require("firebase-admin"));
-const environment_1 = require("../../config/environment");
 const HttpException_1 = require("../../middleware/HttpException");
-admin.initializeApp({
-    credential: admin.credential.cert({
-        "projectId": environment_1.FIREBASE_ENV.project_id,
-        "privateKey": environment_1.FIREBASE_ENV.private_key,
-        "clientEmail": environment_1.FIREBASE_ENV.client_email,
-    }),
-    databaseURL: 'https://fcm.googleapis.com/fcm/send',
-});
+const sendNotification_1 = require("../../services/sendNotification");
 const validateTrempData = (tremp) => {
     tremp.validateTremp();
     const { creator_id, tremp_time, from_root, to_root } = tremp;
@@ -69,13 +60,14 @@ function createTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const newTremp = new TrempModel_1.default(req.body);
-            newTremp.validateTremp();
+            validateTrempData(newTremp);
             const user = yield UserService.getUserById(newTremp.creator_id.toString());
             if (!user) {
                 throw new HttpException_1.NotFoundException("Creator user does not exist");
             }
             newTremp.creator_id = new mongodb_1.ObjectId(newTremp.creator_id);
             newTremp.group_id = new mongodb_1.ObjectId(newTremp.group_id);
+            newTremp.tremp_time = new Date(newTremp.tremp_time);
             const result = yield TrempService.createTremp(newTremp);
             res.status(200).json({ status: true, data: result });
         }
@@ -117,7 +109,7 @@ function addUserToTremp(req, res, next) {
             const creator = yield UserService.getUserById(creatorId);
             const fcmToken = creator.notification_token;
             if (fcmToken) {
-                yield sendNotificationToUser(fcmToken, tremp_id, user_id);
+                yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, 'New User Joined Drive', 'A user has joined your drive.', { tremp_id, user_id });
             }
             else {
                 console.log('User does not have a valid FCM token');
@@ -130,31 +122,24 @@ function addUserToTremp(req, res, next) {
     });
 }
 exports.addUserToTremp = addUserToTremp;
-function sendNotificationToUser(fcmToken, tremp_id, user_id) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const message = {
-            token: fcmToken,
-            notification: {
-                title: 'New User Joined Drive',
-                body: 'A user has joined your drive.',
-            },
-            data: {
-                tremp_id,
-                user_id,
-            },
-        };
-        yield admin.messaging().send(message);
-    });
-}
 function approveUserInTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { tremp_id, creator_id, user_id, approval } = req.body;
             yield TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
+            const user_in_tremp = yield UserService.getUserById(user_id);
+            const fcmToken = user_in_tremp.notification_token;
+            if (fcmToken) {
+                yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, "The creator answered", "The creator of the ride has answered your request", { creator_id, approval, tremp_id, user_id });
+            }
+            else {
+                console.log('User does not have a valid FCM token');
+            }
             res.status(200).json({ status: true, message: 'User approval status updated successfully' });
         }
         catch (err) {
             next(err);
+            321;
         }
     });
 }
@@ -178,4 +163,23 @@ function getUserTremps(req, res, next) {
     });
 }
 exports.getUserTremps = getUserTremps;
+function deleteTremp(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { tremp_id, user_id } = req.body;
+            if (!tremp_id || !user_id) {
+                throw new HttpException_1.BadRequestException('Tremp ID and User ID are required');
+            }
+            const result = yield TrempService.deleteTremp(tremp_id, user_id);
+            if (result.modifiedCount === 0) {
+                throw new HttpException_1.BadRequestException('Tremp could not be deleted');
+            }
+            res.status(200).json({ status: true, message: 'Tremp successfully deleted' });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.deleteTremp = deleteTremp;
 //# sourceMappingURL=TrempController.js.map

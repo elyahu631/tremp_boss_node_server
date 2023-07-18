@@ -8,8 +8,10 @@ const trempRoutes = express.Router();
 trempRoutes.post("/add",authenticateToken, TrempController.createTremp);
 trempRoutes.post('/trempsByFilters',authenticateToken, TrempController.getTrempsByFilters);
 trempRoutes.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
+trempRoutes.post("/user-tremps",authenticateToken, TrempController.getUserTremps);
 trempRoutes.put('/approveUserInTremp',authenticateToken ,TrempController.approveUserInTremp);
-trempRoutes.post("/user-tremps", TrempController.getUserTremps);
+trempRoutes.delete('/delete-tremp',authenticateToken, TrempController.deleteTremp);
+
 trempRoutes.use(handleErrors); 
 
 

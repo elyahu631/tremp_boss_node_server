@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
-const TimeService_1 = require("../../utils/TimeService");
+const TimeService_1 = require("../../services/TimeService");
 class AdminModel {
     constructor(adminData) {
         this.email = adminData.email;
@@ -33,9 +33,9 @@ class AdminModel {
             role: joi_1.default.string().required(),
             account_activated: joi_1.default.boolean().required(),
             photo_URL: joi_1.default.string().optional(),
-            createdAt: joi_1.default.string().isoDate().required(),
-            updatedAt: joi_1.default.string().isoDate().required(),
-            last_login_date: joi_1.default.string().isoDate().allow(null),
+            createdAt: joi_1.default.date().required(),
+            updatedAt: joi_1.default.date().required(),
+            last_login_date: joi_1.default.date().required().allow(null),
             deleted: joi_1.default.boolean().required()
         });
         const { error } = schema.validate(this);

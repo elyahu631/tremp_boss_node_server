@@ -1,1 +1,1 @@
-{"version":3,"file":"KpiRoutes.js","sourceRoot":"","sources":["../../../src/resources/kpi/KpiRoutes.ts"],"names":[],"mappings":""}
+{"version":3,"file":"KpiRoutes.js","sourceRoot":"","sources":["../../../src/resources/kpi/KpiRoutes.ts"],"names":[],"mappings":";AAAA,kCAAkC;;;;;;;;;;;;;;;;;;;;;;;;;AAElC,qCAAiC;AACjC,+DAAiD;AAEjD,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAC;AAExB,MAAM,CAAC,GAAG,CAAC,cAAc,EAAE,aAAa,CAAC,uBAAuB,CAAC,CAAC;AAClE,MAAM,CAAC,GAAG,CAAC,UAAU,EAAE,aAAa,CAAC,mBAAmB,CAAC,CAAC;AAE1D,kBAAe,MAAM,CAAC"}

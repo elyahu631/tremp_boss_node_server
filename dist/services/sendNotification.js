@@ -1,5 +1,4 @@
 "use strict";
-// src/resources/kpis/KpiController.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -33,30 +32,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDriverStatistics = exports.getHitchhikerStatistics = void 0;
-const KpiService = __importStar(require("./KpiService"));
-function getHitchhikerStatistics(req, res, next) {
+exports.sendNotificationToUser = void 0;
+// src/services/sendNotification.ts
+const admin = __importStar(require("firebase-admin"));
+const environment_1 = require("../config/environment");
+admin.initializeApp({
+    credential: admin.credential.cert({
+        "projectId": environment_1.FIREBASE_ENV.project_id,
+        "privateKey": environment_1.FIREBASE_ENV.private_key,
+        "clientEmail": environment_1.FIREBASE_ENV.client_email,
+    }),
+    databaseURL: 'https://fcm.googleapis.com/fcm/send',
+});
+function sendNotificationToUser(fcmToken, title, body, data = {}) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const statistics = yield KpiService.getHitchhikerStatistics();
-            res.status(200).json({ status: true, data: statistics });
-        }
-        catch (err) {
-            next(err);
-        }
+        const message = {
+            token: fcmToken,
+            notification: {
+                title: title,
+                body: body,
+            },
+            data: Object.assign({}, data),
+        };
+        yield admin.messaging().send(message);
     });
 }
-exports.getHitchhikerStatistics = getHitchhikerStatistics;
-function getDriverStatistics(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const statistics = yield KpiService.getDriverStatistics();
-            res.status(200).json({ status: true, data: statistics });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getDriverStatistics = getDriverStatistics;
-//# sourceMappingURL=KpiController.js.map
+exports.sendNotificationToUser = sendNotificationToUser;
+//# sourceMappingURL=sendNotification.js.map

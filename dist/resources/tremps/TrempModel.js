@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
-const TimeService_1 = require("../../utils/TimeService");
+const TimeService_1 = require("../../services/TimeService");
 class TrempModel {
     constructor(trempData) {
         this.creator_id = trempData.creator_id;
@@ -20,7 +20,6 @@ class TrempModel {
         this.users_in_tremp = trempData.users_in_tremp || [];
         this.is_full = trempData.is_full || false;
         this.chat_id = trempData.chat_id;
-        this.active = trempData.active || true;
         this.deleted = trempData.deleted || false;
     }
     validateTremp() {
@@ -28,8 +27,8 @@ class TrempModel {
             creator_id: joi_1.default.string().required(),
             group_id: joi_1.default.string().required(),
             tremp_type: joi_1.default.string().valid('driver', 'hitchhiker').required(),
-            create_date: joi_1.default.string().required(),
-            tremp_time: joi_1.default.string().required(),
+            create_date: joi_1.default.date().required(),
+            tremp_time: joi_1.default.date().required(),
             from_root: joi_1.default.object({
                 name: joi_1.default.string().required(),
                 coordinates: joi_1.default.object({
@@ -48,11 +47,10 @@ class TrempModel {
             seats_amount: joi_1.default.number().integer().min(1).required(),
             users_in_tremp: joi_1.default.array().items(joi_1.default.object({
                 user_id: joi_1.default.string().required(),
-                is_approved: joi_1.default.string().valid('approved', 'pending', 'denied').default('pending').required(),
+                is_approved: joi_1.default.string().valid('approved', 'pending', 'denied,', 'canceled').default('pending').required(),
             })).optional(),
             is_full: joi_1.default.boolean().required(),
             chat_id: joi_1.default.string().optional(),
-            active: joi_1.default.boolean().required(),
             deleted: joi_1.default.boolean().required(),
         });
         const { error } = schema.validate(this);

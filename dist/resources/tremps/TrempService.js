@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserTremps = exports.getTrempById = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.deleteTremp = exports.getUserTremps = exports.getTrempById = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const mongodb_1 = require("mongodb");
+const sendNotification_1 = require("../../services/sendNotification");
 const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
 function createTremp(tremp) {
@@ -143,4 +144,34 @@ function getApprovalStatus(tremp, userId, type_of_tremp) {
     }
     return ''; // default value, if none of the conditions are met
 }
+function deleteTremp(tremp_id, user_id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const userId = new mongodb_1.ObjectId(user_id);
+        const tremp = yield trempDataAccess.FindByID(tremp_id);
+        // Check if the tremp exists
+        if (!tremp) {
+            throw new Error('Tremp does not exist');
+        }
+        // Check if the user requesting the delete is the creator of the tremp
+        if (!tremp.creator_id.equals(userId)) {
+            throw new Error('Only the creator of the tremp can delete it');
+        }
+        // Find users in the tremp who need to be notified
+        const usersToNotify = tremp.users_in_tremp.filter((user) => user.is_approved === 'approved' || 'pending');
+        if (usersToNotify.length > 0) {
+            // Send notifications to all approved users
+            // You'll need to fetch these users from the user database to get their notification tokens
+            const userTokens = yield userDataAccess.FindAllUsers({ _id: { $in: usersToNotify.map((u) => new mongodb_1.ObjectId(u.user_id)) } }, { notification_token: 1 });
+            for (const userToken of userTokens) {
+                if (userToken.notification_token) {
+                    // Use your notification function here
+                    yield (0, sendNotification_1.sendNotificationToUser)(userToken.notification_token, "Tremp cancellation notice", "The tremp you joined has been cancelled.", { tremp_id: tremp_id, user_id: user_id });
+                }
+            }
+        }
+        // Delete the tremp
+        return yield trempDataAccess.Update(tremp_id, { deleted: true });
+    });
+}
+exports.deleteTremp = deleteTremp;
 //# sourceMappingURL=TrempService.js.map

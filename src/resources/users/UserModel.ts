@@ -3,13 +3,14 @@
 import Joi from 'joi';
 import { ObjectId } from 'mongodb';
 import { UserInterface } from './UserInterface';
+import { getCurrentTimeInIsrael } from '../../services/TimeService';
 
 class UserModel {
   user_email?: string;
   password?: string;
   coins?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   phone_number?: string;
   photo_URL?: string;
   first_name?: string;
@@ -31,8 +32,8 @@ class UserModel {
     last_name?: string;
     gender?: string;
     coins?: number;
-    createdAt?: string;
-    updatedAt?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
     last_login_date?: string;
     groups?: ObjectId[];
     status?: string;
@@ -47,8 +48,8 @@ class UserModel {
     this.last_name = userData.last_name;
     this.gender = userData.gender;
     this.coins = userData.coins || 0; 
-    this.createdAt = userData.createdAt || new Date().toISOString(); 
-    this.updatedAt = userData.updatedAt || new Date().toISOString(); 
+    this.createdAt = userData.createdAt || getCurrentTimeInIsrael(); 
+    this.updatedAt = userData.updatedAt || getCurrentTimeInIsrael(); 
     this.last_login_date = userData.last_login_date; 
     this.groups = userData.groups || [new ObjectId("64743b14b165e7102c90dd32")];
     this.status = userData.status || "active"; 

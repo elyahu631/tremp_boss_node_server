@@ -1,4 +1,5 @@
 "use strict";
+// src/resources/kpis/KpiRoutes.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -22,21 +23,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const TrempController = __importStar(require("./TrempController"));
-const handleErrors_1 = require("../../middleware/handleErrors");
+const express_1 = require("express");
+const KpiController = __importStar(require("./KpiController"));
 const auth_1 = require("../../middleware/auth");
-const trempRoutes = express_1.default.Router();
-trempRoutes.post("/add", auth_1.authenticateToken, TrempController.createTremp);
-trempRoutes.post('/trempsByFilters', auth_1.authenticateToken, TrempController.getTrempsByFilters);
-trempRoutes.put('/join-ride', auth_1.authenticateToken, TrempController.addUserToTremp);
-trempRoutes.post("/user-tremps", auth_1.authenticateToken, TrempController.getUserTremps);
-trempRoutes.put('/approveUserInTremp', auth_1.authenticateToken, TrempController.approveUserInTremp);
-trempRoutes.delete('/delete-tremp', auth_1.authenticateToken, TrempController.deleteTremp);
-trempRoutes.use(handleErrors_1.handleErrors);
-exports.default = trempRoutes;
-//# sourceMappingURL=TrempRoutes.js.map
+const handleErrors_1 = require("../../middleware/handleErrors");
+const kpiRoutes = (0, express_1.Router)();
+kpiRoutes.get('/get-total-tremps', auth_1.authenticateToken, KpiController.getTotalTremps);
+kpiRoutes.get('/get-total-tremps-by-gender', auth_1.authenticateToken, KpiController.getTotalTrempsByGender);
+kpiRoutes.use(handleErrors_1.handleErrors);
+exports.default = kpiRoutes;
+//# sourceMappingURL=KpiRoutes.js.map

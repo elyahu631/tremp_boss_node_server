@@ -2,7 +2,7 @@
 
 import Joi from "joi";
 import { ObjectId } from "mongodb";
-import { getCurrentTimeInIsrael } from "../../utils/TimeService";
+import { getCurrentTimeInIsrael } from "../../services/TimeService";
 import { UserInTremp } from "./TrempInterfaces";
 
 interface Coordinate {
@@ -14,8 +14,8 @@ class TrempModel {
   creator_id: ObjectId; //from client 
   group_id: ObjectId;// from client chack if group active and exsits 
   tremp_type: string;
-  create_date: string;// 
-  tremp_time: string;// client 
+  create_date: Date;// 
+  tremp_time: Date;// client 
   from_root: {    // chack if form an to is no simmular
     name: string;
     coordinates: Coordinate;
@@ -29,7 +29,6 @@ class TrempModel {
   users_in_tremp: UserInTremp[];
   is_full: boolean;
   chat_id: ObjectId;// server
-  active: boolean;
   deleted: boolean;
 
   constructor(trempData: Partial<TrempModel>) {
@@ -45,7 +44,6 @@ class TrempModel {
     this.users_in_tremp = trempData.users_in_tremp || [];
     this.is_full = trempData.is_full || false;
     this.chat_id = trempData.chat_id ;
-    this.active = trempData.active || true;
     this.deleted = trempData.deleted || false;
   }
 
@@ -54,8 +52,8 @@ class TrempModel {
       creator_id: Joi.string().required(),
       group_id: Joi.string().required(),//need to create a model for it 
       tremp_type: Joi.string().valid('driver', 'hitchhiker').required(),
-      create_date: Joi.string().required(),
-      tremp_time: Joi.string().required(),
+      create_date: Joi.date().required(),
+      tremp_time: Joi.date().required(),
       from_root: Joi.object({
         name: Joi.string().required(),
         coordinates: Joi.object({
@@ -75,12 +73,11 @@ class TrempModel {
       users_in_tremp: Joi.array().items(
         Joi.object({
           user_id: Joi.string().required(),
-          is_approved: Joi.string().valid('approved', 'pending', 'denied').default('pending').required(),
+          is_approved: Joi.string().valid('approved', 'pending', 'denied,','canceled' ).default('pending').required(),
         })
       ).optional(),
       is_full: Joi.boolean().required(),
       chat_id: Joi.string().optional(),// need to create a model for it 
-      active: Joi.boolean().required(),
       deleted: Joi.boolean().required(),
     });
     const { error } = schema.validate(this);
