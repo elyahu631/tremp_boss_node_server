@@ -381,7 +381,4 @@ class KpiDataAccess {
 
 }
 
-
-
-
 export default KpiDataAccess;
