@@ -36,6 +36,11 @@ class AdminDataAccess {
             return yield new db_1.default().Insert(AdminDataAccess.collection, admin);
         });
     }
+    /**
+   Updates the deletion status of a user.
+   @param id - The ID of the user to update.
+   @returns A promise that resolves to the updated user object or an error if the update fails.
+   */
     UpdateUserDeletionStatus(id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

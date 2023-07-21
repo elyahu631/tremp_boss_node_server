@@ -14,8 +14,6 @@ export function getCurrentTimeInIsrael(): Date {
 
   // Subtract the offset from the current UTC time
   const adjustedUtc = new Date(nowUtc.getTime() + timezoneOffsetMs);
-  
-  console.log(adjustedUtc)
-  // Return adjusted Date
+    // Return adjusted Date
   return adjustedUtc;
 }

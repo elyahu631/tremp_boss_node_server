@@ -23,10 +23,10 @@ adminRoutes.post("/login", loginAdmin);
 adminRoutes.get("/all", authenticateToken, getAllAdminUsers);
 adminRoutes.get("/me", authenticateToken, getUserFromToken);
 adminRoutes.get("/:id",authenticateToken, getAdminUserById);
-adminRoutes.post("/add", authenticateToken, upload.single('photo_URL'), addAdminUser);
+adminRoutes.post("/add", authenticateToken, upload.single('image_URL'), addAdminUser);
 adminRoutes.delete("/delete/:id", authenticateToken, deleteAdminUserById);
 adminRoutes.put("/markDeleted/:id", authenticateToken, markAdminUserAsDeleted);
-adminRoutes.put("/updateAdmin/:id", authenticateToken, upload.single('photo_URL'), updateAdminUserDetails);
+adminRoutes.put("/updateAdmin/:id", authenticateToken, upload.single('image_URL'), updateAdminUserDetails);
 
 adminRoutes.use(handleErrors); 
 

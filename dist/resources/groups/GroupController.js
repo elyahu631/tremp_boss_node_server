@@ -110,18 +110,14 @@ exports.updateGroupDetails = updateGroupDetails;
 function addGroup(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let groupData = req.body;
-            if (Array.isArray(groupData.image_URL)) {
-                // handle the case where image_URL is an array
-                // here I'm taking the first element, but you may want to do something else
-                groupData.image_URL = groupData.image_URL[0];
-            }
-            const newGroup = new GroupModel_1.default(groupData);
+            const newGroup = new GroupModel_1.default(req.body);
+            console.log(newGroup);
             const groupInsertion = yield GroupService.addGroup(newGroup);
             let savedGroup = groupInsertion.insertedId;
             if (req.file) {
                 const filePath = `groupsimages/${groupInsertion.insertedId}`;
-                yield GroupService.uploadImageToFirebaseAndUpdateUser(req.file, filePath, savedGroup);
+                console.log(req.file);
+                yield GroupService.uploadImageToFirebaseAndUpdateGroup(req.file, filePath, savedGroup);
                 savedGroup = yield GroupService.getGroupById(savedGroup); // Get updated user
             }
             res.status(201).json({ status: true, data: savedGroup });

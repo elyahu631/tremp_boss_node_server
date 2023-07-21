@@ -22,6 +22,11 @@ const HttpException_1 = require("../../middleware/HttpException");
 const mongodb_1 = require("mongodb");
 const adminDataAccess = new AdminDataAccess_1.default();
 const saltRounds = 10;
+/**
+ * Hashes the provided password using bcrypt.
+ * @param password The password to hash.
+ * @returns that hashed password.
+ */
 function hashPassword(password) {
     return __awaiter(this, void 0, void 0, function* () {
         const salt = yield bcrypt_1.default.genSalt(saltRounds);
@@ -29,6 +34,12 @@ function hashPassword(password) {
     });
 }
 exports.hashPassword = hashPassword;
+/**
+ * Logs in an admin user with the provided username and password.
+ * @param username The username of the admin user.
+ * @param password The password of the admin user.
+ * @returns The logged-in user if successful, null otherwise.
+ */
 function loginUser(username, password) {
     return __awaiter(this, void 0, void 0, function* () {
         const users = (yield adminDataAccess.FindAllUsers({
@@ -46,6 +57,12 @@ function loginUser(username, password) {
     });
 }
 exports.loginUser = loginUser;
+/**
+ * Creates a new admin user.
+ * @param user The user object representing the admin user.
+ * @returns The inserted user object.
+ * @throws BadRequestException if a user with the same username or email already exists.
+ */
 function createUser(user) {
     return __awaiter(this, void 0, void 0, function* () {
         // Check if user with this username or email already exists
@@ -91,6 +108,14 @@ function markUserAsDeleted(id) {
     });
 }
 exports.markUserAsDeleted = markUserAsDeleted;
+/**
+ * Updates the details of an admin user.
+ * @param id The ID of the admin user to update.
+ * @param userDetails The updated details of the admin user.
+ * @param file The optional file for updating the user's image.
+ * @returns The updated admin user object.
+ * @throws BadRequestException if there is an error updating the user details.
+ */
 function updateUserDetails(id, userDetails, file) {
     return __awaiter(this, void 0, void 0, function* () {
         let updateData = Object.assign(Object.assign({}, userDetails), { updatedAt: (0, TimeService_1.getCurrentTimeInIsrael)() });
@@ -102,11 +127,11 @@ function updateUserDetails(id, userDetails, file) {
         if (updateData.password) {
             updateData.password = yield hashPassword(updateData.password);
         }
-        // If a file is provided, upload it and update photo_URL
+        // If a file is provided, upload it and update image_URL
         if (file) {
             try {
                 const filePath = `adminimages/${id}`;
-                updateData.photo_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+                updateData.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
                 throw new HttpException_1.InternalServerException("Error uploading image: " + error);
@@ -127,10 +152,17 @@ function updateUserDetails(id, userDetails, file) {
     });
 }
 exports.updateUserDetails = updateUserDetails;
+/**
+ * Uploads an image to Firebase and updates the user's image URL.
+ * @param file The file to upload.
+ * @param filePath The file path in Firebase storage.
+ * @param userId The ID of the user to update.
+ * @returns The updated user object.
+ */
 function uploadImageToFirebaseAndUpdateUser(file, filePath, userId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const photo_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
-        return adminDataAccess.UpdateUserDetails(userId, { photo_URL });
+        const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        return adminDataAccess.UpdateUserDetails(userId, { image_URL });
     });
 }
 exports.uploadImageToFirebaseAndUpdateUser = uploadImageToFirebaseAndUpdateUser;

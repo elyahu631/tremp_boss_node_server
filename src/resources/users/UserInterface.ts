@@ -8,12 +8,12 @@ export interface UserInterface  {
   createdAt?: Date;
   updatedAt?: Date;
   phone_number?: string;
-  photo_URL?: string;
+  image_URL?: string;
   first_name?: string;
   last_name?: string;
   gender?: string;
   groups?: ObjectId[];
-  last_login_date?: string;
+  last_login_date?: Date;
   status?: string;
   deleted ?: boolean;
   notification_token ?: string;

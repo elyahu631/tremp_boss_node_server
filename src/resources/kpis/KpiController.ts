@@ -21,3 +21,60 @@ export async function getTotalTrempsByGender(req: Request, res: Response, next: 
     next(err);
   }
 }
+
+export async function getTotalTrempsByGenderByMonth(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const statistics = await kpiDataAccess.getTotalTrempsByGenderByMonth();
+    res.status(200).json({ status: true, data: statistics });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function getLastOpenedTrips(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const trips = await kpiDataAccess.getLastOpenedTrips();
+    res.status(200).json({ status: true, data: trips });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function getMostPopularRoutes(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const routes = await kpiDataAccess.getMostPopularRoutes();
+    res.status(200).json({ status: true, data: routes });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getTopDrivers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const drivers = await kpiDataAccess.getTopDrivers();
+    res.status(200).json({ status: true, data: drivers });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMostRequestedHours(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const hours = await kpiDataAccess.getMostRequestedHours();
+    res.status(200).json({ status: true, data: hours });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function getPeopleAndTrempCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const peopleCounts = await kpiDataAccess.getPeopleAndTrempCounts();
+    res.status(200).json({ status: true, data: peopleCounts });
+  } catch (err) {
+    next(err);
+  }
+}

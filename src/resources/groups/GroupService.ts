@@ -60,7 +60,7 @@ export async function updateGroupDetails(id: string, groupDetails: GroupModel, f
 }
 
 
-export async function uploadImageToFirebaseAndUpdateUser(file: Express.Multer.File,filePath: string,groupId: string
+export async function uploadImageToFirebaseAndUpdateGroup(file: Express.Multer.File,filePath: string,groupId: string
 ) {
   const image_URL = await uploadImageToFirebase(file, filePath);
   return groupDataAccess.UpdateGroup(groupId, { image_URL });

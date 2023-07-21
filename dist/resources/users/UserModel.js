@@ -12,7 +12,7 @@ class UserModel {
         this.user_email = userData.user_email;
         this.password = userData.password;
         this.phone_number = userData.phone_number;
-        this.photo_URL = userData.photo_URL;
+        this.image_URL = userData.image_URL;
         this.first_name = userData.first_name;
         this.last_name = userData.last_name;
         this.gender = userData.gender;

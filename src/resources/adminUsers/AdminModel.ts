@@ -13,7 +13,7 @@ class AdminModel {
   createdAt?: Date;
   updatedAt?: Date;
   phone_number?: string;
-  photo_URL?: string;
+  image_URL?: string;
   account_activated: boolean;
   last_login_date?: Date;
   deleted?: boolean;
@@ -28,7 +28,7 @@ class AdminModel {
     createdAt?: Date;
     updatedAt?: Date;
     phone_number?: string;
-    photo_URL?: string;
+    image_URL?: string;
     last_login_date?: Date;
     account_activated?: boolean;
     deleted?: boolean;
@@ -40,7 +40,7 @@ class AdminModel {
     this.password = adminData.password;
     this.role = adminData.role;
     this.phone_number = adminData.phone_number;
-    this.photo_URL = adminData.photo_URL;
+    this.image_URL = adminData.image_URL;
     this.account_activated = adminData.account_activated;
     this.createdAt = adminData.createdAt || getCurrentTimeInIsrael();
     this.updatedAt = adminData.updatedAt || getCurrentTimeInIsrael();
@@ -50,18 +50,18 @@ class AdminModel {
 
   validateNewAdmin() {
     const schema = Joi.object({
-      username: Joi.string().required(),
+      username: Joi.string().min(3).max(15).required(),
       email: Joi.string().email().required(),
-      phone_number: Joi.string().required(),
-      password: Joi.string().min(8).required(),
+      phone_number: Joi.string().length(10).required(),
+      password: Joi.string().min(8).max(18).required(),
       first_name: Joi.string().required(),
       last_name: Joi.string().required(),
       role: Joi.string().required(),
       account_activated: Joi.boolean().required(),
-      photo_URL: Joi.string().optional(),
+      image_URL: Joi.string().optional(),
       createdAt: Joi.date().required(),
       updatedAt: Joi.date().required(),
-      last_login_date: Joi.date().required().allow(null),
+      last_login_date: Joi.date().optional().allow(null),
       deleted: Joi.boolean().required()
     });
 

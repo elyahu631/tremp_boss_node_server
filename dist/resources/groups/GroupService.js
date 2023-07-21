@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImageToFirebaseAndUpdateUser = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getGroupById = exports.getAllGroups = void 0;
+exports.uploadImageToFirebaseAndUpdateGroup = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getGroupById = exports.getAllGroups = void 0;
 const GroupDataAccess_1 = __importDefault(require("./GroupDataAccess"));
 const fileUpload_1 = require("../../firebase/fileUpload");
 const HttpException_1 = require("../../middleware/HttpException");
@@ -82,11 +82,11 @@ function updateGroupDetails(id, groupDetails, file) {
     });
 }
 exports.updateGroupDetails = updateGroupDetails;
-function uploadImageToFirebaseAndUpdateUser(file, filePath, groupId) {
+function uploadImageToFirebaseAndUpdateGroup(file, filePath, groupId) {
     return __awaiter(this, void 0, void 0, function* () {
         const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
         return groupDataAccess.UpdateGroup(groupId, { image_URL });
     });
 }
-exports.uploadImageToFirebaseAndUpdateUser = uploadImageToFirebaseAndUpdateUser;
+exports.uploadImageToFirebaseAndUpdateGroup = uploadImageToFirebaseAndUpdateGroup;
 //# sourceMappingURL=GroupService.js.map

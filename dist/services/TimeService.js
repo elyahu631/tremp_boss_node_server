@@ -12,7 +12,6 @@ function getCurrentTimeInIsrael() {
     const timezoneOffsetMs = (0, date_fns_tz_1.getTimezoneOffset)(timeZone, nowUtc);
     // Subtract the offset from the current UTC time
     const adjustedUtc = new Date(nowUtc.getTime() + timezoneOffsetMs);
-    console.log(adjustedUtc);
     // Return adjusted Date
     return adjustedUtc;
 }

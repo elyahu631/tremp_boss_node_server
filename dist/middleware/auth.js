@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticateToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../config/environment");
+// Middleware function to authenticate the token
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -17,7 +18,7 @@ const authenticateToken = (req, res, next) => {
         if (err) {
             return res.sendStatus(403);
         }
-        req.user = user;
+        req.user = user; // Set the user object in the request
         next();
     });
 };

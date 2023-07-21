@@ -45,7 +45,7 @@ export async function loginUser(user_email: string, password: string) {
     return null;
   }
   // Update the last_login_date field when the user logs in successfully
-  user.last_login_date = new Date().toISOString();
+  user.last_login_date = getCurrentTimeInIsrael();
   await userDataAccess.UpdateUserDetails(user._id.toString(), user);
 
   return user;
@@ -81,8 +81,8 @@ export async function uploadImageToFirebaseAndUpdateUser(
   filePath: string,
   userId: string
 ) {
-  const photo_URL = await uploadImageToFirebase(file, filePath);
-  return userDataAccess.UpdateUserDetails(userId, { photo_URL });
+  const image_URL = await uploadImageToFirebase(file, filePath);
+  return userDataAccess.UpdateUserDetails(userId, { image_URL });
 }
 
 export async function createUser(user: UserModel) {
@@ -117,11 +117,11 @@ export async function updateUserDetails(id: string, userDetails: UserModel, file
     updateData.password = await hashPassword(updateData.password);
   }
 
-  // If a file is provided, upload it and update photo_URL
+  // If a file is provided, upload it and update image_URL
   if (file) {
     try {
       const filePath = `usersimages/${id}`;
-      updateData.photo_URL = await uploadImageToFirebase(file, filePath);
+      updateData.image_URL = await uploadImageToFirebase(file, filePath);
     } catch (error) {
       console.error("Error uploading image:", error);
     }

@@ -9,7 +9,7 @@ const mongodb_1 = require("mongodb");
 class GiftModel {
     constructor(giftData) {
         this._id = giftData._id || new mongodb_1.ObjectId;
-        this.gift_image = giftData.gift_image;
+        this.image_URL = giftData.image_URL;
         this.gift_name = giftData.gift_name;
         this.price = giftData.price;
         this.quantity = giftData.quantity;
@@ -19,7 +19,7 @@ class GiftModel {
     validateGift() {
         const schema = joi_1.default.object({
             _id: joi_1.default.optional(),
-            gift_image: joi_1.default.string().optional(),
+            image_URL: joi_1.default.string().optional(),
             gift_name: joi_1.default.string().required(),
             price: joi_1.default.number().required(),
             quantity: joi_1.default.number().required(),

@@ -9,6 +9,15 @@ const kpiRoutes = Router();
 
 kpiRoutes.get('/get-total-tremps',authenticateToken, KpiController.getTotalTremps);
 kpiRoutes.get('/get-total-tremps-by-gender', authenticateToken, KpiController.getTotalTrempsByGender);
+kpiRoutes.get('/get-last-opened-trips', authenticateToken, KpiController.getLastOpenedTrips);
+kpiRoutes.get('/get-top-routes', authenticateToken, KpiController.getMostPopularRoutes);
+kpiRoutes.get('/get-top-drivers', authenticateToken, KpiController.getTopDrivers);
+kpiRoutes.get('/get-top-hours', authenticateToken, KpiController.getMostRequestedHours);
+kpiRoutes.get('/get-people-and-tremps-counts', authenticateToken, KpiController.getPeopleAndTrempCounts);
+
+
+
+kpiRoutes.get('/get-total-tremps-by-gender-by-month', authenticateToken, KpiController.getTotalTrempsByGenderByMonth);
 
 kpiRoutes.use(handleErrors); 
 

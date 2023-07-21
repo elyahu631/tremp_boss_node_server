@@ -42,8 +42,8 @@ export async function uploadImageToFirebaseAndUpdateGift(
   filePath: string,
   giftId: string
 ) {
-  const gift_image = await uploadImageToFirebase(file, filePath);
-  return giftDataAccess.UpdateGift(giftId, { gift_image });
+  const image_URL = await uploadImageToFirebase(file, filePath);
+  return giftDataAccess.UpdateGift(giftId, { image_URL });
 }
 
 export async function UpdateGift(id: string, updatedGift: GiftModel) {
@@ -55,7 +55,7 @@ export async function UpdateGiftDetails(id: string, giftDetails: GiftModel, file
   if (file) {
     try {
       const filePath = `usersimages/${id}`;
-      giftDetails.gift_image = await uploadImageToFirebase(file, filePath);
+      giftDetails.image_URL = await uploadImageToFirebase(file, filePath);
     } catch (error) {
       throw new InternalServerException("Error uploading image: " + error);
     }

@@ -13,7 +13,7 @@ export function validateAdminUpdates(updateAdminUserDetails: AdminModel) : boole
       first_name: Joi.string(),
       last_name: Joi.string(),
       role: Joi.string(),
-      photo_URL: Joi.string(),
+      image_URL: Joi.string(),
       last_login_date: Joi.string().isoDate().allow(null),
       deleted: Joi.boolean(),
       password: Joi.string().min(8),

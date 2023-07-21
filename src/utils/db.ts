@@ -94,19 +94,6 @@ class DB {
   }
 
 
-
-  //Summary data about the information in the database
-  async CountCollection(collection: string, query = {}, projection = {}) {
-    try {
-      await this.client.connect();
-      return this.client.db(this.dbName).collection(collection).countDocuments(query, projection)
-    } catch (error) {
-      throw error;
-    } finally {
-      await this.client.close();
-    }
-  }
-
   async aggregate(collection: string, pipeline = [{}]) {
     try {
       await this.client.connect();

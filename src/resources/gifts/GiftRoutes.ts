@@ -21,8 +21,8 @@ giftRoutes.get("/all", authenticateToken, getAllGifts);
 giftRoutes.get("/:id", authenticateToken, getGiftById);
 giftRoutes.delete("/delete/:id", authenticateToken, deleteGiftById);
 giftRoutes.put("/markDeleted/:id", authenticateToken, markGiftAsDeleted);
-giftRoutes.post("/add-gift", authenticateToken, upload.single('gift_image'), addGift);
-giftRoutes.put("/update-gift/:id", authenticateToken, upload.single('gift_image'), updateGiftDetails);
+giftRoutes.post("/add-gift", authenticateToken, upload.single('image_URL'), addGift);
+giftRoutes.put("/update-gift/:id", authenticateToken, upload.single('image_URL'), updateGiftDetails);
 giftRoutes.use(handleErrors); 
 
 export default giftRoutes;

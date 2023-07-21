@@ -50,6 +50,7 @@ export async function markGiftAsDeleted(req: Request, res: Response, next: NextF
 export async function addGift(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const newGift = new GiftModel(req.body);
+    console.log(newGift);    
     let giftInsertion = await GiftService.addGift(newGift);
     let savedGift = giftInsertion.insertedId;
     if (req.file) {

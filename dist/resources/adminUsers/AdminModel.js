@@ -15,7 +15,7 @@ class AdminModel {
         this.password = adminData.password;
         this.role = adminData.role;
         this.phone_number = adminData.phone_number;
-        this.photo_URL = adminData.photo_URL;
+        this.image_URL = adminData.image_URL;
         this.account_activated = adminData.account_activated;
         this.createdAt = adminData.createdAt || (0, TimeService_1.getCurrentTimeInIsrael)();
         this.updatedAt = adminData.updatedAt || (0, TimeService_1.getCurrentTimeInIsrael)();
@@ -24,18 +24,18 @@ class AdminModel {
     }
     validateNewAdmin() {
         const schema = joi_1.default.object({
-            username: joi_1.default.string().required(),
+            username: joi_1.default.string().min(3).max(15).required(),
             email: joi_1.default.string().email().required(),
-            phone_number: joi_1.default.string().required(),
-            password: joi_1.default.string().min(8).required(),
+            phone_number: joi_1.default.string().length(10).required(),
+            password: joi_1.default.string().min(8).max(18).required(),
             first_name: joi_1.default.string().required(),
             last_name: joi_1.default.string().required(),
             role: joi_1.default.string().required(),
             account_activated: joi_1.default.boolean().required(),
-            photo_URL: joi_1.default.string().optional(),
+            image_URL: joi_1.default.string().optional(),
             createdAt: joi_1.default.date().required(),
             updatedAt: joi_1.default.date().required(),
-            last_login_date: joi_1.default.date().required().allow(null),
+            last_login_date: joi_1.default.date().optional().allow(null),
             deleted: joi_1.default.boolean().required()
         });
         const { error } = schema.validate(this);

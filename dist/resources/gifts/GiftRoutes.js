@@ -16,8 +16,8 @@ giftRoutes.get("/all", auth_1.authenticateToken, GiftController_1.getAllGifts);
 giftRoutes.get("/:id", auth_1.authenticateToken, GiftController_1.getGiftById);
 giftRoutes.delete("/delete/:id", auth_1.authenticateToken, GiftController_1.deleteGiftById);
 giftRoutes.put("/markDeleted/:id", auth_1.authenticateToken, GiftController_1.markGiftAsDeleted);
-giftRoutes.post("/add-gift", auth_1.authenticateToken, upload.single('gift_image'), GiftController_1.addGift);
-giftRoutes.put("/update-gift/:id", auth_1.authenticateToken, upload.single('gift_image'), GiftController_1.updateGiftDetails);
+giftRoutes.post("/add-gift", auth_1.authenticateToken, upload.single('image_URL'), GiftController_1.addGift);
+giftRoutes.put("/update-gift/:id", auth_1.authenticateToken, upload.single('image_URL'), GiftController_1.updateGiftDetails);
 giftRoutes.use(handleErrors_1.handleErrors);
 exports.default = giftRoutes;
 //# sourceMappingURL=GiftRoutes.js.map

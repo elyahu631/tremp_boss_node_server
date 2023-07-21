@@ -16,10 +16,10 @@ adminRoutes.post("/login", AdminController_1.loginAdmin);
 adminRoutes.get("/all", auth_1.authenticateToken, AdminController_1.getAllAdminUsers);
 adminRoutes.get("/me", auth_1.authenticateToken, AdminController_1.getUserFromToken);
 adminRoutes.get("/:id", auth_1.authenticateToken, AdminController_1.getAdminUserById);
-adminRoutes.post("/add", auth_1.authenticateToken, upload.single('photo_URL'), AdminController_1.addAdminUser);
+adminRoutes.post("/add", auth_1.authenticateToken, upload.single('image_URL'), AdminController_1.addAdminUser);
 adminRoutes.delete("/delete/:id", auth_1.authenticateToken, AdminController_1.deleteAdminUserById);
 adminRoutes.put("/markDeleted/:id", auth_1.authenticateToken, AdminController_1.markAdminUserAsDeleted);
-adminRoutes.put("/updateAdmin/:id", auth_1.authenticateToken, upload.single('photo_URL'), AdminController_1.updateAdminUserDetails);
+adminRoutes.put("/updateAdmin/:id", auth_1.authenticateToken, upload.single('image_URL'), AdminController_1.updateAdminUserDetails);
 adminRoutes.use(handleErrors_1.handleErrors);
 exports.default = adminRoutes;
 //# sourceMappingURL=AdminRoutes.js.map

@@ -58,7 +58,7 @@ function loginUser(user_email, password) {
             return null;
         }
         // Update the last_login_date field when the user logs in successfully
-        user.last_login_date = new Date().toISOString();
+        user.last_login_date = (0, TimeService_1.getCurrentTimeInIsrael)();
         yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
         return user;
     });
@@ -103,8 +103,8 @@ function markUserAsDeleted(id) {
 exports.markUserAsDeleted = markUserAsDeleted;
 function uploadImageToFirebaseAndUpdateUser(file, filePath, userId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const photo_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
-        return userDataAccess.UpdateUserDetails(userId, { photo_URL });
+        const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        return userDataAccess.UpdateUserDetails(userId, { image_URL });
     });
 }
 exports.uploadImageToFirebaseAndUpdateUser = uploadImageToFirebaseAndUpdateUser;
@@ -136,11 +136,11 @@ function updateUserDetails(id, userDetails, file) {
         if (updateData.password) {
             updateData.password = yield hashPassword(updateData.password);
         }
-        // If a file is provided, upload it and update photo_URL
+        // If a file is provided, upload it and update image_URL
         if (file) {
             try {
                 const filePath = `usersimages/${id}`;
-                updateData.photo_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+                updateData.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
                 console.error("Error uploading image:", error);

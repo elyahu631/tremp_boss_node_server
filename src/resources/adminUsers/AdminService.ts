@@ -12,12 +12,22 @@ import { MongoError } from "mongodb";
 const adminDataAccess = new AdminDataAccess();
 const saltRounds = 10;
 
-
+/**
+ * Hashes the provided password using bcrypt.
+ * @param password The password to hash.
+ * @returns that hashed password.
+ */
 export async function hashPassword(password: string): Promise<string> {
   const salt = await bcrypt.genSalt(saltRounds);
   return bcrypt.hash(password, salt);
 }
 
+/**
+ * Logs in an admin user with the provided username and password.
+ * @param username The username of the admin user.
+ * @param password The password of the admin user.
+ * @returns The logged-in user if successful, null otherwise.
+ */
 export async function loginUser(username: string, password: string) {
   const users =
     (await adminDataAccess.FindAllUsers({
@@ -38,6 +48,12 @@ export async function loginUser(username: string, password: string) {
   return user;
 }
 
+/**
+ * Creates a new admin user.
+ * @param user The user object representing the admin user.
+ * @returns The inserted user object.
+ * @throws BadRequestException if a user with the same username or email already exists.
+ */
 export async function createUser(user: AdminModel) {
   // Check if user with this username or email already exists
   const existingUsers = await adminDataAccess.FindAllUsers({
@@ -76,6 +92,14 @@ export async function markUserAsDeleted(id: string) {
   return adminDataAccess.UpdateUserDeletionStatus(id);
 }
 
+/**
+ * Updates the details of an admin user.
+ * @param id The ID of the admin user to update.
+ * @param userDetails The updated details of the admin user.
+ * @param file The optional file for updating the user's image.
+ * @returns The updated admin user object.
+ * @throws BadRequestException if there is an error updating the user details.
+ */
 export async function updateUserDetails(id: string,userDetails: AdminModel,file?: Express.Multer.File) {
   let updateData: Partial<AdminModel> = {
     ...userDetails,
@@ -92,11 +116,11 @@ export async function updateUserDetails(id: string,userDetails: AdminModel,file?
     updateData.password = await hashPassword(updateData.password);
   }
 
-  // If a file is provided, upload it and update photo_URL
+  // If a file is provided, upload it and update image_URL
   if (file) {
     try {
       const filePath = `adminimages/${id}`;
-      updateData.photo_URL = await uploadImageToFirebase(file, filePath);
+      updateData.image_URL = await uploadImageToFirebase(file, filePath);
     } catch (error) {
       throw new InternalServerException("Error uploading image: " + error);
     }
@@ -114,11 +138,18 @@ export async function updateUserDetails(id: string,userDetails: AdminModel,file?
   }
 }
 
+/**
+ * Uploads an image to Firebase and updates the user's image URL.
+ * @param file The file to upload.
+ * @param filePath The file path in Firebase storage.
+ * @param userId The ID of the user to update.
+ * @returns The updated user object.
+ */
 export async function uploadImageToFirebaseAndUpdateUser(
   file: Express.Multer.File,
   filePath: string,
   userId: string
 ) {
-  const photo_URL = await uploadImageToFirebase(file, filePath);
-  return adminDataAccess.UpdateUserDetails(userId, { photo_URL });
+  const image_URL = await uploadImageToFirebase(file, filePath);
+  return adminDataAccess.UpdateUserDetails(userId, { image_URL });
 }

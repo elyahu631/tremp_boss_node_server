@@ -31,6 +31,12 @@ const handleErrors_1 = require("../../middleware/handleErrors");
 const kpiRoutes = (0, express_1.Router)();
 kpiRoutes.get('/get-total-tremps', auth_1.authenticateToken, KpiController.getTotalTremps);
 kpiRoutes.get('/get-total-tremps-by-gender', auth_1.authenticateToken, KpiController.getTotalTrempsByGender);
+kpiRoutes.get('/get-last-opened-trips', auth_1.authenticateToken, KpiController.getLastOpenedTrips);
+kpiRoutes.get('/get-top-routes', auth_1.authenticateToken, KpiController.getMostPopularRoutes);
+kpiRoutes.get('/get-top-drivers', auth_1.authenticateToken, KpiController.getTopDrivers);
+kpiRoutes.get('/get-top-hours', auth_1.authenticateToken, KpiController.getMostRequestedHours);
+kpiRoutes.get('/get-people-and-tremps-counts', auth_1.authenticateToken, KpiController.getPeopleAndTrempCounts);
+kpiRoutes.get('/get-total-tremps-by-gender-by-month', auth_1.authenticateToken, KpiController.getTotalTrempsByGenderByMonth);
 kpiRoutes.use(handleErrors_1.handleErrors);
 exports.default = kpiRoutes;
 //# sourceMappingURL=KpiRoutes.js.map

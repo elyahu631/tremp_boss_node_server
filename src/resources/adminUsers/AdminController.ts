@@ -8,6 +8,13 @@ import * as AdminService from "./AdminService";
 import AdminModel from "./AdminModel";
 import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from "../../middleware/HttpException";
 
+/**
+  Logs in an admin user.
+  It validates the username and password in the request body,
+  calls the loginUser function from AdminService to check the credentials,
+  generates a token using the user's ID, and returns the user and token in the response.
+  If there are any errors, it passes them to the error handling middleware.
+ */
 export async function loginAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { username, password } = req.body;
@@ -27,6 +34,13 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
   }
 }
 
+/**
+ Retrieves an admin user by ID.
+ It validates the user ID in the request params,
+ calls the getUserById function from AdminService to fetch the user,
+ and returns the user in the response.
+ If the user is not found, it throws a NotFoundException.
+ */
 export async function getAdminUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -45,6 +59,12 @@ export async function getAdminUserById(req: Request, res: Response, next: NextFu
   }
 }
 
+/**
+Deletes an admin user by ID.
+It validates the user ID in the request params,
+calls the deleteUserById function from AdminService to delete the user,
+and returns a success message in the response.
+ */
 export async function deleteAdminUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -58,6 +78,12 @@ export async function deleteAdminUserById(req: Request, res: Response, next: Nex
   }
 }
 
+/**
+ Retrieves all admin users.
+ It calls the getAllUsers function from AdminService to fetch all users,
+ and returns the users in the response.
+ Additionally, it modifies each user object to hide the actual password.
+ */
 export async function getAllAdminUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     let users = await AdminService.getAllUsers();
@@ -68,6 +94,12 @@ export async function getAllAdminUsers(req: Request, res: Response, next: NextFu
   }
 }
 
+/**
+ Marks an admin user as deleted.
+ It validates the user ID in the request params,
+ calls the markUserAsDeleted function from AdminService to update the user's deletion status,
+ and returns a success message in the response.
+ */
 export async function markAdminUserAsDeleted(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -81,6 +113,15 @@ export async function markAdminUserAsDeleted(req: Request, res: Response, next: 
   }
 }
 
+/**
+ Retrieves a user from the provided token.
+ It validates the authorization token from the request headers,
+ verifies the token using the JWT_SECRET,
+ calls the getUserById function from AdminService to fetch the user,
+ and returns the user in the response.
+ If the token is missing or invalid, it throws a ForbiddenException or UnauthorizedException.
+ If the user is not found, it throws a NotFoundException.
+ */
 export async function getUserFromToken(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -102,6 +143,14 @@ export async function getUserFromToken(req: Request, res: Response, next: NextFu
   }
 }
 
+/**
+ Adds a new admin user.
+ It creates a new AdminModel instance using the request body,
+ calls the createUser function from AdminService to save the user in the database,
+ and returns the saved user in the response.
+ If there is an uploaded file, it updates the user's image using
+ the uploadImageToFirebaseAndUpdateUser function from AdminService.
+ */
 export async function addAdminUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const newUser = new AdminModel(req.body);
@@ -121,6 +170,14 @@ export async function addAdminUser(req: Request, res: Response, next: NextFuncti
   }
 }
 
+/**
+ Updates the details of an admin user.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateAdminUpdates function,
+ calls the updateUserDetails function from AdminService to update the user details in the database,
+ and returns the updated user in the response.
+ If the updated user details are invalid, it throws a BadRequestException.
+ */
 export async function updateAdminUserDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;

@@ -29,8 +29,8 @@ usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
 usersRouter.put("/markDeleted/:id", authenticateToken, markUserAsDeleted);
 usersRouter.put("/update/:id", authenticateToken, updateUser);
 usersRouter.post("/add", addUser);
-usersRouter.post("/admin-add-user",authenticateToken,upload.single('photo_URL'),AdminAddUser);
-usersRouter.put("/update-user/:id", authenticateToken, upload.single('photo_URL'), updateUserDetails);
+usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
+usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
 // usersRouter.post("/add-notification-token", addNotificationToken);
 
 usersRouter.use(handleErrors); 

@@ -98,6 +98,7 @@ function addGift(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const newGift = new GiftModel_1.default(req.body);
+            console.log(newGift);
             let giftInsertion = yield GiftService.addGift(newGift);
             let savedGift = giftInsertion.insertedId;
             if (req.file) {

@@ -5,16 +5,16 @@ import { ObjectId } from 'mongodb';
 
 class GiftModel {
   _id: ObjectId;
-  gift_image: string;
+  image_URL: string;
   gift_name: string;
   price: number;
   quantity: number;
   collect_place: string;
   deleted: boolean;
 
-  constructor(giftData: {_id: ObjectId, gift_image: string, gift_name: string, price: number, quantity: number, collect_place: string, deleted: boolean}) {
+  constructor(giftData: {_id: ObjectId, image_URL: string, gift_name: string, price: number, quantity: number, collect_place: string, deleted: boolean}) {
     this._id = giftData._id || new ObjectId;
-    this.gift_image = giftData.gift_image;
+    this.image_URL = giftData.image_URL;
     this.gift_name = giftData.gift_name;
     this.price = giftData.price;
     this.quantity = giftData.quantity;
@@ -25,7 +25,7 @@ class GiftModel {
   validateGift() {
     const schema = Joi.object({
       _id: Joi.optional(),
-      gift_image: Joi.string().optional(),
+      image_URL: Joi.string().optional(),
       gift_name: Joi.string().required(),
       price: Joi.number().required(),
       quantity: Joi.number().required(),

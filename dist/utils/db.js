@@ -117,21 +117,6 @@ class DB {
             }
         });
     }
-    //Summary data about the information in the database
-    CountCollection(collection, query = {}, projection = {}) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                yield this.client.connect();
-                return this.client.db(this.dbName).collection(collection).countDocuments(query, projection);
-            }
-            catch (error) {
-                throw error;
-            }
-            finally {
-                yield this.client.close();
-            }
-        });
-    }
     aggregate(collection, pipeline = [{}]) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

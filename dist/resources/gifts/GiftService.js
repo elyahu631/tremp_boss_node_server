@@ -59,8 +59,8 @@ function addGift(gift) {
 exports.addGift = addGift;
 function uploadImageToFirebaseAndUpdateGift(file, filePath, giftId) {
     return __awaiter(this, void 0, void 0, function* () {
-        const gift_image = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
-        return giftDataAccess.UpdateGift(giftId, { gift_image });
+        const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        return giftDataAccess.UpdateGift(giftId, { image_URL });
     });
 }
 exports.uploadImageToFirebaseAndUpdateGift = uploadImageToFirebaseAndUpdateGift;
@@ -76,7 +76,7 @@ function UpdateGiftDetails(id, giftDetails, file) {
         if (file) {
             try {
                 const filePath = `usersimages/${id}`;
-                giftDetails.gift_image = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+                giftDetails.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
                 throw new HttpException_1.InternalServerException("Error uploading image: " + error);

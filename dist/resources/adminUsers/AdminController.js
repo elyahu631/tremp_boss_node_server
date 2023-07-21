@@ -43,6 +43,13 @@ const AdminValidation_1 = require("./AdminValidation");
 const AdminService = __importStar(require("./AdminService"));
 const AdminModel_1 = __importDefault(require("./AdminModel"));
 const HttpException_1 = require("../../middleware/HttpException");
+/**
+  Logs in an admin user.
+  It validates the username and password in the request body,
+  calls the loginUser function from AdminService to check the credentials,
+  generates a token using the user's ID, and returns the user and token in the response.
+  If there are any errors, it passes them to the error handling middleware.
+ */
 function loginAdmin(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -63,6 +70,13 @@ function loginAdmin(req, res, next) {
     });
 }
 exports.loginAdmin = loginAdmin;
+/**
+ Retrieves an admin user by ID.
+ It validates the user ID in the request params,
+ calls the getUserById function from AdminService to fetch the user,
+ and returns the user in the response.
+ If the user is not found, it throws a NotFoundException.
+ */
 function getAdminUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -82,6 +96,12 @@ function getAdminUserById(req, res, next) {
     });
 }
 exports.getAdminUserById = getAdminUserById;
+/**
+Deletes an admin user by ID.
+It validates the user ID in the request params,
+calls the deleteUserById function from AdminService to delete the user,
+and returns a success message in the response.
+ */
 function deleteAdminUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -98,6 +118,12 @@ function deleteAdminUserById(req, res, next) {
     });
 }
 exports.deleteAdminUserById = deleteAdminUserById;
+/**
+ Retrieves all admin users.
+ It calls the getAllUsers function from AdminService to fetch all users,
+ and returns the users in the response.
+ Additionally, it modifies each user object to hide the actual password.
+ */
 function getAllAdminUsers(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -111,6 +137,12 @@ function getAllAdminUsers(req, res, next) {
     });
 }
 exports.getAllAdminUsers = getAllAdminUsers;
+/**
+ Marks an admin user as deleted.
+ It validates the user ID in the request params,
+ calls the markUserAsDeleted function from AdminService to update the user's deletion status,
+ and returns a success message in the response.
+ */
 function markAdminUserAsDeleted(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -127,6 +159,15 @@ function markAdminUserAsDeleted(req, res, next) {
     });
 }
 exports.markAdminUserAsDeleted = markAdminUserAsDeleted;
+/**
+ Retrieves a user from the provided token.
+ It validates the authorization token from the request headers,
+ verifies the token using the JWT_SECRET,
+ calls the getUserById function from AdminService to fetch the user,
+ and returns the user in the response.
+ If the token is missing or invalid, it throws a ForbiddenException or UnauthorizedException.
+ If the user is not found, it throws a NotFoundException.
+ */
 function getUserFromToken(req, res, next) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
@@ -152,6 +193,14 @@ function getUserFromToken(req, res, next) {
     });
 }
 exports.getUserFromToken = getUserFromToken;
+/**
+ Adds a new admin user.
+ It creates a new AdminModel instance using the request body,
+ calls the createUser function from AdminService to save the user in the database,
+ and returns the saved user in the response.
+ If there is an uploaded file, it updates the user's image using
+ the uploadImageToFirebaseAndUpdateUser function from AdminService.
+ */
 function addAdminUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -172,6 +221,14 @@ function addAdminUser(req, res, next) {
     });
 }
 exports.addAdminUser = addAdminUser;
+/**
+ Updates the details of an admin user.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateAdminUpdates function,
+ calls the updateUserDetails function from AdminService to update the user details in the database,
+ and returns the updated user in the response.
+ If the updated user details are invalid, it throws a BadRequestException.
+ */
 function updateAdminUserDetails(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
