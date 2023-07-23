@@ -83,18 +83,19 @@ function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
             throw new Error('Tremp does not exist');
         }
         // Check if the user making the request is the creator of the tremp
-        if (tremp.creator_id !== creator_id) {
+        if (tremp.creator_id.toString() !== creator_id) {
             throw new Error('Only the creator of the tremp can approve or disapprove participants');
         }
         // Find the user in the tremp
-        const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id === user_id);
+        const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id.toString() === user_id);
         // Check if the user is a participant in the tremp
         if (userIndex === -1) {
             throw new Error('User is not a participant in this tremp');
         }
         // Update the user's approval status
-        tremp.users_in_tremp[userIndex].is_approved = approval ? 'approved' : 'denied';
+        tremp.users_in_tremp[userIndex].is_approved = approval ? "approved" : "denied";
         // Update the tremp in the database
+        console.log(tremp);
         const result = yield trempDataAccess.Update(tremp_id, tremp);
         return result;
     });

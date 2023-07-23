@@ -70,24 +70,28 @@ export async function addUserToTremp(tremp_id: string, user_id: string) {
 
 export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: boolean): Promise<any> {
   // Fetch the tremp using tremp_id
+
   const tremp = await trempDataAccess.FindByID(tremp_id);
   // Check if the tremp exists
   if (!tremp) {
     throw new Error('Tremp does not exist');
   }
+
   // Check if the user making the request is the creator of the tremp
-  if (tremp.creator_id !== creator_id) {
+  if (tremp.creator_id.toString() !== creator_id) {
     throw new Error('Only the creator of the tremp can approve or disapprove participants');
   }
   // Find the user in the tremp
-  const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id === user_id);
+  const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id.toString() === user_id);
   // Check if the user is a participant in the tremp
   if (userIndex === -1) {
     throw new Error('User is not a participant in this tremp');
   }
   // Update the user's approval status
-  tremp.users_in_tremp[userIndex].is_approved = approval ? 'approved' : 'denied';
+  tremp.users_in_tremp[userIndex].is_approved = approval ? "approved" : "denied";
   // Update the tremp in the database
+  console.log(tremp);
+
   const result = await trempDataAccess.Update(tremp_id, tremp);
   return result;
 }
@@ -118,6 +122,7 @@ export async function getUserTremps(user_id: string, type_of_tremp: string) {
 
   return trempsMapped;
 }
+
 
 function getApprovalStatus(tremp: Tremp, userId: ObjectId, type_of_tremp: string): string {
   if (tremp.creator_id.equals(userId)) {

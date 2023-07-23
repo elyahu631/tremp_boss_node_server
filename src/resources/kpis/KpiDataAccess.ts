@@ -210,48 +210,45 @@ class KpiDataAccess {
 
   
   // async getGenderRideCounts() {
+
   //   const pipeline = [
   //     {
   //       $lookup: {
   //         from: KpiDataAccess.UserCollection,
-  //         localField: "creator_id",
-  //         foreignField: "_id",
-  //         as: "creator",
-  //       },
+  //         localField: 'creator_id',
+  //         foreignField: '_id',
+  //         as: 'creator_data'
+  //       }
   //     },
   //     {
-  //       $unwind: "$creator",
+  //       $unwind: '$creator_data'
   //     },
   //     {
-  //       $unwind: {
-  //         path: "$users_in_tremp",
-  //         preserveNullAndEmptyArrays: true
+  //       $match: {
+  //         'deleted': false
+  //       }
+  //     },
+  //     {
+  //       $addFields: {
+  //         openedRide: 1,
+  //         joinedRide: {
+  //           $cond: [
+  //             { $ne: [{ $size: "$users_in_tremp" }, 0] },
+  //             1,
+  //             0
+  //           ]
+  //         },
   //       }
   //     },
   //     {
   //       $group: {
-  //         _id: "$creator.gender",
-  //         openedRides: {
-  //           $sum: 1
-  //         },
-  //         joinedRides: {
-  //           $sum: {
-  //             $cond: [
-  //               {
-  //                 $and: [
-  //                   { $ne: ["$users_in_tremp", null] },
-  //                   { $gt: [{ $size: { $ifNull: ["$users_in_tremp", []] } as any }, 0] }
-  //               ],
-  //               },
-  //               1,
-  //               0,
-  //             ],
-  //           },
-  //         },
-  //       },
-  //     },
+  //         _id: "$creator_data.gender",
+  //         totalOpenedRides: { $sum: "$openedRide" },
+  //         totalJoinedRides: { $sum: "$joinedRide" },
+  //       }
+  //     }
   //   ];
-    
+
   //   const result = await db.aggregate(KpiDataAccess.trempCollection, pipeline);
   //   return result;
   // }

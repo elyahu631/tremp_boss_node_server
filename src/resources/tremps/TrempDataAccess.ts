@@ -44,6 +44,16 @@ class TrempDataAccess {
     const db = new DB();
     return await db.Update(TrempDataAccess.collection, id, updateQuery);
   }
+
+  // async UpdateUserInTremp(trempId: string, userId: string, approval: string) {
+  //   const db = new DB();
+  //   return await db.UpdateWithOperation(
+  //     TrempDataAccess.collection, 
+  //     trempId, 
+  //     { $set: { "users_in_tremp.$[elem].is_approved" : approval } },
+  //     { arrayFilters: [ { "elem.user_id": userId } ] }
+  //   );
+  // }
 }
 
 export default TrempDataAccess;
