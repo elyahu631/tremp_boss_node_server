@@ -121,12 +121,12 @@ export async function updateUserDetails(id: string, userDetails: UserModel, file
   if (file) {
     try {
       const filePath = `usersimages/${id}`;
-      updateData.image_URL = await uploadImageToFirebase(file, filePath);
+      return updateData.image_URL = await uploadImageToFirebase(file, filePath);
     } catch (error) {
       console.error("Error uploading image:", error);
     }
   }
-
+  return "no file";
   try {
     const res = await userDataAccess.UpdateUserDetails(id, updateData);
     return res    

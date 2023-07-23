@@ -140,12 +140,13 @@ function updateUserDetails(id, userDetails, file) {
         if (file) {
             try {
                 const filePath = `usersimages/${id}`;
-                updateData.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+                return updateData.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
                 console.error("Error uploading image:", error);
             }
         }
+        return "no file";
         try {
             const res = yield userDataAccess.UpdateUserDetails(id, updateData);
             return res;

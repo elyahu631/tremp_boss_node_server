@@ -42,6 +42,13 @@ const UserService = __importStar(require("./UserService"));
 const UserValidation_1 = require("./UserValidation");
 const UserModel_1 = __importDefault(require("./UserModel"));
 const HttpException_1 = require("../../middleware/HttpException");
+/**
+  Registers a new user.
+  It validates the user_email and password in the request body,
+  calls the registerUser function from UserService to create the user,
+  and returns a success message in the response.
+  If there are any errors, it passes them to the error handling middleware.
+ */
 function registerUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -58,6 +65,12 @@ function registerUser(req, res, next) {
     });
 }
 exports.registerUser = registerUser;
+/**
+  Logs in a user.
+  It validates the user_email and password in the request body,
+  calls the loginUser function from UserService to check the credentials,
+  generates a token using the user's ID, and returns the user and token in the response.
+ */
 function loginUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -75,6 +88,12 @@ function loginUser(req, res, next) {
     });
 }
 exports.loginUser = loginUser;
+/**
+ Retrieves a user by ID.
+ It validates the user ID in the request params,
+ calls the getUserById function from UserService to fetch the user,
+ and returns the user in the response.
+ */
 function getUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -88,6 +107,12 @@ function getUserById(req, res, next) {
     });
 }
 exports.getUserById = getUserById;
+/**
+Deletes a user by ID.
+It validates the user ID in the request params,
+calls the deleteUserById function from UserService to delete the user,
+and returns a success message in the response.
+ */
 function deleteUserById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -101,6 +126,13 @@ function deleteUserById(req, res, next) {
     });
 }
 exports.deleteUserById = deleteUserById;
+/**
+ Updates the details of a user.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateUpdatedUser function,
+ calls the updateUser function from UserService to update the user details in the database,
+ and returns the updated user in the response.
+ */
 function updateUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -118,6 +150,14 @@ function updateUser(req, res, next) {
     });
 }
 exports.updateUser = updateUser;
+/**
+ Adds a new user.
+ It creates a new UserModel instance using the request body,
+ calls the createUser function from UserService to save the user in the database,
+ and returns the saved user in the response.
+ If there is an uploaded file, it updates the user's image using
+ the uploadImageToFirebaseAndUpdateUser function from UserService.
+ */
 function addUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -131,6 +171,12 @@ function addUser(req, res, next) {
     });
 }
 exports.addUser = addUser;
+/**
+ Retrieves all users.
+ It calls the getAllUsers function from UserService to fetch all users,
+ and returns the users in the response.
+ Additionally, it modifies each user object to hide the actual password.
+ */
 function getAllUsers(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -144,6 +190,11 @@ function getAllUsers(req, res, next) {
     });
 }
 exports.getAllUsers = getAllUsers;
+/**
+ Marks a user as deleted.
+ It validates the user ID in the request params,
+ calls the markUserAsDeleted function from UserService to update the user's deletion status
+ */
 function markUserAsDeleted(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -157,6 +208,14 @@ function markUserAsDeleted(req, res, next) {
     });
 }
 exports.markUserAsDeleted = markUserAsDeleted;
+/**
+ Admin Adds a new  user from the request body.
+ It creates a new UserModel instance using the request body,
+ calls the createUser function from UserService to save the user in the database,
+ and returns the saved user in the response.
+ If there is an uploaded file, it updates the user's image using
+ the uploadImageToFirebaseAndUpdateUser function from UserService.
+ */
 function AdminAddUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -176,6 +235,14 @@ function AdminAddUser(req, res, next) {
     });
 }
 exports.AdminAddUser = AdminAddUser;
+/**
+ Updates the details of a user from the request body.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateUpdatedUser function,
+ calls the updateUserDetails function from UserService to update the user details in the database,
+ and returns the updated user in the response.
+ If the updated user details are invalid, it throws a BadRequestException.
+ */
 function updateUserDetails(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -193,6 +260,16 @@ function updateUserDetails(req, res, next) {
     });
 }
 exports.updateUserDetails = updateUserDetails;
+/**
+ Adds a notification token to a user from the request body.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateUpdatedUser function,
+ calls the updateUserDetails function from UserService to update the user details in the database,
+ and returns the updated user in the response.
+ If the updated user details are invalid, it throws a BadRequestException.
+ Note: There seems to be an issue with this function's implementation, as it is identical to updateUserDetails function.
+       It should be revised if it's intended to serve a different purpose.
+ */
 function addNotificationToken(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

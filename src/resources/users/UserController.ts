@@ -5,8 +5,16 @@ import { JWT_SECRET } from "../../config/environment";
 import * as UserService from './UserService';
 import { validateUpdatedUser } from "./UserValidation";
 import UserModel from "./UserModel";
-import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from "../../middleware/HttpException";
+import { BadRequestException, UnauthorizedException } from "../../middleware/HttpException";
 
+
+/**
+  Registers a new user.
+  It validates the user_email and password in the request body,
+  calls the registerUser function from UserService to create the user,
+  and returns a success message in the response.
+  If there are any errors, it passes them to the error handling middleware.
+ */
 export async function registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { user_email, password } = req.body;
@@ -20,6 +28,12 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
   }
 }
 
+/**
+  Logs in a user.
+  It validates the user_email and password in the request body,
+  calls the loginUser function from UserService to check the credentials,
+  generates a token using the user's ID, and returns the user and token in the response.
+ */
 export async function loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { user_email, password } = req.body;
@@ -36,6 +50,12 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
   }
 }
 
+/**
+ Retrieves a user by ID.
+ It validates the user ID in the request params,
+ calls the getUserById function from UserService to fetch the user,
+ and returns the user in the response.
+ */
 export async function getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -46,6 +66,12 @@ export async function getUserById(req: Request, res: Response, next: NextFunctio
   }
 }
 
+/**
+Deletes a user by ID.
+It validates the user ID in the request params,
+calls the deleteUserById function from UserService to delete the user,
+and returns a success message in the response.
+ */
 export async function deleteUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -56,6 +82,13 @@ export async function deleteUserById(req: Request, res: Response, next: NextFunc
   }
 }
 
+/**
+ Updates the details of a user.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateUpdatedUser function,
+ calls the updateUser function from UserService to update the user details in the database,
+ and returns the updated user in the response.
+ */
 export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -70,6 +103,14 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
   }
 }
 
+/**
+ Adds a new user.
+ It creates a new UserModel instance using the request body,
+ calls the createUser function from UserService to save the user in the database,
+ and returns the saved user in the response.
+ If there is an uploaded file, it updates the user's image using
+ the uploadImageToFirebaseAndUpdateUser function from UserService.
+ */
 export async function addUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { user_email, password } = req.body;
@@ -80,6 +121,13 @@ export async function addUser(req: Request, res: Response, next: NextFunction): 
   }
 }
 
+
+/**
+ Retrieves all users.
+ It calls the getAllUsers function from UserService to fetch all users,
+ and returns the users in the response.
+ Additionally, it modifies each user object to hide the actual password.
+ */
 export async function getAllUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     let users = await UserService.getAllUsers();
@@ -90,6 +138,11 @@ export async function getAllUsers(req: Request, res: Response, next: NextFunctio
   }
 }
 
+/**
+ Marks a user as deleted.
+ It validates the user ID in the request params,
+ calls the markUserAsDeleted function from UserService to update the user's deletion status
+ */
 export async function markUserAsDeleted(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -100,6 +153,14 @@ export async function markUserAsDeleted(req: Request, res: Response, next: NextF
   }
 }
 
+/**
+ Admin Adds a new  user from the request body.
+ It creates a new UserModel instance using the request body,
+ calls the createUser function from UserService to save the user in the database,
+ and returns the saved user in the response.
+ If there is an uploaded file, it updates the user's image using
+ the uploadImageToFirebaseAndUpdateUser function from UserService.
+ */
 export async function AdminAddUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const newUser = new UserModel(req.body);
@@ -116,6 +177,14 @@ export async function AdminAddUser(req: Request, res: Response, next: NextFuncti
   }
 }
 
+/**
+ Updates the details of a user from the request body.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateUpdatedUser function,
+ calls the updateUserDetails function from UserService to update the user details in the database,
+ and returns the updated user in the response.
+ If the updated user details are invalid, it throws a BadRequestException.
+ */
 export async function updateUserDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -130,6 +199,16 @@ export async function updateUserDetails(req: Request, res: Response, next: NextF
   }
 }
 
+/**
+ Adds a notification token to a user from the request body.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateUpdatedUser function,
+ calls the updateUserDetails function from UserService to update the user details in the database,
+ and returns the updated user in the response.
+ If the updated user details are invalid, it throws a BadRequestException.
+ Note: There seems to be an issue with this function's implementation, as it is identical to updateUserDetails function.
+       It should be revised if it's intended to serve a different purpose.
+ */
 export async function addNotificationToken(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;

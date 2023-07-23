@@ -100,32 +100,37 @@ export async function getTrempById(id: string) {
 
 export async function getUserTremps(user_id: string, type_of_tremp: string) {
   const userId = new ObjectId(user_id);
+  const first = type_of_tremp === 'driver' ? 'driver': 'hitchhiker' ;
+  const second = type_of_tremp === 'hitchhiker' ? 'driver': 'hitchhiker' ;
 
-  const query = {
-    $or: [
-      { creator_id: userId },
-      { "users_in_tremp.user_id": userId }
-    ],
-    tremp_type: type_of_tremp,
+  const driverQuery = {
+    creator_id: userId,
+    tremp_type: first,
     deleted: false
   };
 
-  const tremps: Tremp[] = await trempDataAccess.FindAll(query) as any;
-  console.log(tremps);
+  const hitchhikerQuery = {
+    "users_in_tremp.user_id": userId,
+    tremp_type: second,
+    deleted: false
+  };
 
-  const trempsMapped = tremps.map(tremp => {
-    
-    
-    const approvalStatus = getApprovalStatus(tremp, userId, type_of_tremp);
-    const userInTremp = tremp.users_in_tremp.find((user: UserInTremp) => user.user_id.equals(userId));
-    
-    if (userInTremp && !tremp.creator_id.equals(userId)) {
-      tremp.tremp_type = type_of_tremp === 'driver' ? 'hitchhiker' : 'driver';
-    }
+  const driverTremps: Tremp[] = await trempDataAccess.FindAll(driverQuery) as any;
+
+  const driverTrempsMapped = driverTremps.map(tremp => {  
+    const approvalStatus = getApprovalStatus(tremp, userId, first);
+    return { ...tremp, approvalStatus };
+  });
+  const hitchhikerTremps: Tremp[] = await trempDataAccess.FindAll(hitchhikerQuery) as any;
+
+  const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => {  
+    const approvalStatus = getApprovalStatus(tremp, userId, second);
     return { ...tremp, approvalStatus };
   });
 
-  return trempsMapped;
+  const tremps = [...driverTrempsMapped, ...hitchhikerTrempsMapped];
+
+  return tremps;
 }
 
 function getApprovalStatus(tremp: Tremp, userId: ObjectId, type_of_tremp: string): string {

@@ -109,25 +109,30 @@ exports.getTrempById = getTrempById;
 function getUserTremps(user_id, type_of_tremp) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
-        const query = {
-            $or: [
-                { creator_id: userId },
-                { "users_in_tremp.user_id": userId }
-            ],
-            tremp_type: type_of_tremp,
+        const first = type_of_tremp === 'driver' ? 'driver' : 'hitchhiker';
+        const second = type_of_tremp === 'hitchhiker' ? 'driver' : 'hitchhiker';
+        const driverQuery = {
+            creator_id: userId,
+            tremp_type: first,
             deleted: false
         };
-        const tremps = yield trempDataAccess.FindAll(query);
-        console.log(tremps);
-        const trempsMapped = tremps.map(tremp => {
-            const approvalStatus = getApprovalStatus(tremp, userId, type_of_tremp);
-            const userInTremp = tremp.users_in_tremp.find((user) => user.user_id.equals(userId));
-            if (userInTremp && !tremp.creator_id.equals(userId)) {
-                tremp.tremp_type = type_of_tremp === 'driver' ? 'hitchhiker' : 'driver';
-            }
+        const hitchhikerQuery = {
+            "users_in_tremp.user_id": userId,
+            tremp_type: second,
+            deleted: false
+        };
+        const driverTremps = yield trempDataAccess.FindAll(driverQuery);
+        const driverTrempsMapped = driverTremps.map(tremp => {
+            const approvalStatus = getApprovalStatus(tremp, userId, first);
             return Object.assign(Object.assign({}, tremp), { approvalStatus });
         });
-        return trempsMapped;
+        const hitchhikerTremps = yield trempDataAccess.FindAll(hitchhikerQuery);
+        const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => {
+            const approvalStatus = getApprovalStatus(tremp, userId, second);
+            return Object.assign(Object.assign({}, tremp), { approvalStatus });
+        });
+        const tremps = [...driverTrempsMapped, ...hitchhikerTrempsMapped];
+        return tremps;
     });
 }
 exports.getUserTremps = getUserTremps;
