@@ -23,7 +23,7 @@ usersRouter.put("/update/:id", auth_1.authenticateToken, UserController_1.update
 usersRouter.post("/add", UserController_1.addUser);
 usersRouter.post("/admin-add-user", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.AdminAddUser);
 usersRouter.put("/update-user/:id", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.updateUserDetails);
-usersRouter.put("/update-user-image/:id", auth_1.authenticateToken, UserController_1.updateUserImage);
+usersRouter.put("/update-user-image/:id", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.updateUserImage);
 // usersRouter.post("/add-notification-token", addNotificationToken);
 usersRouter.use(handleErrors_1.handleErrors);
 exports.default = usersRouter;

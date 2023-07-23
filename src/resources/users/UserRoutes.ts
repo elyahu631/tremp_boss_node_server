@@ -32,7 +32,7 @@ usersRouter.put("/update/:id", authenticateToken, updateUser);
 usersRouter.post("/add", addUser);
 usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
 usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
-usersRouter.put("/update-user-image/:id", authenticateToken, updateUserImage);
+usersRouter.put("/update-user-image/:id", authenticateToken, upload.single('image_URL'), updateUserImage);
 
 // usersRouter.post("/add-notification-token", addNotificationToken);
 
