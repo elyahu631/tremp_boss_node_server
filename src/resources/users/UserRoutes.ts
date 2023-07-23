@@ -15,6 +15,7 @@ import {
   markUserAsDeleted,
   AdminAddUser,
   updateUserDetails,
+  updateUserImage,
 } from "./UserController";
 import multerConfig from "../../config/multerConfig";
 // multer middleware for file upload handling
@@ -31,6 +32,8 @@ usersRouter.put("/update/:id", authenticateToken, updateUser);
 usersRouter.post("/add", addUser);
 usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
 usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
+usersRouter.put("/update-user-image/:id", authenticateToken, updateUserImage);
+
 // usersRouter.post("/add-notification-token", addNotificationToken);
 
 usersRouter.use(handleErrors); 

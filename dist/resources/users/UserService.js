@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserDetails = exports.createUser = exports.uploadImageToFirebaseAndUpdateUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
+exports.updateUserImage = exports.updateUserDetails = exports.createUser = exports.uploadImageToFirebaseAndUpdateUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserModel_1 = __importDefault(require("./UserModel"));
 const UserDataAccess_1 = __importDefault(require("./UserDataAccess"));
@@ -140,13 +140,12 @@ function updateUserDetails(id, userDetails, file) {
         if (file) {
             try {
                 const filePath = `usersimages/${id}`;
-                return updateData.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+                updateData.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
                 console.error("Error uploading image:", error);
             }
         }
-        return "no file";
         try {
             const res = yield userDataAccess.UpdateUserDetails(id, updateData);
             return res;
@@ -162,4 +161,36 @@ function updateUserDetails(id, userDetails, file) {
     });
 }
 exports.updateUserDetails = updateUserDetails;
+function updateUserImage(id, userDetails, base64Image) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let updateData = Object.assign(Object.assign({}, userDetails), { updatedAt: (0, TimeService_1.getCurrentTimeInIsrael)() });
+        // If a new password is provided, hash it before storing
+        if (updateData.password) {
+            updateData.password = yield hashPassword(updateData.password);
+        }
+        // If a base64Image is provided, upload it and update image_URL
+        if (base64Image) {
+            try {
+                const filePath = `usersimages/${id}`;
+                updateData.image_URL = yield (0, fileUpload_1.uploadBase64ImageToFirebase)(base64Image, filePath);
+            }
+            catch (error) {
+                console.error("Error uploading image:", error);
+            }
+        }
+        try {
+            const updatedUser = yield userDataAccess.UpdateUserDetails(id, updateData);
+            return updatedUser;
+        }
+        catch (error) {
+            if (error instanceof mongodb_1.MongoError && error.code === 11000) {
+                // This error code stands for 'Duplicate Key Error'
+                const keyValue = error.keyValue;
+                throw new HttpException_1.BadRequestException(`User with this ${Object.keys(keyValue)[0]} already exists.`);
+            }
+            throw new HttpException_1.BadRequestException("Error updating user image: " + error);
+        }
+    });
+}
+exports.updateUserImage = updateUserImage;
 //# sourceMappingURL=UserService.js.map
