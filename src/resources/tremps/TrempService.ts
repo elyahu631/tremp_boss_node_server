@@ -123,7 +123,6 @@ export async function getUserTremps(user_id: string, type_of_tremp: string) {
   return trempsMapped;
 }
 
-
 function getApprovalStatus(tremp: Tremp, userId: ObjectId, type_of_tremp: string): string {
   if (tremp.creator_id.equals(userId)) {
     if (tremp.users_in_tremp.length === 0) {

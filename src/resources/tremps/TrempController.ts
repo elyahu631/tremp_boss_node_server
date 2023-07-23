@@ -92,7 +92,7 @@ export async function approveUserInTremp(req: Request, res: Response, next: Next
     const fcmToken = user_in_tremp.notification_token;
     if (fcmToken) {
       await sendNotificationToUser(fcmToken, "The creator answered", 
-      "The creator of the ride has answered your request", { creator_id, approval, tremp_id, user_id });
+      "The creator of the ride has answered your request", { creator_id, tremp_id, user_id });
     } else {
       console.log('User does not have a valid FCM token');
     }

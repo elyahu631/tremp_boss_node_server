@@ -130,7 +130,7 @@ function approveUserInTremp(req, res, next) {
             const user_in_tremp = yield UserService.getUserById(user_id);
             const fcmToken = user_in_tremp.notification_token;
             if (fcmToken) {
-                yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, "The creator answered", "The creator of the ride has answered your request", { creator_id, approval, tremp_id, user_id });
+                yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, "The creator answered", "The creator of the ride has answered your request", { creator_id, tremp_id, user_id });
             }
             else {
                 console.log('User does not have a valid FCM token');
