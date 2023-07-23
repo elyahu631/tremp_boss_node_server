@@ -90,8 +90,6 @@ export async function approveUserInTremp(tremp_id: string, creator_id: string, u
   // Update the user's approval status
   tremp.users_in_tremp[userIndex].is_approved = approval ? "approved" : "denied";
   // Update the tremp in the database
-  console.log(tremp);
-
   const result = await trempDataAccess.Update(tremp_id, tremp);
   return result;
 }
@@ -116,7 +114,14 @@ export async function getUserTremps(user_id: string, type_of_tremp: string) {
   console.log(tremps);
 
   const trempsMapped = tremps.map(tremp => {
+    
+    
     const approvalStatus = getApprovalStatus(tremp, userId, type_of_tremp);
+    const userInTremp = tremp.users_in_tremp.find((user: UserInTremp) => user.user_id.equals(userId));
+    
+    if (userInTremp && !tremp.creator_id.equals(userId)) {
+      tremp.tremp_type = type_of_tremp === 'driver' ? 'hitchhiker' : 'driver';
+    }
     return { ...tremp, approvalStatus };
   });
 
@@ -124,21 +129,64 @@ export async function getUserTremps(user_id: string, type_of_tremp: string) {
 }
 
 function getApprovalStatus(tremp: Tremp, userId: ObjectId, type_of_tremp: string): string {
-  if (tremp.creator_id.equals(userId)) {
-    if (tremp.users_in_tremp.length === 0) {
-      return (type_of_tremp === 'hitchhiker') ? 'no bidders' : 'no applicants';
+  if (type_of_tremp === 'driver') {
+    console.log('User is the creator');
+    if (tremp.creator_id.equals(userId)) {
+      if (tremp.users_in_tremp.length === 0) {
+        return 'no applicants';
+      } else {
+        const pending = tremp.users_in_tremp.some((user: UserInTremp) => user.is_approved === 'pending');
+        const denied = tremp.users_in_tremp.every((user: UserInTremp) => user.is_approved === 'denied');
+        if (pending) return 'awaiting approval from me';
+        if (denied) return 'no applicants';
+        return 'all approved';
+      }
     } else {
-      const pending = tremp.users_in_tremp.some((user: UserInTremp) => user.is_approved === 'pending');
-      return pending ? 'awaiting approval' : 'all approved';
+      const userInTremp = tremp.users_in_tremp.find((user: UserInTremp) => user.user_id.equals(userId));
+      if (userInTremp) {
+        console.log('User is in users_in_tremp');
+        switch (userInTremp.is_approved) {
+          case 'pending':
+            return 'waiting for approval from driver';
+          case 'denied':
+            return 'not approved';
+          case 'approved':
+            return 'approved';
+          default:
+            return 'not involved';
+        }
+      }
     }
-  } else {
-    const userInTremp = tremp.users_in_tremp.find((user: UserInTremp) => user.user_id.equals(userId));
-    if (userInTremp) {
-      return (userInTremp.is_approved === 'approved') ? 'approved' : 'awaiting approval';
+  } else if (type_of_tremp === 'hitchhiker') {
+    if (tremp.creator_id.equals(userId)) {
+      if (tremp.users_in_tremp.length === 0) {
+        return 'no bidders';
+      } else {
+        const pending = tremp.users_in_tremp.some((user: UserInTremp) => user.is_approved === 'pending');
+        const denied = tremp.users_in_tremp.every((user: UserInTremp) => user.is_approved === 'denied');
+        if (pending) return 'awaiting approval from me';
+        if (denied) return 'no bidders';
+        return 'all approved';
+      }
+    } else {
+      console.log('User is neither the creator nor in users_in_tremp');
+      const userInTremp = tremp.users_in_tremp.find((user: UserInTremp) => user.user_id.equals(userId));
+      if (userInTremp) {
+        switch (userInTremp.is_approved) {
+          case 'pending':
+            return 'waiting for approval from hitchhiker';
+          case 'denied':
+            return 'not approved';
+          case 'approved':
+            return 'approved';
+          default:
+            return 'not involved';
+        }
+      }
     }
   }
 
-  return ''; // default value, if none of the conditions are met
+  return 'not involved'; // default value, if none of the conditions are met
 }
 
 export async function deleteTremp(tremp_id: string, user_id: string) {

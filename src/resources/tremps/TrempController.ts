@@ -53,7 +53,6 @@ export async function getTrempsByFilters(req: Request, res: Response, next: Next
   }
 }
 
-
 export async function addUserToTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { tremp_id, user_id } = req.body;
@@ -82,7 +81,6 @@ export async function addUserToTremp(req: Request, res: Response, next: NextFunc
     next(err);
   }
 }
-
 
 export async function approveUserInTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
