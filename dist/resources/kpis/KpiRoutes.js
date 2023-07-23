@@ -34,7 +34,7 @@ kpiRoutes.get('/get-top-drivers', auth_1.authenticateToken, KpiController.getTop
 kpiRoutes.get('/get-top-hours', auth_1.authenticateToken, KpiController.getMostRequestedHours);
 kpiRoutes.get('/get-people-and-tremps-counts', auth_1.authenticateToken, KpiController.getPeopleAndTrempCounts);
 kpiRoutes.get('/get-percentages-per-type', auth_1.authenticateToken, KpiController.getRideAndTripCounts);
-// kpiRoutes.get('/get-gender-ride-counts', authenticateToken, KpiController.getGenderRideCounts);
+kpiRoutes.get('/get-hitchhiker-monthly-counts-by-gender', auth_1.authenticateToken, KpiController.getHitchhikerMonthlyCountsByGender);
 kpiRoutes.use(handleErrors_1.handleErrors);
 exports.default = kpiRoutes;
 // kpiRoutes.get('/get-total-tremps-by-gender', authenticateToken, KpiController.getTotalTrempsByGender);

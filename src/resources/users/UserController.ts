@@ -223,20 +223,3 @@ export async function addNotificationToken(req: Request, res: Response, next: Ne
   }
 }
 
-
-export async function updateUserImage(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const { id } = req.params;
-    const userDetails = req.body;
-
-    if (!validateUpdatedUser(userDetails)) {
-      throw new BadRequestException('Invalid data to update.');
-    }
-
-    const updatedUser = await UserService.updateUserImage(id, userDetails, req.file);
-
-    res.status(200).json({ status: true, message: "User image updated successfully", data: {userDetails,id} });
-  } catch (err) {
-    next(err);
-  }
-}

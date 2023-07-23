@@ -93,7 +93,6 @@ class DB {
     }
   }
 
-
   async aggregate(collection: string, pipeline = [{}]) {
     try {
       await this.client.connect();
@@ -104,7 +103,6 @@ class DB {
       await this.client.close();
     }
   }
-
 
 }
 

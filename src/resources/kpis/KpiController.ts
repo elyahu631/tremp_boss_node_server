@@ -54,48 +54,11 @@ export async function getRideAndTripCounts(req: Request, res: Response, next: Ne
   }
 }
 
-// export async function getGenderRideCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const counts = await kpiDataAccess.getGenderRideCounts();
-//     res.status(200).json({ status: true, data: counts });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
-// export async function getTotalTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const statistics = await kpiDataAccess.getTotalTremps();
-//     res.status(200).json({ status: true, data: statistics });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
-// export async function getTotalTrempsByGender(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const statistics = await kpiDataAccess.getTotalTrempsByGender();
-//     res.status(200).json({ status: true, data: statistics });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
-// export async function getTotalTrempsByGenderByMonth(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const statistics = await kpiDataAccess.getTotalTrempsByGenderByMonth();
-//     res.status(200).json({ status: true, data: statistics });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
-
-
-// export async function getLastOpenedTrips(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const trips = await kpiDataAccess.getLastOpenedTrips();
-//     res.status(200).json({ status: true, data: trips });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
+export async function getHitchhikerMonthlyCountsByGender(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const hitchhikerMonthlyCountsByGender = await kpiDataAccess.getHitchhikerMonthlyCountsByGender();
+    res.status(200).json({ status: true, data: hitchhikerMonthlyCountsByGender });
+  } catch (err) {
+    next(err);
+  }
+}

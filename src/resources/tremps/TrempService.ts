@@ -12,6 +12,9 @@ const userDataAccess = new UserDataAccess();
 export async function createTremp(tremp: TrempModel) {
   return await trempDataAccess.insertTremp(tremp);
 }
+export async function getAllTremps() {
+  return trempDataAccess.FindAll({deleted:false}); 
+}
 
 export async function getTrempsByFilters(filters: any) {
   const userId = new ObjectId(filters.creator_id);

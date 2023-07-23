@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserImage = exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
+exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
@@ -287,21 +287,4 @@ function addNotificationToken(req, res, next) {
     });
 }
 exports.addNotificationToken = addNotificationToken;
-function updateUserImage(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const { id } = req.params;
-            const userDetails = req.body;
-            if (!(0, UserValidation_1.validateUpdatedUser)(userDetails)) {
-                throw new HttpException_1.BadRequestException('Invalid data to update.');
-            }
-            const updatedUser = yield UserService.updateUserImage(id, userDetails, req.file);
-            res.status(200).json({ status: true, message: "User image updated successfully", data: { userDetails, id } });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.updateUserImage = updateUserImage;
 //# sourceMappingURL=UserController.js.map

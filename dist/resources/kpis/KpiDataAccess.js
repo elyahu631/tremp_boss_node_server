@@ -208,203 +208,86 @@ class KpiDataAccess {
             return result;
         });
     }
+    getHitchhikerMonthlyCountsByGender() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+            const creatorsPipeline = [
+                {
+                    $match: {
+                        "create_date": { $gte: sixMonthsAgo },
+                        "deleted": false
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'Users',
+                        localField: 'creator_id',
+                        foreignField: '_id',
+                        as: 'creator'
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            month: { $month: "$create_date" },
+                            gender: "$creator.gender"
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: {
+                        "_id.month": 1
+                    }
+                }
+            ];
+            const passengersPipeline = [
+                {
+                    $match: {
+                        "create_date": { $gte: sixMonthsAgo },
+                        "users_in_tremp.is_approved": 'approved',
+                        "deleted": false
+                    }
+                },
+                {
+                    $unwind: '$users_in_tremp'
+                },
+                {
+                    $lookup: {
+                        from: 'Users',
+                        localField: 'users_in_tremp.user_id',
+                        foreignField: '_id',
+                        as: 'passenger'
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            month: { $month: "$create_date" },
+                            gender: "$passenger.gender"
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: {
+                        "_id.month": 1
+                    }
+                }
+            ];
+            const [creatorsResult, passengersResult] = yield Promise.all([
+                yield db.aggregate(KpiDataAccess.trempCollection, creatorsPipeline),
+                yield db.aggregate(KpiDataAccess.trempCollection, passengersPipeline)
+            ]);
+            return {
+                creators_by_month_and_gender: creatorsResult,
+                passengers_by_month_and_gender: passengersResult
+            };
+        });
+    }
 }
 KpiDataAccess.trempCollection = 'Tremps';
 KpiDataAccess.UserCollection = 'Users';
 exports.default = KpiDataAccess;
-// async getTotalTremps() {
-//   const pipeline = [
-//     {
-//       $facet: {
-//         rideRequests: [
-//           { $match: { tremp_type: 'hitchhiker' } },
-//           { $count: 'count' }
-//         ],
-//         ApprovedRequests: [
-//           { $match: { tremp_type: 'hitchhiker', 'users_in_tremp.is_approved': 'approved', 'deleted': false } },
-//           { $count: 'count' }
-//         ],
-//         rideOffers: [
-//           { $match: { tremp_type: 'driver' } },
-//           { $count: 'count' }
-//         ],
-//         approvedOffers: [
-//           { $match: { tremp_type: 'driver', 'users_in_tremp.is_approved': 'approved', 'deleted': false } },
-//           { $count: 'count' }
-//         ],
-//       }
-//     }
-//   ];
-//   const result = await db.aggregate(KpiDataAccess.trempCollection, pipeline);;
-//   return {
-//     rideRequests: result[0].rideRequests[0]?.count || 0,
-//     ApprovedRequests: result[0].ApprovedRequests[0]?.count || 0,
-//     rideOffers: result[0].rideOffers[0]?.count || 0,
-//     approvedOffers: result[0].approvedOffers[0]?.count || 0,
-//   };
-// }
-// async getTotalTrempsByGender() {
-//   const pipeline = [
-//     {
-//       $match: {
-//         'users_in_tremp.is_approved': 'approved',
-//         'deleted': false
-//       }
-//     },
-//     {
-//       $lookup: {
-//         from: 'Users',
-//         localField: 'creator_id',
-//         foreignField: '_id',
-//         as: 'creator_details'
-//       }
-//     },
-//     {
-//       $lookup: {
-//         from: 'Users',
-//         localField: 'users_in_tremp.user_id',
-//         foreignField: '_id',
-//         as: 'users_in_tremp_details'
-//       }
-//     },
-//     {
-//       $project: {
-//         users: {
-//           $concatArrays: ['$creator_details', '$users_in_tremp_details']
-//         }
-//       }
-//     },
-//     {
-//       $unwind: '$users'
-//     },
-//     {
-//       $group: {
-//         _id: '$users.gender',
-//         count: { $sum: 1 }
-//       }
-//     }
-//   ];
-//   const result = await db.aggregate(KpiDataAccess.trempCollection, pipeline);
-//   const genderStats = result.reduce((acc, curr) => {
-//     acc[curr._id] = curr.count;
-//     return acc;
-//   }, { M: 0, F: 0 });
-//   return genderStats;
-// }
-// async getTotalTrempsByGenderByMonth(): Promise<any> {
-//   const fourMonthsAgo = getCurrentTimeInIsrael();
-//   fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
-//   const pipeline = [
-//     {
-//       $match: {
-//         'users_in_tremp.is_approved': 'approved',
-//         'deleted': false,
-//         'tremp_time': { $gte: fourMonthsAgo },
-//       }
-//     },
-//     {
-//       $lookup: {
-//         from: 'users',
-//         localField: 'creator_id',
-//         foreignField: '_id',
-//         as: 'creator_details'
-//       }
-//     },
-//     {
-//       $unwind: "$creator_details"
-//     },
-//     {
-//       $project: {
-//         month: { $month: "$tremp_time" },
-//         year: { $year: "$tremp_time" },
-//         gender: "$creator_details.gender"
-//       }
-//     },
-//     {
-//       $group: {
-//         _id: {
-//           month: "$month",
-//           year: "$year",
-//           gender: "$gender"
-//         },
-//         count: { $sum: 1 }
-//       }
-//     },
-//     {
-//       $group: {
-//         _id: {
-//           month: "$_id.month",
-//           year: "$_id.year"
-//         },
-//         genders: {
-//           $push: {
-//             gender: "$_id.gender",
-//             count: "$count"
-//           }
-//         }
-//       },
-//     },
-//   ];
-//   const dbResult: any[] = await db.aggregate(KpiDataAccess.trempCollection, pipeline);
-//   const dbResultMap = dbResult.reduce((acc: { [key: string]: { gender: string, count: number }[] }, curr: any) => {
-//     const monthYearKey = `${curr._id.month}-${curr._id.year}`;
-//     acc[monthYearKey] = curr.genders;
-//     return acc;
-//   }, {} as { [key: string]: { gender: string, count: number }[] });
-//   const lastFourMonths = this.getLastFourMonths();
-//   const finalResult = lastFourMonths.map(monthYear => {
-//     const monthYearKey = `${monthYear.month}-${monthYear.year}`;
-//     const genders = dbResultMap[monthYearKey] || [{ gender: 'M', count: 0 }, { gender: 'F', count: 0 }];
-//     return { ...monthYear, genders };
-//   });
-//   return finalResult;
-// }
-// private getLastFourMonths(): { month: number, year: number }[] {
-//   const date = getCurrentTimeInIsrael();
-//   const months = [];
-//   for (let i = 0; i < 4; i++) {
-//     months.push({
-//       month: date.getMonth() + 1,
-//       year: date.getFullYear()
-//     });
-//     date.setMonth(date.getMonth() - 1);
-//   }
-//   return months;
-// }
-// async getLastOpenedTrips() {
-//   const pipeline = [
-//     {
-//       $match: {
-//         'deleted': false
-//       }
-//     },
-//     {
-//       $lookup: {
-//         from: KpiDataAccess.UserCollection,
-//         localField: 'creator_id',
-//         foreignField: '_id',
-//         as: 'creator_data'
-//       }
-//     },
-//     {
-//       $unwind: "$creator_data" // Deconstructs an array field to output a document for each element.
-//     },
-//     {
-//       $sort: { 'create_date': -1 } // Sort by date descending, latest first
-//     },
-//     {
-//       $limit: 5 // Get only the last 5 documents
-//     },
-//     {
-//       $project: { // Select only necessary fields
-//         creator_name: { $concat: ['$creator_data.first_name', ' ', '$creator_data.last_name'] },
-//         from_route: '$from_root.name',
-//         to_root: '$to_root.name',
-//         time: '$tremp_time'
-//       }
-//     }
-//   ];
-//   const trips = await db.aggregate(KpiDataAccess.trempCollection, pipeline);
-//   return trips;
-// }
 //# sourceMappingURL=KpiDataAccess.js.map

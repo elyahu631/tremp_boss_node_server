@@ -14,3 +14,8 @@ const firebaseConfig = {
 const storage = new Storage(firebaseConfig);
 
 export const bucket = storage.bucket(firebaseConfig.bucketName);
+
+
+
+
+

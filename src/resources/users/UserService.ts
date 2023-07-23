@@ -3,7 +3,7 @@
 import bcrypt from 'bcrypt';
 import UserModel from "./UserModel";
 import UserDataAccess from "./UserDataAccess";
-import { uploadBase64ImageToFirebase, uploadImageToFirebase } from '../../firebase/fileUpload';
+import { uploadImageToFirebase } from '../../firebase/fileUpload';
 import { getCurrentTimeInIsrael } from '../../services/TimeService';
 import { BadRequestException } from '../../middleware/HttpException';
 import { MongoError } from 'mongodb';
@@ -136,42 +136,5 @@ export async function updateUserDetails(id: string, userDetails: UserModel, file
       throw new BadRequestException(`User with this ${Object.keys(keyValue)[0]} already exists.`);
     }   
     throw new BadRequestException("Error updating user details: "+  error);
-  }
-}
-
-
-
-export async function updateUserImage(id: string, userDetails: UserModel, file: Express.Multer.File) {
-  let updateData: Partial<UserModel> = {
-    ...userDetails,
-    updatedAt: getCurrentTimeInIsrael(),
-  };
-
-  // If a new password is provided, hash it before storing
-  if (updateData.password) {
-    updateData.password = await hashPassword(updateData.password);
-  }
-
-  // If a file is provided, upload it and update image_URL
-  if (file) {
-    try {
-      const filePath = `usersimages/${id}`;
-      updateData.image_URL = await uploadImageToFirebase(file, filePath);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-    }
-  }
-
-  try {
-    const updatedUser = await userDataAccess.UpdateUserDetails(id, updateData);
-    return updatedUser;
-  } catch (error) {
-    if (error instanceof MongoError && error.code === 11000) {
-      // This error code stands for 'Duplicate Key Error'
-      const keyValue = (error as any).keyValue;
-      throw new BadRequestException(`User with this ${Object.keys(keyValue)[0]} already exists.`);
-    }
-   
-    throw new BadRequestException("Error updating user image: "+  error);
   }
 }
