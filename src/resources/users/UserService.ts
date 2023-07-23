@@ -141,7 +141,7 @@ export async function updateUserDetails(id: string, userDetails: UserModel, file
 
 
 
-export async function updateUserImage(id: string, userDetails: UserModel, base64Image?: string) {
+export async function updateUserImage(id: string, userDetails: UserModel, file: Express.Multer.File) {
   let updateData: Partial<UserModel> = {
     ...userDetails,
     updatedAt: getCurrentTimeInIsrael(),
@@ -152,11 +152,11 @@ export async function updateUserImage(id: string, userDetails: UserModel, base64
     updateData.password = await hashPassword(updateData.password);
   }
 
-  // If a base64Image is provided, upload it and update image_URL
-  if (base64Image) {
+  // If a file is provided, upload it and update image_URL
+  if (file) {
     try {
       const filePath = `usersimages/${id}`;
-      updateData.image_URL = await uploadBase64ImageToFirebase(base64Image, filePath);
+      updateData.image_URL = await uploadImageToFirebase(file, filePath);
     } catch (error) {
       console.error("Error uploading image:", error);
     }

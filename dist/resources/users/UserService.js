@@ -161,18 +161,18 @@ function updateUserDetails(id, userDetails, file) {
     });
 }
 exports.updateUserDetails = updateUserDetails;
-function updateUserImage(id, userDetails, base64Image) {
+function updateUserImage(id, userDetails, file) {
     return __awaiter(this, void 0, void 0, function* () {
         let updateData = Object.assign(Object.assign({}, userDetails), { updatedAt: (0, TimeService_1.getCurrentTimeInIsrael)() });
         // If a new password is provided, hash it before storing
         if (updateData.password) {
             updateData.password = yield hashPassword(updateData.password);
         }
-        // If a base64Image is provided, upload it and update image_URL
-        if (base64Image) {
+        // If a file is provided, upload it and update image_URL
+        if (file) {
             try {
                 const filePath = `usersimages/${id}`;
-                updateData.image_URL = yield (0, fileUpload_1.uploadBase64ImageToFirebase)(base64Image, filePath);
+                updateData.image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
             }
             catch (error) {
                 console.error("Error uploading image:", error);

@@ -295,7 +295,7 @@ function updateUserImage(req, res, next) {
             if (!(0, UserValidation_1.validateUpdatedUser)(userDetails)) {
                 throw new HttpException_1.BadRequestException('Invalid data to update.');
             }
-            const updatedUser = yield UserService.updateUserImage(id, userDetails, userDetails.image_URL);
+            const updatedUser = yield UserService.updateUserImage(id, userDetails, req.file);
             res.status(200).json({ status: true, message: "User image updated successfully", data: { userDetails, id } });
         }
         catch (err) {
