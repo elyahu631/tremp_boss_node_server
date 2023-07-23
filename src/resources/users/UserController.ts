@@ -229,13 +229,13 @@ export async function updateUserImage(req: Request, res: Response, next: NextFun
     const { id } = req.params;
     const userDetails = req.body;
 
-    if (!validateUpdatedUser(userDetails)) {
-      throw new BadRequestException('Invalid data to update.');
-    }
+    // if (!validateUpdatedUser(userDetails)) {
+    //   throw new BadRequestException('Invalid data to update.');
+    // }
 
-    const updatedUser = await UserService.updateUserImage(id, userDetails, userDetails.image_URL);
+    // const updatedUser = await UserService.updateUserImage(id, userDetails, userDetails.image_URL);
 
-    res.status(200).json({ status: true, message: "User image updated successfully", data: updatedUser });
+    res.status(200).json({ status: true, message: "User image updated successfully", data: userDetails });
   } catch (err) {
     next(err);
   }

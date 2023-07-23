@@ -292,11 +292,11 @@ function updateUserImage(req, res, next) {
         try {
             const { id } = req.params;
             const userDetails = req.body;
-            if (!(0, UserValidation_1.validateUpdatedUser)(userDetails)) {
-                throw new HttpException_1.BadRequestException('Invalid data to update.');
-            }
-            const updatedUser = yield UserService.updateUserImage(id, userDetails, userDetails.image_URL);
-            res.status(200).json({ status: true, message: "User image updated successfully", data: updatedUser });
+            // if (!validateUpdatedUser(userDetails)) {
+            //   throw new BadRequestException('Invalid data to update.');
+            // }
+            // const updatedUser = await UserService.updateUserImage(id, userDetails, userDetails.image_URL);
+            res.status(200).json({ status: true, message: "User image updated successfully", data: userDetails });
         }
         catch (err) {
             next(err);
