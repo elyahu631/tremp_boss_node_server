@@ -28,11 +28,12 @@ exports.createTremp = createTremp;
 function getTrempsByFilters(filters) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(filters.creator_id);
+        const date = new Date(filters.tremp_time);
         const query = {
             deleted: false,
             is_full: false,
             creator_id: { $ne: userId },
-            tremp_time: { $gt: filters.tremp_time },
+            tremp_time: { $gt: date },
             tremp_type: filters.type_of_tremp,
             users_in_tremp: {
                 $not: {

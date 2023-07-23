@@ -13,57 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPeopleAndTrempCounts = exports.getMostRequestedHours = exports.getTopDrivers = exports.getMostPopularRoutes = exports.getLastOpenedTrips = exports.getTotalTrempsByGenderByMonth = exports.getTotalTrempsByGender = exports.getTotalTremps = void 0;
+exports.getRideAndTripCounts = exports.getPeopleAndTrempCounts = exports.getMostRequestedHours = exports.getTopDrivers = exports.getMostPopularRoutes = void 0;
 const KpiDataAccess_1 = __importDefault(require("./KpiDataAccess"));
 const kpiDataAccess = new KpiDataAccess_1.default();
-function getTotalTremps(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const statistics = yield kpiDataAccess.getTotalTremps();
-            res.status(200).json({ status: true, data: statistics });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getTotalTremps = getTotalTremps;
-function getTotalTrempsByGender(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const statistics = yield kpiDataAccess.getTotalTrempsByGender();
-            res.status(200).json({ status: true, data: statistics });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getTotalTrempsByGender = getTotalTrempsByGender;
-function getTotalTrempsByGenderByMonth(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const statistics = yield kpiDataAccess.getTotalTrempsByGenderByMonth();
-            res.status(200).json({ status: true, data: statistics });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getTotalTrempsByGenderByMonth = getTotalTrempsByGenderByMonth;
-function getLastOpenedTrips(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const trips = yield kpiDataAccess.getLastOpenedTrips();
-            res.status(200).json({ status: true, data: trips });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getLastOpenedTrips = getLastOpenedTrips;
 function getMostPopularRoutes(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -112,4 +64,56 @@ function getPeopleAndTrempCounts(req, res, next) {
     });
 }
 exports.getPeopleAndTrempCounts = getPeopleAndTrempCounts;
+function getRideAndTripCounts(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const counts = yield kpiDataAccess.getRideAndTripCounts();
+            res.status(200).json({ status: true, data: counts });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getRideAndTripCounts = getRideAndTripCounts;
+// export async function getGenderRideCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
+//   try {
+//     const counts = await kpiDataAccess.getGenderRideCounts();
+//     res.status(200).json({ status: true, data: counts });
+//   } catch (err) {
+//     next(err);
+//   }
+// }
+// export async function getTotalTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
+//   try {
+//     const statistics = await kpiDataAccess.getTotalTremps();
+//     res.status(200).json({ status: true, data: statistics });
+//   } catch (err) {
+//     next(err);
+//   }
+// }
+// export async function getTotalTrempsByGender(req: Request, res: Response, next: NextFunction): Promise<void> {
+//   try {
+//     const statistics = await kpiDataAccess.getTotalTrempsByGender();
+//     res.status(200).json({ status: true, data: statistics });
+//   } catch (err) {
+//     next(err);
+//   }
+// }
+// export async function getTotalTrempsByGenderByMonth(req: Request, res: Response, next: NextFunction): Promise<void> {
+//   try {
+//     const statistics = await kpiDataAccess.getTotalTrempsByGenderByMonth();
+//     res.status(200).json({ status: true, data: statistics });
+//   } catch (err) {
+//     next(err);
+//   }
+// }
+// export async function getLastOpenedTrips(req: Request, res: Response, next: NextFunction): Promise<void> {
+//   try {
+//     const trips = await kpiDataAccess.getLastOpenedTrips();
+//     res.status(200).json({ status: true, data: trips });
+//   } catch (err) {
+//     next(err);
+//   }
+// }
 //# sourceMappingURL=KpiController.js.map
