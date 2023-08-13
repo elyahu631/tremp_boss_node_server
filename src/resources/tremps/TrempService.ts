@@ -41,7 +41,7 @@ export async function createTremp(tremp: TrempModel) {
 }
 
 export async function getAllTremps() {
-  return trempDataAccess.FindAll({deleted:false}); 
+  return trempDataAccess.FindAll({ deleted: false });
 }
 
 export async function getTrempsByFilters(filters: any) {
@@ -51,7 +51,7 @@ export async function getTrempsByFilters(filters: any) {
     deleted: false,
     is_full: false,
     creator_id: { $ne: userId },
-    tremp_time: { $gt: date},
+    tremp_time: { $gt: date },
     tremp_type: filters.tremp_type,
     users_in_tremp: {
       $not: {
@@ -103,16 +103,16 @@ export async function addUserToTremp(tremp_id: string, user_id: string) {
   if (updatedTremp.modifiedCount === 0) {
     throw new BadRequestException('User not added to the tremp');
   }
-    const tremp = await trempDataAccess.FindByID(tremp_id);
-    const creatorId = tremp.creator_id;
-    const creator = await userDataAccess.FindById(creatorId);
-    const fcmToken = creator.notification_token;
-    if (fcmToken) {
-      await sendNotificationToUser(fcmToken, 'New User Joined Drive',
-       'A user has joined your drive.', { tremp_id, user_id });
-    } else {
-      console.log('User does not have a valid FCM token');
-    }
+  const tremp = await trempDataAccess.FindByID(tremp_id);
+  const creatorId = tremp.creator_id;
+  const creator = await userDataAccess.FindById(creatorId);
+  const fcmToken = creator.notification_token;
+  if (fcmToken) {
+    await sendNotificationToUser(fcmToken, 'New User Joined Drive',
+      'A user has joined your drive.', { tremp_id, user_id });
+  } else {
+    console.log('User does not have a valid FCM token');
+  }
 }
 
 export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: string): Promise<any> {
@@ -152,8 +152,8 @@ const mapTrempWithoutUsersInTremp = (tremp: Tremp, approvalStatus: string) => {
 
 export async function getUserTremps(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
-  const first = tremp_type === 'driver' ? 'driver': 'hitchhiker' ;
-  const second = tremp_type === 'hitchhiker' ? 'driver': 'hitchhiker' ;
+  const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
+  const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
 
   const driverQuery = {
     creator_id: userId,
@@ -238,7 +238,7 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
   if (!tremp.creator_id.equals(userId)) {
     throw new Error('Only the creator of the tremp can delete it');
   }
-  
+
   // Find users in the tremp who need to be notified
   const usersToNotify = tremp.users_in_tremp.filter((user: UserInTremp) => user.is_approved === 'approved' || 'pending');
 
@@ -253,7 +253,7 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
       if (userToken.notification_token) {
         // Use your notification function here
         await sendNotificationToUser(userToken.notification_token, "Tremp cancellation notice",
-         "The tremp you joined has been cancelled.", { tremp_id: tremp_id, user_id: user_id });
+          "The tremp you joined has been cancelled.", { tremp_id: tremp_id, user_id: user_id });
       }
     }
   }
@@ -262,14 +262,14 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
   return await trempDataAccess.Update(tremp_id, { deleted: true });
 }
 
-export const getUsersInTremp = async (trempId: string): Promise<any[]> => {
+export async function getUsersInTremp(trempId: string): Promise<any[]> {
   const tremp = await trempDataAccess.FindByID(trempId);
   if (!tremp) {
     throw new NotFoundException('Tremp not found');
   }
 
   const usersDetails = await Promise.all(
-    tremp.users_in_tremp.map(async (userInTremp:UserInTremp) => {
+    tremp.users_in_tremp.map(async (userInTremp: UserInTremp) => {
       const userIdString = userInTremp.user_id.toString();
       const user = await userDataAccess.FindById(userIdString);
       return {
@@ -285,3 +285,45 @@ export const getUsersInTremp = async (trempId: string): Promise<any[]> => {
 
   return usersDetails;
 };
+
+
+export async function getApprovedTremps(user_id: string, tremp_type: string) {
+  const userId = new ObjectId(user_id);
+  const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
+  const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
+
+  // First, find the tramps where the user is the creator and has type 'first' and there is
+  // at least one different user who is approved and type 'second'
+  const createdByUserQuery = {
+    creator_id: userId,
+    tremp_type: first,
+    "users_in_tremp": {
+      "$elemMatch": {
+        "user_id": { "$ne": userId },
+        "is_approved": 'approved',
+      }
+    }
+  };
+
+  const trampsCreatedByUser = await trempDataAccess.FindTrempsByFilters(createdByUserQuery);
+
+  // Then, find the tramps where the user has joined as type 'second' and is approved
+  const joinedByUserQuery = {
+    "users_in_tremp": {
+      "$elemMatch": {
+        "user_id": userId,
+        "is_approved": 'approved',
+        "tremp_type": second
+      }
+    }
+  };
+
+  const trampsJoinedByUser = await trempDataAccess.FindAll(joinedByUserQuery);
+
+  const trampsToShow = [
+    ...trampsCreatedByUser,
+    ...trampsJoinedByUser
+  ];
+
+  return trampsToShow;
+}

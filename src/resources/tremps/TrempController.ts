@@ -7,8 +7,6 @@ import TrempModel from "./TrempModel";
 import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 import { sendNotificationToUser } from '../../services/sendNotification';
 
-
-
 export async function createTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const newTremp = new TrempModel(req.body);   
@@ -89,7 +87,7 @@ export async function getUserTremps(req: Request, res: Response, next: NextFunct
   }
 }
 
-export const getUsersInTremp = async (req: Request, res: Response, next: NextFunction) => {
+export async function getUsersInTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const trempId = req.params.tremp_id;
     const users = await TrempService.getUsersInTremp(trempId);
@@ -110,6 +108,22 @@ export async function deleteTremp(req: Request, res: Response, next: NextFunctio
       throw new BadRequestException('Tremp could not be deleted');
     }
     res.status(200).json({ status: true, message: 'Tremp successfully deleted' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getApprovedTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id, tremp_type } = req.body;
+    if (!user_id || !tremp_type) {
+      throw new BadRequestException('User ID and type of ride are required');
+    }
+    const approvedTremps = await TrempService.getApprovedTremps(user_id, tremp_type);
+    if (!approvedTremps) {
+      throw new NotFoundException("No Tremps found for this user and ride type");
+    }
+    res.status(200).json({ status: true, data:{approved_tremps:approvedTremps} });
   } catch (err) {
     next(err);
   }

@@ -11,7 +11,7 @@ trempRoutes.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
 trempRoutes.post("/user-tremps",authenticateToken, TrempController.getUserTremps);
 trempRoutes.put('/approve-user-in-tremp',authenticateToken ,TrempController.approveUserInTremp);
 trempRoutes.get('/users-in-tremp/:tremp_id',authenticateToken ,TrempController.getUsersInTremp);
-// trempRoutes.put('/approved-tremps',authenticateToken ,TrempController.approvedTremps);
+trempRoutes.post('/approved-tremps',authenticateToken ,TrempController.getApprovedTremps);
 
 trempRoutes.delete('/delete-tremp',authenticateToken, TrempController.deleteTremp);
 

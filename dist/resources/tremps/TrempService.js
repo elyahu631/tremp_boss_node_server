@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.getTrempById = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.getAllTremps = exports.createTremp = void 0;
+exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.getTrempById = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.getAllTremps = exports.createTremp = void 0;
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const mongodb_1 = require("mongodb");
@@ -264,24 +264,64 @@ function deleteTremp(tremp_id, user_id) {
     });
 }
 exports.deleteTremp = deleteTremp;
-const getUsersInTremp = (trempId) => __awaiter(void 0, void 0, void 0, function* () {
-    const tremp = yield trempDataAccess.FindByID(trempId);
-    if (!tremp) {
-        throw new HttpException_1.NotFoundException('Tremp not found');
-    }
-    const usersDetails = yield Promise.all(tremp.users_in_tremp.map((userInTremp) => __awaiter(void 0, void 0, void 0, function* () {
-        const userIdString = userInTremp.user_id.toString();
-        const user = yield userDataAccess.FindById(userIdString);
-        return {
-            user_id: userInTremp.user_id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            image_URL: user.image_URL,
-            gender: user.gender,
-            is_confirmed: userInTremp.is_approved,
-        };
-    })));
-    return usersDetails;
-});
+function getUsersInTremp(trempId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tremp = yield trempDataAccess.FindByID(trempId);
+        if (!tremp) {
+            throw new HttpException_1.NotFoundException('Tremp not found');
+        }
+        const usersDetails = yield Promise.all(tremp.users_in_tremp.map((userInTremp) => __awaiter(this, void 0, void 0, function* () {
+            const userIdString = userInTremp.user_id.toString();
+            const user = yield userDataAccess.FindById(userIdString);
+            return {
+                user_id: userInTremp.user_id,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                image_URL: user.image_URL,
+                gender: user.gender,
+                is_confirmed: userInTremp.is_approved,
+            };
+        })));
+        return usersDetails;
+    });
+}
 exports.getUsersInTremp = getUsersInTremp;
+;
+function getApprovedTremps(user_id, tremp_type) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const userId = new mongodb_1.ObjectId(user_id);
+        const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
+        const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
+        // First, find the tramps where the user is the creator and has type 'first' and there is
+        // at least one different user who is approved and type 'second'
+        const createdByUserQuery = {
+            creator_id: userId,
+            tremp_type: first,
+            "users_in_tremp": {
+                "$elemMatch": {
+                    "user_id": { "$ne": userId },
+                    "is_approved": 'approved',
+                }
+            }
+        };
+        const trampsCreatedByUser = yield trempDataAccess.FindTrempsByFilters(createdByUserQuery);
+        // Then, find the tramps where the user has joined as type 'second' and is approved
+        const joinedByUserQuery = {
+            "users_in_tremp": {
+                "$elemMatch": {
+                    "user_id": userId,
+                    "is_approved": 'approved',
+                    "tremp_type": second
+                }
+            }
+        };
+        const trampsJoinedByUser = yield trempDataAccess.FindAll(joinedByUserQuery);
+        const trampsToShow = [
+            ...trampsCreatedByUser,
+            ...trampsJoinedByUser
+        ];
+        return trampsToShow;
+    });
+}
+exports.getApprovedTremps = getApprovedTremps;
 //# sourceMappingURL=TrempService.js.map
