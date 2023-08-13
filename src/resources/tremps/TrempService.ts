@@ -115,7 +115,7 @@ export async function addUserToTremp(tremp_id: string, user_id: string) {
     }
 }
 
-export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: boolean): Promise<any> {
+export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: string): Promise<any> {
   // Fetch the tremp using tremp_id
 
   const tremp = await trempDataAccess.FindByID(tremp_id);
@@ -135,7 +135,7 @@ export async function approveUserInTremp(tremp_id: string, creator_id: string, u
     throw new Error('User is not a participant in this tremp');
   }
   // Update the user's approval status
-  tremp.users_in_tremp[userIndex].is_approved = approval ? "approved" : "denied";
+  tremp.users_in_tremp[userIndex].is_approved = approval;
   // Update the tremp in the database
   const result = await trempDataAccess.Update(tremp_id, tremp);
   return result;

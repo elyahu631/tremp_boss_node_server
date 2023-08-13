@@ -101,11 +101,13 @@ function approveUserInTremp(req, res, next) {
         try {
             const { tremp_id, creator_id, user_id, approval } = req.body;
             yield TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
+            if (approval !== "approved" && approval !== "denied") {
+                throw new HttpException_1.BadRequestException('invalid approval');
+            }
             const user_in_tremp = yield UserService.getUserById(user_id);
             const fcmToken = user_in_tremp.notification_token;
-            const answer = approval ? "approved" : "denied";
             if (fcmToken) {
-                yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, `The creator ${answer}`, `The creator of the ride ${answer} your request`, { creator_id, tremp_id, user_id });
+                yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, `The creator ${approval}`, `The creator of the ride ${approval} your request`, { creator_id, tremp_id, user_id });
             }
             else {
                 console.log('User does not have a valid FCM token');

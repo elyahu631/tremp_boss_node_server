@@ -148,7 +148,7 @@ function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
             throw new Error('User is not a participant in this tremp');
         }
         // Update the user's approval status
-        tremp.users_in_tremp[userIndex].is_approved = approval ? "approved" : "denied";
+        tremp.users_in_tremp[userIndex].is_approved = approval;
         // Update the tremp in the database
         const result = yield trempDataAccess.Update(tremp_id, tremp);
         return result;
