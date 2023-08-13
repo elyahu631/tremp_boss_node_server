@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -22,14 +33,14 @@ const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
 const validateTrempData = (tremp) => {
     tremp.validateTremp();
-    const { creator_id, tremp_time, from_root, to_root } = tremp;
-    if (!creator_id || !tremp_time || !from_root || !to_root) {
+    const { creator_id, tremp_time, from_route, to_route } = tremp;
+    if (!creator_id || !tremp_time || !from_route || !to_route) {
         throw new Error("Missing required tremp data");
     }
     if (new Date(tremp_time) < new Date()) {
         throw new Error("Tremp time has already passed");
     }
-    if (from_root.name === to_root.name) {
+    if (from_route.name === to_route.name) {
         throw new Error("The 'from' and 'to' locations cannot be the same");
     }
 };
@@ -150,6 +161,10 @@ function getTrempById(id) {
     });
 }
 exports.getTrempById = getTrempById;
+const mapTrempWithoutUsersInTremp = (tremp, approvalStatus) => {
+    const { users_in_tremp } = tremp, otherProps = __rest(tremp, ["users_in_tremp"]);
+    return Object.assign(Object.assign({}, otherProps), { approvalStatus });
+};
 function getUserTremps(user_id, tremp_type) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
@@ -168,12 +183,12 @@ function getUserTremps(user_id, tremp_type) {
         const driverTremps = yield trempDataAccess.FindAll(driverQuery);
         const driverTrempsMapped = driverTremps.map(tremp => {
             const approvalStatus = getApprovalStatus(tremp, userId, first);
-            return Object.assign(Object.assign({}, tremp), { approvalStatus });
+            return mapTrempWithoutUsersInTremp(tremp, approvalStatus);
         });
         const hitchhikerTremps = yield trempDataAccess.FindAll(hitchhikerQuery);
         const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => {
             const approvalStatus = getApprovalStatus(tremp, userId, second);
-            return Object.assign(Object.assign({}, tremp), { approvalStatus });
+            return mapTrempWithoutUsersInTremp(tremp, approvalStatus);
         });
         const tremps = [...driverTrempsMapped, ...hitchhikerTrempsMapped];
         return tremps;

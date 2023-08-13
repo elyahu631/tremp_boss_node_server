@@ -28,8 +28,8 @@ class TrempDataAccess {
                 group_id: 1,
                 tremp_type: 1,
                 tremp_time: 1,
-                from_root: 1,
-                to_root: 1,
+                from_route: 1,
+                to_route: 1,
                 note: 1,
                 seats_amount: 1,
             };

@@ -16,11 +16,11 @@ class TrempModel {
   tremp_type: string;
   create_date: Date;// 
   tremp_time: Date;// client 
-  from_root: {    // chack if form an to is no simmular
+  from_route: {    // chack if form an to is no simmular
     name: string;
     coordinates: Coordinate;
   };
-  to_root: {
+  to_route: {
     name: string;
     coordinates: Coordinate;
   };
@@ -37,8 +37,8 @@ class TrempModel {
     this.tremp_type = trempData.tremp_type;
     this.create_date = trempData.create_date || getCurrentTimeInIsrael();
     this.tremp_time = trempData.tremp_time;
-    this.from_root = trempData.from_root;
-    this.to_root = trempData.to_root;
+    this.from_route = trempData.from_route;
+    this.to_route = trempData.to_route;
     this.note = trempData.note;
     this.seats_amount = trempData.seats_amount || 1;
     this.users_in_tremp = trempData.users_in_tremp || [];
@@ -54,14 +54,14 @@ class TrempModel {
       tremp_type: Joi.string().valid('driver', 'hitchhiker').required(),
       create_date: Joi.date().required(),
       tremp_time: Joi.date().required(),
-      from_root: Joi.object({
+      from_route: Joi.object({
         name: Joi.string().required(),
         coordinates: Joi.object({
           latitude: Joi.number().required(),
           longitude: Joi.number().required(),
         }).required(),
       }).required(),
-      to_root: Joi.object({
+      to_route: Joi.object({
         name: Joi.string().required(),
         coordinates: Joi.object({
           latitude: Joi.number().required(),

@@ -13,8 +13,8 @@ class TrempModel {
         this.tremp_type = trempData.tremp_type;
         this.create_date = trempData.create_date || (0, TimeService_1.getCurrentTimeInIsrael)();
         this.tremp_time = trempData.tremp_time;
-        this.from_root = trempData.from_root;
-        this.to_root = trempData.to_root;
+        this.from_route = trempData.from_route;
+        this.to_route = trempData.to_route;
         this.note = trempData.note;
         this.seats_amount = trempData.seats_amount || 1;
         this.users_in_tremp = trempData.users_in_tremp || [];
@@ -29,14 +29,14 @@ class TrempModel {
             tremp_type: joi_1.default.string().valid('driver', 'hitchhiker').required(),
             create_date: joi_1.default.date().required(),
             tremp_time: joi_1.default.date().required(),
-            from_root: joi_1.default.object({
+            from_route: joi_1.default.object({
                 name: joi_1.default.string().required(),
                 coordinates: joi_1.default.object({
                     latitude: joi_1.default.number().required(),
                     longitude: joi_1.default.number().required(),
                 }).required(),
             }).required(),
-            to_root: joi_1.default.object({
+            to_route: joi_1.default.object({
                 name: joi_1.default.string().required(),
                 coordinates: joi_1.default.object({
                     latitude: joi_1.default.number().required(),

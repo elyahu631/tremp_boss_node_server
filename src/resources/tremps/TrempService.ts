@@ -13,9 +13,9 @@ const userDataAccess = new UserDataAccess();
 const validateTrempData = (tremp: TrempModel) => {
   tremp.validateTremp();
 
-  const { creator_id, tremp_time, from_root, to_root } = tremp;
+  const { creator_id, tremp_time, from_route, to_route } = tremp;
 
-  if (!creator_id || !tremp_time || !from_root || !to_root) {
+  if (!creator_id || !tremp_time || !from_route || !to_route) {
     throw new Error("Missing required tremp data");
   }
 
@@ -23,7 +23,7 @@ const validateTrempData = (tremp: TrempModel) => {
     throw new Error("Tremp time has already passed");
   }
 
-  if (from_root.name === to_root.name) {
+  if (from_route.name === to_route.name) {
     throw new Error("The 'from' and 'to' locations cannot be the same");
   }
 }
@@ -145,6 +145,11 @@ export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
 }
 
+const mapTrempWithoutUsersInTremp = (tremp: Tremp, approvalStatus: string) => {
+  const { users_in_tremp, ...otherProps } = tremp;
+  return { ...otherProps, approvalStatus };
+};
+
 export async function getUserTremps(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
   const first = tremp_type === 'driver' ? 'driver': 'hitchhiker' ;
@@ -164,15 +169,16 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
 
   const driverTremps: Tremp[] = await trempDataAccess.FindAll(driverQuery) as any;
 
-  const driverTrempsMapped = driverTremps.map(tremp => {  
+  const driverTrempsMapped = driverTremps.map(tremp => {
     const approvalStatus = getApprovalStatus(tremp, userId, first);
-    return { ...tremp, approvalStatus };
+    return mapTrempWithoutUsersInTremp(tremp, approvalStatus);
   });
+
   const hitchhikerTremps: Tremp[] = await trempDataAccess.FindAll(hitchhikerQuery) as any;
 
-  const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => {  
+  const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => {
     const approvalStatus = getApprovalStatus(tremp, userId, second);
-    return { ...tremp, approvalStatus };
+    return mapTrempWithoutUsersInTremp(tremp, approvalStatus);
   });
 
   const tremps = [...driverTrempsMapped, ...hitchhikerTrempsMapped];
