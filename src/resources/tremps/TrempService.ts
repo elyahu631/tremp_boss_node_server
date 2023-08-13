@@ -261,3 +261,27 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
   // Delete the tremp
   return await trempDataAccess.Update(tremp_id, { deleted: true });
 }
+
+export const getUsersInTremp = async (trempId: string): Promise<any[]> => {
+  const tremp = await trempDataAccess.FindByID(trempId);
+  if (!tremp) {
+    throw new NotFoundException('Tremp not found');
+  }
+
+  const usersDetails = await Promise.all(
+    tremp.users_in_tremp.map(async (userInTremp:UserInTremp) => {
+      const userIdString = userInTremp.user_id.toString();
+      const user = await userDataAccess.FindById(userIdString);
+      return {
+        user_id: userInTremp.user_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        image_URL: user.image_URL,
+        gender: user.gender,
+        is_confirmed: userInTremp.is_approved,
+      };
+    })
+  );
+
+  return usersDetails;
+};

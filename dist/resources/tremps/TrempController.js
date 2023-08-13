@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.getAllTremps = exports.createTremp = void 0;
+exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.getAllTremps = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
@@ -137,6 +137,17 @@ function getUserTremps(req, res, next) {
     });
 }
 exports.getUserTremps = getUserTremps;
+const getUsersInTremp = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const trempId = req.params.tremp_id;
+        const users = yield TrempService.getUsersInTremp(trempId);
+        res.status(200).json({ status: true, data: users });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getUsersInTremp = getUsersInTremp;
 function deleteTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

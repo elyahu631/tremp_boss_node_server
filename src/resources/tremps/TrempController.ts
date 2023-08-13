@@ -87,6 +87,16 @@ export async function getUserTremps(req: Request, res: Response, next: NextFunct
   }
 }
 
+export const getUsersInTremp = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const trempId = req.params.tremp_id;
+    const users = await TrempService.getUsersInTremp(trempId);
+    res.status(200).json({ status: true, data: users });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export async function deleteTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { tremp_id, user_id } = req.body;

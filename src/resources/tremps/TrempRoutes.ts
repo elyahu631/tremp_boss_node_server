@@ -10,7 +10,7 @@ trempRoutes.post('/tremps-by-filters',authenticateToken, TrempController.getTrem
 trempRoutes.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
 trempRoutes.post("/user-tremps",authenticateToken, TrempController.getUserTremps);
 trempRoutes.put('/approve-user-in-tremp',authenticateToken ,TrempController.approveUserInTremp);
-// trempRoutes.put('/users-in-tremp',authenticateToken ,TrempController.usersInTremp);
+trempRoutes.get('/users-in-tremp/:tremp_id',authenticateToken ,TrempController.getUsersInTremp);
 // trempRoutes.put('/approved-tremps',authenticateToken ,TrempController.approvedTremps);
 
 trempRoutes.delete('/delete-tremp',authenticateToken, TrempController.deleteTremp);

@@ -28,7 +28,7 @@ class TrempModel {
   seats_amount: number;
   users_in_tremp: UserInTremp[];
   is_full: boolean;
-  chat_id: ObjectId;// server
+  chat_id: ObjectId;
   deleted: boolean;
 
   constructor(trempData: Partial<TrempModel>) {
@@ -50,7 +50,7 @@ class TrempModel {
   validateTremp() {
     const schema = Joi.object({
       creator_id: Joi.string().required(),
-      group_id: Joi.string().required(),//need to create a model for it 
+      group_id: Joi.string().required(),
       tremp_type: Joi.string().valid('driver', 'hitchhiker').required(),
       create_date: Joi.date().required(),
       tremp_time: Joi.date().required(),
@@ -77,7 +77,7 @@ class TrempModel {
         })
       ).optional(),
       is_full: Joi.boolean().required(),
-      chat_id: Joi.string().optional(),// need to create a model for it 
+      chat_id: Joi.string().optional(),
       deleted: Joi.boolean().required(),
     });
     const { error } = schema.validate(this);
