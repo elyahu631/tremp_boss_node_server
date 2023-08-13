@@ -278,7 +278,7 @@ export async function getUsersInTremp(trempId: string): Promise<any[]> {
         last_name: user.last_name,
         image_URL: user.image_URL,
         gender: user.gender,
-        is_confirmed: userInTremp.is_approved,
+        is_approved: userInTremp.is_approved,
       };
     })
   );
@@ -305,7 +305,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
     }
   };
 
-  const trampsCreatedByUser = await trempDataAccess.FindTrempsByFilters(createdByUserQuery);
+  const trampsCreatedByUser = await trempDataAccess.FindAll(createdByUserQuery);
 
   // Then, find the tramps where the user has joined as type 'second' and is approved
   const joinedByUserQuery = {

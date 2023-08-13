@@ -279,7 +279,7 @@ function getUsersInTremp(trempId) {
                 last_name: user.last_name,
                 image_URL: user.image_URL,
                 gender: user.gender,
-                is_confirmed: userInTremp.is_approved,
+                is_approved: userInTremp.is_approved,
             };
         })));
         return usersDetails;
@@ -304,7 +304,7 @@ function getApprovedTremps(user_id, tremp_type) {
                 }
             }
         };
-        const trampsCreatedByUser = yield trempDataAccess.FindTrempsByFilters(createdByUserQuery);
+        const trampsCreatedByUser = yield trempDataAccess.FindAll(createdByUserQuery);
         // Then, find the tramps where the user has joined as type 'second' and is approved
         const joinedByUserQuery = {
             "users_in_tremp": {
