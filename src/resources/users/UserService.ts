@@ -16,8 +16,8 @@ export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, salt);
 }
 
-export async function registerUser(user_email: string, password: string) {
-  const existingUser = await userDataAccess.FindAllUsers({ user_email });
+export async function registerUser(email: string, password: string) {
+  const existingUser = await userDataAccess.FindAllUsers({ email });
 
   if (existingUser && existingUser.length) {
     return null;
@@ -25,16 +25,16 @@ export async function registerUser(user_email: string, password: string) {
 
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   const newUser = new UserModel({
-    user_email,
+    email,
     password: hashedPassword,
   });
 
   return userDataAccess.InsertOne(newUser);
 }
 
-export async function loginUser(user_email: string, password: string) {
+export async function loginUser(email: string, password: string) {
   const users = await userDataAccess.FindAllUsers({
-    user_email,
+    email,
     status: "active",
     deleted: false,
   }) || [];
@@ -71,8 +71,8 @@ export async function uploadUserImage(id: string, file?: Express.Multer.File) {
   await userDataAccess.Update(id, { image_URL }); // Pass object with image_URL field
   return image_URL;
 }
-export async function addUser(user_email: string, password: string) {
-  const newUser = new UserModel({ user_email, password });
+export async function addUser(email: string, password: string) {
+  const newUser = new UserModel({ email, password });
   return userDataAccess.InsertOne(newUser);
 }
 
@@ -84,10 +84,10 @@ export async function createUser(user: UserModel) {
   // Check if user with this username or email already exists
   const existingUsers = await userDataAccess.FindAllUsers({
     $or: [
-      { user_email: user.user_email },
+      { email: user.email },
     ],
   });
-  if (!user.user_email) {
+  if (!user.email) {
     throw new BadRequestException("email field is empty.");
   }
   else if (existingUsers.length > 0) {

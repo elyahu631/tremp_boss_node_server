@@ -6,7 +6,7 @@ import { UserInterface } from './UserInterface';
 import { getCurrentTimeInIsrael } from '../../services/TimeService';
 
 class UserModel {
-  user_email?: string;
+  email?: string;
   password?: string;
   coins?: number;
   createdAt?: Date;
@@ -24,7 +24,7 @@ class UserModel {
 
 
   constructor(userData: {
-    user_email?: string;
+    email?: string;
     password?: string;
     phone_number?: string;
     image_URL?: string;
@@ -40,7 +40,7 @@ class UserModel {
     deleted ?: boolean;
     notification_token ?: string;
   }) {
-    this.user_email = userData.user_email;
+    this.email = userData.email;
     this.password = userData.password;
     this.phone_number = userData.phone_number;
     this.image_URL = userData.image_URL;
@@ -59,13 +59,13 @@ class UserModel {
 
   validateUser() {
     const schema = Joi.object({
-      user_email: Joi.string().email().max(50).required(),
+      email: Joi.string().email().max(50).required(),
       password: Joi.string().min(8).required(),
     });
   
-    // Only validate the user_email and password properties
+    // Only validate the email and password properties
     const { error } = schema.validate({
-      user_email: this.user_email,
+      email: this.email,
       password: this.password,
     });
   

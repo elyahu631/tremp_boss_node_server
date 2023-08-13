@@ -5,13 +5,41 @@ import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
 import { Tremp, UserInTremp } from './TrempInterfaces';
 import { sendNotificationToUser } from '../../services/sendNotification';
+import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
 
+const validateTrempData = (tremp: TrempModel) => {
+  tremp.validateTremp();
+
+  const { creator_id, tremp_time, from_root, to_root } = tremp;
+
+  if (!creator_id || !tremp_time || !from_root || !to_root) {
+    throw new Error("Missing required tremp data");
+  }
+
+  if (new Date(tremp_time) < new Date()) {
+    throw new Error("Tremp time has already passed");
+  }
+
+  if (from_root.name === to_root.name) {
+    throw new Error("The 'from' and 'to' locations cannot be the same");
+  }
+}
+
 export async function createTremp(tremp: TrempModel) {
+  tremp.creator_id = new ObjectId(tremp.creator_id)
+  tremp.group_id = new ObjectId(tremp.group_id)
+  tremp.tremp_time = new Date(tremp.tremp_time)
+  validateTrempData(tremp);
+  const user = await userDataAccess.FindById(tremp.creator_id.toString());
+  if (!user) {
+    throw new NotFoundException("Creator user does not exist");
+  }
   return await trempDataAccess.insertTremp(tremp);
 }
+
 export async function getAllTremps() {
   return trempDataAccess.FindAll({deleted:false}); 
 }
@@ -68,7 +96,23 @@ export async function addUserToTremp(tremp_id: string, user_id: string) {
   let id = new ObjectId(user_id);
   const user = { user_id: id, is_approved: "pending" };
   const query = ({ $push: { users_in_tremp: user } });
-  return await trempDataAccess.addUserToTremp(tremp_id, query);
+  const updatedTremp = await trempDataAccess.addUserToTremp(tremp_id, query)
+  if (updatedTremp.matchedCount === 0) {
+    throw new NotFoundException('Tremp not found');
+  }
+  if (updatedTremp.modifiedCount === 0) {
+    throw new BadRequestException('User not added to the tremp');
+  }
+    const tremp = await trempDataAccess.FindByID(tremp_id);
+    const creatorId = tremp.creator_id;
+    const creator = await userDataAccess.FindById(creatorId);
+    const fcmToken = creator.notification_token;
+    if (fcmToken) {
+      await sendNotificationToUser(fcmToken, 'New User Joined Drive',
+       'A user has joined your drive.', { tremp_id, user_id });
+    } else {
+      console.log('User does not have a valid FCM token');
+    }
 }
 
 export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: boolean): Promise<any> {

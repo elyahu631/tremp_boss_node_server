@@ -6,7 +6,7 @@ export function validateUpdatedUser(updatedUser: UserModel) : boolean{
   console.log(updatedUser);
 
   const schema = Joi.object({
-    user_email: Joi.string().email().optional(),
+    email: Joi.string().email().optional(),
     phone_number: Joi.string().optional(),
     password: Joi.string().min(6).optional(),
     first_name: Joi.string().optional(),

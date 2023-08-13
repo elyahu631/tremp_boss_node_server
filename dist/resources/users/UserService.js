@@ -30,25 +30,25 @@ function hashPassword(password) {
     });
 }
 exports.hashPassword = hashPassword;
-function registerUser(user_email, password) {
+function registerUser(email, password) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existingUser = yield userDataAccess.FindAllUsers({ user_email });
+        const existingUser = yield userDataAccess.FindAllUsers({ email });
         if (existingUser && existingUser.length) {
             return null;
         }
         const hashedPassword = yield bcrypt_1.default.hash(password, saltRounds);
         const newUser = new UserModel_1.default({
-            user_email,
+            email,
             password: hashedPassword,
         });
         return userDataAccess.InsertOne(newUser);
     });
 }
 exports.registerUser = registerUser;
-function loginUser(user_email, password) {
+function loginUser(email, password) {
     return __awaiter(this, void 0, void 0, function* () {
         const users = (yield userDataAccess.FindAllUsers({
-            user_email,
+            email,
             status: "active",
             deleted: false,
         })) || [];
@@ -91,9 +91,9 @@ function uploadUserImage(id, file) {
     });
 }
 exports.uploadUserImage = uploadUserImage;
-function addUser(user_email, password) {
+function addUser(email, password) {
     return __awaiter(this, void 0, void 0, function* () {
-        const newUser = new UserModel_1.default({ user_email, password });
+        const newUser = new UserModel_1.default({ email, password });
         return userDataAccess.InsertOne(newUser);
     });
 }
@@ -109,10 +109,10 @@ function createUser(user) {
         // Check if user with this username or email already exists
         const existingUsers = yield userDataAccess.FindAllUsers({
             $or: [
-                { user_email: user.user_email },
+                { email: user.email },
             ],
         });
-        if (!user.user_email) {
+        if (!user.email) {
             throw new HttpException_1.BadRequestException("email field is empty.");
         }
         else if (existingUsers.length > 0) {

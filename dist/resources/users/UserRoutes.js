@@ -14,12 +14,12 @@ const multerConfig_1 = __importDefault(require("../../config/multerConfig"));
 const upload = (0, multer_1.default)(multerConfig_1.default);
 const usersRouter = express_1.default.Router();
 // for app users
-usersRouter.post("/register", UserController_1.registerUser); // v
-usersRouter.post("/login", UserController_1.loginUser); // v
-usersRouter.get("/:id", auth_1.authenticateToken, UserController_1.getUserById); // v
-usersRouter.put("/markDeleted/:id", auth_1.authenticateToken, UserController_1.markUserAsDeleted);
+usersRouter.post("/register", UserController_1.registerUser); // V
+usersRouter.post("/login", UserController_1.loginUser); // V
+usersRouter.get("/:id", auth_1.authenticateToken, UserController_1.getUserById); // V
 usersRouter.put("/update/:id", auth_1.authenticateToken, UserController_1.updateUser); // V
-usersRouter.post("/upload-image/:id", auth_1.authenticateToken, upload.any(), UserController_1.uploadUserImage);
+usersRouter.post("/update-image/:id", auth_1.authenticateToken, upload.any(), UserController_1.uploadUserImage); // V
+usersRouter.put("/mark-deleted/:id", auth_1.authenticateToken, UserController_1.markUserAsDeleted);
 // for admin
 usersRouter.get("/all", auth_1.authenticateToken, UserController_1.getAllUsers);
 usersRouter.post("/add", UserController_1.addUser);

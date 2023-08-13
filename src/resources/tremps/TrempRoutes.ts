@@ -6,12 +6,14 @@ import { authenticateToken } from "../../middleware/auth";
 const trempRoutes = express.Router();
 
 trempRoutes.post("/add",authenticateToken, TrempController.createTremp);
-trempRoutes.get("/all", authenticateToken, TrempController.getAllTremps);
-trempRoutes.post('/trempsByFilters',authenticateToken, TrempController.getTrempsByFilters);
+trempRoutes.post('/tremps-by-filters',authenticateToken, TrempController.getTrempsByFilters);
 trempRoutes.put('/join-ride',authenticateToken, TrempController.addUserToTremp);
 trempRoutes.post("/user-tremps",authenticateToken, TrempController.getUserTremps);
-trempRoutes.put('/approveUserInTremp',authenticateToken ,TrempController.approveUserInTremp);
+trempRoutes.put('/approve-user-in-tremp',authenticateToken ,TrempController.approveUserInTremp);
 trempRoutes.delete('/delete-tremp',authenticateToken, TrempController.deleteTremp);
+
+//for admin
+trempRoutes.get("/all", authenticateToken, TrempController.getAllTremps);
 
 trempRoutes.use(handleErrors); 
 

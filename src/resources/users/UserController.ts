@@ -10,15 +10,15 @@ import { BadRequestException } from "../../middleware/HttpException";
 
 /**
   Registers a new user.
-  It validates the user_email and password in the request body,
+  It validates the email and password in the request body,
   calls the registerUser function from UserService to create the user,
   and returns a success message in the response.
   If there are any errors, it passes them to the error handling middleware.
  */
 export async function registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { user_email, password } = req.body;
-    const result = await UserService.registerUser(user_email, password);
+    const { email, password } = req.body;
+    const result = await UserService.registerUser(email, password);
     if (!result) {
       throw new BadRequestException("Failed to register user");
     }
@@ -30,14 +30,14 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
 
 /**
   Logs in a user.
-  It validates the user_email and password in the request body,
+  It validates the email and password in the request body,
   calls the loginUser function from UserService to check the credentials,
   generates a token using the user's ID, and returns the user and token in the response.
  */
 export async function loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { user_email, password } = req.body;
-    const user = await UserService.loginUser(user_email, password);
+    const {email, password } = req.body;
+    const user = await UserService.loginUser(email, password);
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '6h' });
     res.status(200).json({ status: true, data: { user, token } });
   } catch (err) {
@@ -132,8 +132,8 @@ export async function deleteUserById(req: Request, res: Response, next: NextFunc
  */
 export async function addUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { user_email, password } = req.body;
-    const result = await UserService.addUser(user_email, password);
+    const { email, password } = req.body;
+    const result = await UserService.addUser(email, password);
     res.status(201).json({ status: true, data: result });
   } catch (err) {
     next(err);

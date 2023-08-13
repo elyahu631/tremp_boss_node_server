@@ -25,12 +25,12 @@ const upload = multer(multerConfig);
 const usersRouter: Router = express.Router();
 
 // for app users
-usersRouter.post("/register", registerUser);// v
-usersRouter.post("/login", loginUser);// v
-usersRouter.get("/:id", authenticateToken, getUserById);// v
-usersRouter.put("/markDeleted/:id", authenticateToken, markUserAsDeleted);
+usersRouter.post("/register", registerUser);// V
+usersRouter.post("/login", loginUser);// V
+usersRouter.get("/:id", authenticateToken, getUserById);// V
 usersRouter.put("/update/:id", authenticateToken, updateUser);// V
-usersRouter.post("/upload-image/:id", authenticateToken, upload.any(), uploadUserImage);
+usersRouter.post("/update-image/:id", authenticateToken, upload.any(), uploadUserImage);// V
+usersRouter.put("/mark-deleted/:id", authenticateToken, markUserAsDeleted);
 
 // for admin
 usersRouter.get("/all", authenticateToken, getAllUsers);

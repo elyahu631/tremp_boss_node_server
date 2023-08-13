@@ -9,7 +9,7 @@ const joi_1 = __importDefault(require("joi"));
 function validateUpdatedUser(updatedUser) {
     console.log(updatedUser);
     const schema = joi_1.default.object({
-        user_email: joi_1.default.string().email().optional(),
+        email: joi_1.default.string().email().optional(),
         phone_number: joi_1.default.string().optional(),
         password: joi_1.default.string().min(6).optional(),
         first_name: joi_1.default.string().optional(),

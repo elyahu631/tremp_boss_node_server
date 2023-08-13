@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 
 export interface UserInterface  {
   _id?: ObjectId;
-  user_email?: string;
+  email?: string;
   password?: string;
   coins?: number;
   createdAt?: Date;

@@ -44,7 +44,7 @@ const UserModel_1 = __importDefault(require("./UserModel"));
 const HttpException_1 = require("../../middleware/HttpException");
 /**
   Registers a new user.
-  It validates the user_email and password in the request body,
+  It validates the email and password in the request body,
   calls the registerUser function from UserService to create the user,
   and returns a success message in the response.
   If there are any errors, it passes them to the error handling middleware.
@@ -52,8 +52,8 @@ const HttpException_1 = require("../../middleware/HttpException");
 function registerUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { user_email, password } = req.body;
-            const result = yield UserService.registerUser(user_email, password);
+            const { email, password } = req.body;
+            const result = yield UserService.registerUser(email, password);
             if (!result) {
                 throw new HttpException_1.BadRequestException("Failed to register user");
             }
@@ -67,15 +67,15 @@ function registerUser(req, res, next) {
 exports.registerUser = registerUser;
 /**
   Logs in a user.
-  It validates the user_email and password in the request body,
+  It validates the email and password in the request body,
   calls the loginUser function from UserService to check the credentials,
   generates a token using the user's ID, and returns the user and token in the response.
  */
 function loginUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { user_email, password } = req.body;
-            const user = yield UserService.loginUser(user_email, password);
+            const { email, password } = req.body;
+            const user = yield UserService.loginUser(email, password);
             const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '6h' });
             res.status(200).json({ status: true, data: { user, token } });
         }
@@ -182,8 +182,8 @@ exports.deleteUserById = deleteUserById;
 function addUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { user_email, password } = req.body;
-            const result = yield UserService.addUser(user_email, password);
+            const { email, password } = req.body;
+            const result = yield UserService.addUser(email, password);
             res.status(201).json({ status: true, data: result });
         }
         catch (err) {

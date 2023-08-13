@@ -36,38 +36,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.getAllTremps = exports.createTremp = void 0;
-// src/resources/tremps/trempControler.ts
-const mongodb_1 = require("mongodb");
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const HttpException_1 = require("../../middleware/HttpException");
 const sendNotification_1 = require("../../services/sendNotification");
-const validateTrempData = (tremp) => {
-    tremp.validateTremp();
-    const { creator_id, tremp_time, from_root, to_root } = tremp;
-    if (!creator_id || !tremp_time || !from_root || !to_root) {
-        throw new Error("Missing required tremp data");
-    }
-    if (new Date(tremp_time) < new Date()) {
-        throw new Error("Tremp time has already passed");
-    }
-    if (from_root.name === to_root.name) {
-        throw new Error("The 'from' and 'to' locations cannot be the same");
-    }
-};
 function createTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const newTremp = new TrempModel_1.default(req.body);
-            validateTrempData(newTremp);
-            const user = yield UserService.getUserById(newTremp.creator_id.toString());
-            if (!user) {
-                throw new HttpException_1.NotFoundException("Creator user does not exist");
-            }
-            newTremp.creator_id = new mongodb_1.ObjectId(newTremp.creator_id);
-            newTremp.group_id = new mongodb_1.ObjectId(newTremp.group_id);
-            newTremp.tremp_time = new Date(newTremp.tremp_time);
             const result = yield TrempService.createTremp(newTremp);
             res.status(200).json({ status: true, data: result });
         }
@@ -110,23 +87,7 @@ function addUserToTremp(req, res, next) {
             if (!tremp_id || !user_id) {
                 throw new HttpException_1.BadRequestException('Tremp ID and User ID are required');
             }
-            const updatedTremp = yield TrempService.addUserToTremp(tremp_id, user_id);
-            if (updatedTremp.matchedCount === 0) {
-                throw new HttpException_1.NotFoundException('Tremp not found');
-            }
-            if (updatedTremp.modifiedCount === 0) {
-                throw new HttpException_1.BadRequestException('User not added to the tremp');
-            }
-            const tremp = yield TrempService.getTrempById(tremp_id);
-            const creatorId = tremp.creator_id;
-            const creator = yield UserService.getUserById(creatorId);
-            const fcmToken = creator.notification_token;
-            if (fcmToken) {
-                yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, 'New User Joined Drive', 'A user has joined your drive.', { tremp_id, user_id });
-            }
-            else {
-                console.log('User does not have a valid FCM token');
-            }
+            yield TrempService.addUserToTremp(tremp_id, user_id);
             res.status(200).json({ status: true, message: 'User successfully added to the tremp' });
         }
         catch (err) {

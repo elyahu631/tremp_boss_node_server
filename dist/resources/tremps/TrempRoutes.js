@@ -32,12 +32,13 @@ const handleErrors_1 = require("../../middleware/handleErrors");
 const auth_1 = require("../../middleware/auth");
 const trempRoutes = express_1.default.Router();
 trempRoutes.post("/add", auth_1.authenticateToken, TrempController.createTremp);
-trempRoutes.get("/all", auth_1.authenticateToken, TrempController.getAllTremps);
-trempRoutes.post('/trempsByFilters', auth_1.authenticateToken, TrempController.getTrempsByFilters);
+trempRoutes.post('/tremps-by-filters', auth_1.authenticateToken, TrempController.getTrempsByFilters);
 trempRoutes.put('/join-ride', auth_1.authenticateToken, TrempController.addUserToTremp);
 trempRoutes.post("/user-tremps", auth_1.authenticateToken, TrempController.getUserTremps);
-trempRoutes.put('/approveUserInTremp', auth_1.authenticateToken, TrempController.approveUserInTremp);
+trempRoutes.put('/approve-user-in-tremp', auth_1.authenticateToken, TrempController.approveUserInTremp);
 trempRoutes.delete('/delete-tremp', auth_1.authenticateToken, TrempController.deleteTremp);
+//for admin
+trempRoutes.get("/all", auth_1.authenticateToken, TrempController.getAllTremps);
 trempRoutes.use(handleErrors_1.handleErrors);
 exports.default = trempRoutes;
 //# sourceMappingURL=TrempRoutes.js.map

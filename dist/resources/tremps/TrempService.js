@@ -17,10 +17,32 @@ const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const mongodb_1 = require("mongodb");
 const sendNotification_1 = require("../../services/sendNotification");
+const HttpException_1 = require("../../middleware/HttpException");
 const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
+const validateTrempData = (tremp) => {
+    tremp.validateTremp();
+    const { creator_id, tremp_time, from_root, to_root } = tremp;
+    if (!creator_id || !tremp_time || !from_root || !to_root) {
+        throw new Error("Missing required tremp data");
+    }
+    if (new Date(tremp_time) < new Date()) {
+        throw new Error("Tremp time has already passed");
+    }
+    if (from_root.name === to_root.name) {
+        throw new Error("The 'from' and 'to' locations cannot be the same");
+    }
+};
 function createTremp(tremp) {
     return __awaiter(this, void 0, void 0, function* () {
+        tremp.creator_id = new mongodb_1.ObjectId(tremp.creator_id);
+        tremp.group_id = new mongodb_1.ObjectId(tremp.group_id);
+        tremp.tremp_time = new Date(tremp.tremp_time);
+        validateTrempData(tremp);
+        const user = yield userDataAccess.FindById(tremp.creator_id.toString());
+        if (!user) {
+            throw new HttpException_1.NotFoundException("Creator user does not exist");
+        }
         return yield trempDataAccess.insertTremp(tremp);
     });
 }
@@ -76,7 +98,23 @@ function addUserToTremp(tremp_id, user_id) {
         let id = new mongodb_1.ObjectId(user_id);
         const user = { user_id: id, is_approved: "pending" };
         const query = ({ $push: { users_in_tremp: user } });
-        return yield trempDataAccess.addUserToTremp(tremp_id, query);
+        const updatedTremp = yield trempDataAccess.addUserToTremp(tremp_id, query);
+        if (updatedTremp.matchedCount === 0) {
+            throw new HttpException_1.NotFoundException('Tremp not found');
+        }
+        if (updatedTremp.modifiedCount === 0) {
+            throw new HttpException_1.BadRequestException('User not added to the tremp');
+        }
+        const tremp = yield trempDataAccess.FindByID(tremp_id);
+        const creatorId = tremp.creator_id;
+        const creator = yield userDataAccess.FindById(creatorId);
+        const fcmToken = creator.notification_token;
+        if (fcmToken) {
+            yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, 'New User Joined Drive', 'A user has joined your drive.', { tremp_id, user_id });
+        }
+        else {
+            console.log('User does not have a valid FCM token');
+        }
     });
 }
 exports.addUserToTremp = addUserToTremp;

@@ -9,7 +9,7 @@ const mongodb_1 = require("mongodb");
 const TimeService_1 = require("../../services/TimeService");
 class UserModel {
     constructor(userData) {
-        this.user_email = userData.user_email;
+        this.email = userData.email;
         this.password = userData.password;
         this.phone_number = userData.phone_number;
         this.image_URL = userData.image_URL;
@@ -27,12 +27,12 @@ class UserModel {
     }
     validateUser() {
         const schema = joi_1.default.object({
-            user_email: joi_1.default.string().email().max(50).required(),
+            email: joi_1.default.string().email().max(50).required(),
             password: joi_1.default.string().min(8).required(),
         });
-        // Only validate the user_email and password properties
+        // Only validate the email and password properties
         const { error } = schema.validate({
-            user_email: this.user_email,
+            email: this.email,
             password: this.password,
         });
         if (error) {
