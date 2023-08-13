@@ -307,32 +307,31 @@ function getApprovedTremps(user_id, tremp_type) {
         const trampsCreatedByUser = yield trempDataAccess.FindAll(createdByUserQuery);
         // Then, find the tramps where the user has joined as type 'second' and is approved
         const joinedByUserQuery = {
+            tremp_type: second,
             "users_in_tremp": {
                 "$elemMatch": {
                     "user_id": userId,
                     "is_approved": 'approved',
-                    "tremp_type": second
                 }
             }
         };
         const trampsJoinedByUser = yield trempDataAccess.FindAll(joinedByUserQuery);
         const trampsToShow = yield Promise.all([...trampsCreatedByUser, ...trampsJoinedByUser].map((tramp) => __awaiter(this, void 0, void 0, function* () {
             var _a;
-            // Identifying the driver based on tremp type
+            // Identifying the driver based on tremp type and Identifying the hitchhikers
             let driverId;
+            let hitchhikers;
             if (tramp.tremp_type === 'driver') {
                 driverId = tramp.creator_id;
+                hitchhikers = yield Promise.all(tramp.users_in_tremp
+                    .filter((user) => user.is_approved === 'approved')
+                    .map((user) => getUserDetailsById(user.user_id)));
             }
             else {
                 driverId = (_a = tramp.users_in_tremp.find((user) => user.is_approved === 'approved')) === null || _a === void 0 ? void 0 : _a.user_id;
+                hitchhikers = yield getUserDetailsById(tramp.creator_id);
             }
-            const driver = yield getUserDetailsById(driverId); // You should implement this function to get user details
-            // Identifying the hitchhikers
-            const hitchhikers = yield Promise.all(tramp.users_in_tremp
-                .filter((user) => user.is_approved === 'approved')
-                .map((user) => getUserDetailsById(user.user_id)) // Implement getUserDetailsById as needed
-            );
-            // Returning the tramp in the required format
+            const driver = yield getUserDetailsById(driverId);
             return Object.assign(Object.assign({}, tramp), { driver: {
                     user_id: driver.user_id,
                     first_name: driver.first_name,

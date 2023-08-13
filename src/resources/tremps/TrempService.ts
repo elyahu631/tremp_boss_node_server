@@ -1,3 +1,4 @@
+import { handleErrors } from './../../middleware/handleErrors';
 // src/resources/tremps/trempService.ts
 import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
@@ -309,11 +310,11 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
   // Then, find the tramps where the user has joined as type 'second' and is approved
   const joinedByUserQuery = {
+    tremp_type: second,
     "users_in_tremp": {
       "$elemMatch": {
         "user_id": userId,
         "is_approved": 'approved',
-        "tremp_type": second
       }
     }
   };
@@ -322,23 +323,26 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
   const trampsToShow = await Promise.all(
     [...trampsCreatedByUser, ...trampsJoinedByUser].map(async tramp => {
-      // Identifying the driver based on tremp type
+
+      // Identifying the driver based on tremp type and Identifying the hitchhikers
       let driverId;
+      let hitchhikers;
       if (tramp.tremp_type === 'driver') {
         driverId = tramp.creator_id;
+
+        hitchhikers = await Promise.all(
+          tramp.users_in_tremp
+            .filter((user: UsersApprovedInTremp) => user.is_approved === 'approved')
+            .map((user: UsersApprovedInTremp) => getUserDetailsById(user.user_id)) 
+        );
+
       } else {
-        driverId = tramp.users_in_tremp.find((user:UsersApprovedInTremp)  => user.is_approved === 'approved')?.user_id;
+        driverId = tramp.users_in_tremp.find((user: UsersApprovedInTremp) => user.is_approved === 'approved')?.user_id;
+        hitchhikers = await getUserDetailsById(tramp.creator_id);
       }
-      const driver = await getUserDetailsById(driverId); // You should implement this function to get user details
+      const driver = await getUserDetailsById(driverId); 
 
-      // Identifying the hitchhikers
-      const hitchhikers = await Promise.all(
-        tramp.users_in_tremp
-          .filter((user:UsersApprovedInTremp) =>  user.is_approved === 'approved')
-          .map((user:UsersApprovedInTremp) => getUserDetailsById(user.user_id)) // Implement getUserDetailsById as needed
-      );
-
-      // Returning the tramp in the required format
+      
       return {
         ...tramp,
         driver: {
