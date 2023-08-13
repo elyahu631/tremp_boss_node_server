@@ -62,7 +62,7 @@ function getTrempsByFilters(filters) {
             is_full: false,
             creator_id: { $ne: userId },
             tremp_time: { $gt: date },
-            tremp_type: filters.type_of_tremp,
+            tremp_type: filters.tremp_type,
             users_in_tremp: {
                 $not: {
                     $elemMatch: { user_id: userId }
@@ -71,10 +71,10 @@ function getTrempsByFilters(filters) {
         };
         let tremps = yield trempDataAccess.FindTrempsByFilters(query);
         // Get all unique user IDs
-        let uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))]; ///
+        let uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))]; //
         console.log(uniqueUserIds);
         // Fetch all users in one operation
-        let users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, photo_URL: 1 });
+        let users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, image_URL: 1 });
         console.log(users);
         // Convert users array to a map for efficient access
         let usersMap = new Map(users.map(user => [user._id.toString(), user]));
@@ -85,7 +85,7 @@ function getTrempsByFilters(filters) {
                 tremp.creator = {
                     first_name: user.first_name,
                     last_name: user.last_name,
-                    photo_URL: user.photo_URL
+                    image_URL: user.image_URL
                 };
             }
         });
@@ -150,11 +150,11 @@ function getTrempById(id) {
     });
 }
 exports.getTrempById = getTrempById;
-function getUserTremps(user_id, type_of_tremp) {
+function getUserTremps(user_id, tremp_type) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
-        const first = type_of_tremp === 'driver' ? 'driver' : 'hitchhiker';
-        const second = type_of_tremp === 'hitchhiker' ? 'driver' : 'hitchhiker';
+        const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
+        const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
         const driverQuery = {
             creator_id: userId,
             tremp_type: first,
@@ -180,72 +180,43 @@ function getUserTremps(user_id, type_of_tremp) {
     });
 }
 exports.getUserTremps = getUserTremps;
-function getApprovalStatus(tremp, userId, type_of_tremp) {
-    if (type_of_tremp === 'driver') {
+function getApprovalStatus(tremp, userId, tremp_type) {
+    const isCreator = tremp.creator_id.equals(userId);
+    const userInTremp = tremp.users_in_tremp.find((user) => user.user_id.equals(userId));
+    const noApplicantsMessage = tremp_type === 'driver' ? 'no applicants' : 'no bidders';
+    const awaitingApprovalMessage = 'awaiting approval from me';
+    const allApprovedMessage = 'all approved';
+    // Check if the user is the creator
+    if (isCreator) {
         console.log('User is the creator');
-        if (tremp.creator_id.equals(userId)) {
-            if (tremp.users_in_tremp.length === 0) {
-                return 'no applicants';
-            }
-            else {
-                const pending = tremp.users_in_tremp.some((user) => user.is_approved === 'pending');
-                const denied = tremp.users_in_tremp.every((user) => user.is_approved === 'denied');
-                if (pending)
-                    return 'awaiting approval from me';
-                if (denied)
-                    return 'no applicants';
-                return 'all approved';
-            }
+        if (tremp.users_in_tremp.length === 0) {
+            return noApplicantsMessage;
         }
         else {
-            const userInTremp = tremp.users_in_tremp.find((user) => user.user_id.equals(userId));
-            if (userInTremp) {
-                console.log('User is in users_in_tremp');
-                switch (userInTremp.is_approved) {
-                    case 'pending':
-                        return 'waiting for approval from driver';
-                    case 'denied':
-                        return 'not approved';
-                    case 'approved':
-                        return 'approved';
-                    default:
-                        return 'not involved';
-                }
-            }
+            const pending = tremp.users_in_tremp.some((user) => user.is_approved === 'pending');
+            const denied = tremp.users_in_tremp.every((user) => user.is_approved === 'denied');
+            if (pending)
+                return awaitingApprovalMessage;
+            if (denied)
+                return noApplicantsMessage;
+            return allApprovedMessage;
         }
     }
-    else if (type_of_tremp === 'hitchhiker') {
-        if (tremp.creator_id.equals(userId)) {
-            if (tremp.users_in_tremp.length === 0) {
-                return 'no bidders';
-            }
-            else {
-                const pending = tremp.users_in_tremp.some((user) => user.is_approved === 'pending');
-                const denied = tremp.users_in_tremp.every((user) => user.is_approved === 'denied');
-                if (pending)
-                    return 'awaiting approval from me';
-                if (denied)
-                    return 'no bidders';
-                return 'all approved';
-            }
-        }
-        else {
-            console.log('User is neither the creator nor in users_in_tremp');
-            const userInTremp = tremp.users_in_tremp.find((user) => user.user_id.equals(userId));
-            if (userInTremp) {
-                switch (userInTremp.is_approved) {
-                    case 'pending':
-                        return 'waiting for approval from hitchhiker';
-                    case 'denied':
-                        return 'not approved';
-                    case 'approved':
-                        return 'approved';
-                    default:
-                        return 'not involved';
-                }
-            }
+    // Check if the user is in users_in_tremp
+    if (userInTremp) {
+        console.log('User is in users_in_tremp');
+        switch (userInTremp.is_approved) {
+            case 'pending':
+                return tremp_type === 'driver' ? 'waiting for approval from driver' : 'waiting for approval from hitchhiker';
+            case 'denied':
+                return 'not approved';
+            case 'approved':
+                return 'approved';
+            default:
+                return 'not involved';
         }
     }
+    console.log('User is neither the creator nor in users_in_tremp');
     return 'not involved'; // default value, if none of the conditions are met
 }
 function deleteTremp(tremp_id, user_id) {

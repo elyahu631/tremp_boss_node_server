@@ -121,11 +121,11 @@ exports.approveUserInTremp = approveUserInTremp;
 function getUserTremps(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { user_id, type_of_tremp } = req.body;
-            if (!user_id || !type_of_tremp) {
+            const { user_id, tremp_type } = req.body;
+            if (!user_id || !tremp_type) {
                 throw new HttpException_1.BadRequestException('User ID and type of ride are required');
             }
-            const tremps = yield TrempService.getUserTremps(user_id, type_of_tremp);
+            const tremps = yield TrempService.getUserTremps(user_id, tremp_type);
             if (!tremps) {
                 throw new HttpException_1.NotFoundException("No Tremps found for this user and ride type");
             }

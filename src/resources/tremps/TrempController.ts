@@ -73,11 +73,11 @@ export async function approveUserInTremp(req: Request, res: Response, next: Next
 
 export async function getUserTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { user_id, type_of_tremp } = req.body;
-    if (!user_id || !type_of_tremp) {
+    const { user_id, tremp_type } = req.body;
+    if (!user_id || !tremp_type) {
       throw new BadRequestException('User ID and type of ride are required');
     }
-    const tremps = await TrempService.getUserTremps(user_id, type_of_tremp);
+    const tremps = await TrempService.getUserTremps(user_id, tremp_type);
     if (!tremps) {
       throw new NotFoundException("No Tremps found for this user and ride type");
     }
