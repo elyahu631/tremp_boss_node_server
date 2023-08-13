@@ -21,3 +21,10 @@ export interface UserInTremp {
   user_id: ObjectId;
   is_approved: string;
 }  
+
+
+export interface UsersApprovedInTremp {
+  tremp_type: string;
+  is_approved: string;
+  user_id: ObjectId; 
+}  

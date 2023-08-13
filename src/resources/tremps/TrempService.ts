@@ -3,7 +3,7 @@ import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
-import { Tremp, UserInTremp } from './TrempInterfaces';
+import { Tremp, UserInTremp, UsersApprovedInTremp } from './TrempInterfaces';
 import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 
@@ -320,10 +320,59 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
   const trampsJoinedByUser = await trempDataAccess.FindAll(joinedByUserQuery);
 
-  const trampsToShow = [
-    ...trampsCreatedByUser,
-    ...trampsJoinedByUser
-  ];
+  const trampsToShow = await Promise.all(
+    [...trampsCreatedByUser, ...trampsJoinedByUser].map(async tramp => {
+      // Identifying the driver based on tremp type
+      let driverId;
+      if (tramp.tremp_type === 'driver') {
+        driverId = tramp.creator_id;
+      } else {
+        driverId = tramp.users_in_tremp.find((user:UsersApprovedInTremp)  => user.is_approved === 'approved')?.user_id;
+      }
+      const driver = await getUserDetailsById(driverId); // You should implement this function to get user details
+
+      // Identifying the hitchhikers
+      const hitchhikers = await Promise.all(
+        tramp.users_in_tremp
+          .filter((user:UsersApprovedInTremp) =>  user.is_approved === 'approved')
+          .map((user:UsersApprovedInTremp) => getUserDetailsById(user.user_id)) // Implement getUserDetailsById as needed
+      );
+
+      // Returning the tramp in the required format
+      return {
+        ...tramp,
+        driver: {
+          user_id: driver.user_id,
+          first_name: driver.first_name,
+          last_name: driver.last_name
+        },
+        hitchhikers,
+        users_in_tremp: undefined // Removing users_in_tremp from the response
+      };
+    })
+  );
 
   return trampsToShow;
+}
+
+
+
+async function getUserDetailsById(userId: ObjectId) {
+  try {
+    const user = await userDataAccess.FindById(userId.toString());
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Returning the needed details
+    return {
+      user_id: user._id,
+      first_name: user.first_name,
+      last_name: user.last_name
+    };
+  } catch (error) {
+    // Handle any errors (e.g., log them and/or throw a specific error)
+    console.error('Error getting user details:', error);
+    throw error;
+  }
 }

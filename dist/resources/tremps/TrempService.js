@@ -316,12 +316,53 @@ function getApprovedTremps(user_id, tremp_type) {
             }
         };
         const trampsJoinedByUser = yield trempDataAccess.FindAll(joinedByUserQuery);
-        const trampsToShow = [
-            ...trampsCreatedByUser,
-            ...trampsJoinedByUser
-        ];
+        const trampsToShow = yield Promise.all([...trampsCreatedByUser, ...trampsJoinedByUser].map((tramp) => __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            // Identifying the driver based on tremp type
+            let driverId;
+            if (tramp.tremp_type === 'driver') {
+                driverId = tramp.creator_id;
+            }
+            else {
+                driverId = (_a = tramp.users_in_tremp.find((user) => user.is_approved === 'approved')) === null || _a === void 0 ? void 0 : _a.user_id;
+            }
+            const driver = yield getUserDetailsById(driverId); // You should implement this function to get user details
+            // Identifying the hitchhikers
+            const hitchhikers = yield Promise.all(tramp.users_in_tremp
+                .filter((user) => user.is_approved === 'approved')
+                .map((user) => getUserDetailsById(user.user_id)) // Implement getUserDetailsById as needed
+            );
+            // Returning the tramp in the required format
+            return Object.assign(Object.assign({}, tramp), { driver: {
+                    user_id: driver.user_id,
+                    first_name: driver.first_name,
+                    last_name: driver.last_name
+                }, hitchhikers, users_in_tremp: undefined // Removing users_in_tremp from the response
+             });
+        })));
         return trampsToShow;
     });
 }
 exports.getApprovedTremps = getApprovedTremps;
+function getUserDetailsById(userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const user = yield userDataAccess.FindById(userId.toString());
+            if (!user) {
+                throw new Error('User not found');
+            }
+            // Returning the needed details
+            return {
+                user_id: user._id,
+                first_name: user.first_name,
+                last_name: user.last_name
+            };
+        }
+        catch (error) {
+            // Handle any errors (e.g., log them and/or throw a specific error)
+            console.error('Error getting user details:', error);
+            throw error;
+        }
+    });
+}
 //# sourceMappingURL=TrempService.js.map
