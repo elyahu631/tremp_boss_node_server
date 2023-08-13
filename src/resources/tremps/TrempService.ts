@@ -29,10 +29,10 @@ const validateTrempData = (tremp: TrempModel) => {
 }
 
 export async function createTremp(tremp: TrempModel) {
+  validateTrempData(tremp);
   tremp.creator_id = new ObjectId(tremp.creator_id)
   tremp.group_id = new ObjectId(tremp.group_id)
   tremp.tremp_time = new Date(tremp.tremp_time)
-  validateTrempData(tremp);
   const user = await userDataAccess.FindById(tremp.creator_id.toString());
   if (!user) {
     throw new NotFoundException("Creator user does not exist");

@@ -35,10 +35,10 @@ const validateTrempData = (tremp) => {
 };
 function createTremp(tremp) {
     return __awaiter(this, void 0, void 0, function* () {
+        validateTrempData(tremp);
         tremp.creator_id = new mongodb_1.ObjectId(tremp.creator_id);
         tremp.group_id = new mongodb_1.ObjectId(tremp.group_id);
         tremp.tremp_time = new Date(tremp.tremp_time);
-        validateTrempData(tremp);
         const user = yield userDataAccess.FindById(tremp.creator_id.toString());
         if (!user) {
             throw new HttpException_1.NotFoundException("Creator user does not exist");
