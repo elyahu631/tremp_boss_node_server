@@ -5,7 +5,7 @@ import { JWT_SECRET } from "../../config/environment";
 import * as UserService from './UserService';
 import { validateUpdatedUser } from "./UserValidation";
 import UserModel from "./UserModel";
-import { BadRequestException, UnauthorizedException } from "../../middleware/HttpException";
+import { BadRequestException } from "../../middleware/HttpException";
 
 
 /**
@@ -20,7 +20,7 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
     const { user_email, password } = req.body;
     const result = await UserService.registerUser(user_email, password);
     if (!result) {
-      throw new UnauthorizedException("Failed to register user");
+      throw new BadRequestException("Failed to register user");
     }
     res.status(201).json({ status: true, message: "User registered successfully" });
   } catch (err) {
@@ -38,11 +38,6 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
   try {
     const { user_email, password } = req.body;
     const user = await UserService.loginUser(user_email, password);
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid email or password.');
-    }
-
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '6h' });
     res.status(200).json({ status: true, data: { user, token } });
   } catch (err) {
@@ -67,6 +62,51 @@ export async function getUserById(req: Request, res: Response, next: NextFunctio
 }
 
 /**
+ Updates the details of a user.
+ It validates the user ID in the request params,
+ checks the validity of the updated user details using the validateUpdatedUser function,
+ calls the updateUser function from UserService to update the user details in the database,
+ and returns the updated user in the response.
+ */
+ export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const updatedUser = req.body;
+    if (!validateUpdatedUser(updatedUser)) {
+      throw new BadRequestException('Invalid data to update.');
+    }
+    const user = await UserService.updateUser(id, updatedUser);
+    res.status(200).json({ status: true, message: "User updated successfully", data: user });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function uploadUserImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    let file: Express.Multer.File;
+
+    if (Array.isArray(req.files)) {
+      file = req.files[0];
+    } else {
+      // You can choose the field name or just get the first file
+      file = req.files[Object.keys(req.files)[0]][0];
+    }
+
+    if (!file) {
+      throw new BadRequestException('No image provided.');
+    }
+
+    const { id } = req.params;
+    const imageUrl = await UserService.uploadUserImage(id, file);
+    res.status(200).json({ status: true, message: "Image uploaded successfully", data: {image_URL:imageUrl}});
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+/**
 Deletes a user by ID.
 It validates the user ID in the request params,
 calls the deleteUserById function from UserService to delete the user,
@@ -77,27 +117,6 @@ export async function deleteUserById(req: Request, res: Response, next: NextFunc
     const { id } = req.params;
     await UserService.deleteUserById(id);
     res.status(200).json({ status: true, message: "User successfully deleted" });
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
- Updates the details of a user.
- It validates the user ID in the request params,
- checks the validity of the updated user details using the validateUpdatedUser function,
- calls the updateUser function from UserService to update the user details in the database,
- and returns the updated user in the response.
- */
-export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const { id } = req.params;
-    const updatedUser = req.body;
-    if (!validateUpdatedUser(updatedUser)) {
-      throw new BadRequestException('Invalid data to update.');
-    }
-    const user = await UserService.updateUser(id, updatedUser);
-    res.status(200).json({ status: true, message: "User updated successfully", data: user });
   } catch (err) {
     next(err);
   }

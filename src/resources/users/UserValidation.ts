@@ -16,14 +16,8 @@ export function validateUpdatedUser(updatedUser: UserModel) : boolean{
     deleted: Joi.boolean().optional(),
     notification_token: Joi.string().optional(),
   });
-
   const { error } = schema.validate(updatedUser);
   if (error) {
-    
-    console.log('====================================');
-    console.log(error.details[0].message);
-    console.log('====================================');
-
     return false;
   }
   return true;

@@ -6,7 +6,7 @@ import { JWT_SECRET } from '../config/environment';
 
 // Define a custom Request type that includes the user object
 interface RequestWithUser extends Request {
-  user?: string | object;  // or the type of your user object
+  user?: string | object;  
 }
 
 // Middleware function to authenticate the token
@@ -26,3 +26,4 @@ export const authenticateToken = (req: RequestWithUser, res: Response, next: Nex
     next();
   });
 };
+

@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
+exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.deleteUserById = exports.uploadUserImage = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
@@ -55,7 +55,7 @@ function registerUser(req, res, next) {
             const { user_email, password } = req.body;
             const result = yield UserService.registerUser(user_email, password);
             if (!result) {
-                throw new HttpException_1.UnauthorizedException("Failed to register user");
+                throw new HttpException_1.BadRequestException("Failed to register user");
             }
             res.status(201).json({ status: true, message: "User registered successfully" });
         }
@@ -76,9 +76,6 @@ function loginUser(req, res, next) {
         try {
             const { user_email, password } = req.body;
             const user = yield UserService.loginUser(user_email, password);
-            if (!user) {
-                throw new HttpException_1.UnauthorizedException('Invalid email or password.');
-            }
             const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '6h' });
             res.status(200).json({ status: true, data: { user, token } });
         }
@@ -108,25 +105,6 @@ function getUserById(req, res, next) {
 }
 exports.getUserById = getUserById;
 /**
-Deletes a user by ID.
-It validates the user ID in the request params,
-calls the deleteUserById function from UserService to delete the user,
-and returns a success message in the response.
- */
-function deleteUserById(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const { id } = req.params;
-            yield UserService.deleteUserById(id);
-            res.status(200).json({ status: true, message: "User successfully deleted" });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.deleteUserById = deleteUserById;
-/**
  Updates the details of a user.
  It validates the user ID in the request params,
  checks the validity of the updated user details using the validateUpdatedUser function,
@@ -150,6 +128,49 @@ function updateUser(req, res, next) {
     });
 }
 exports.updateUser = updateUser;
+function uploadUserImage(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let file;
+            if (Array.isArray(req.files)) {
+                file = req.files[0];
+            }
+            else {
+                // You can choose the field name or just get the first file
+                file = req.files[Object.keys(req.files)[0]][0];
+            }
+            if (!file) {
+                throw new HttpException_1.BadRequestException('No image provided.');
+            }
+            const { id } = req.params;
+            const imageUrl = yield UserService.uploadUserImage(id, file);
+            res.status(200).json({ status: true, message: "Image uploaded successfully", data: { image_URL: imageUrl } });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.uploadUserImage = uploadUserImage;
+/**
+Deletes a user by ID.
+It validates the user ID in the request params,
+calls the deleteUserById function from UserService to delete the user,
+and returns a success message in the response.
+ */
+function deleteUserById(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { id } = req.params;
+            yield UserService.deleteUserById(id);
+            res.status(200).json({ status: true, message: "User successfully deleted" });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.deleteUserById = deleteUserById;
 /**
  Adds a new user.
  It creates a new UserModel instance using the request body,

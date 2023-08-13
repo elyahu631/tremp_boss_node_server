@@ -5,7 +5,7 @@ import UserModel from "./UserModel";
 import UserDataAccess from "./UserDataAccess";
 import { uploadImageToFirebase } from '../../firebase/fileUpload';
 import { getCurrentTimeInIsrael } from '../../services/TimeService';
-import { BadRequestException } from '../../middleware/HttpException';
+import { BadRequestException, UnauthorizedException } from '../../middleware/HttpException';
 import { MongoError } from 'mongodb';
 
 const userDataAccess = new UserDataAccess();
@@ -40,10 +40,12 @@ export async function loginUser(user_email: string, password: string) {
   }) || [];
 
   const user = users[0];
+
+  // return null if user not found or password doesn't match
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    // return null if user not found or password doesn't match
-    return null;
+      throw new UnauthorizedException('Invalid email or password.');
   }
+
   // Update the last_login_date field when the user logs in successfully
   user.last_login_date = getCurrentTimeInIsrael();
   await userDataAccess.UpdateUserDetails(user._id.toString(), user);
@@ -55,14 +57,20 @@ export async function getUserById(id: string) {
   return userDataAccess.FindById(id);
 }
 
-export async function deleteUserById(id: string) {
-  return userDataAccess.DeleteUserById(id);
-}
-
 export async function updateUser(id: string, updatedUser: UserModel) {
   return userDataAccess.Update(id, updatedUser);
 }
 
+export async function markUserAsDeleted(id: string) {
+  return userDataAccess.UpdateUserDeletionStatus(id);
+}
+
+export async function uploadUserImage(id: string, file?: Express.Multer.File) {
+  const filePath = `usersimages/${id}`; 
+  const image_URL = await uploadImageToFirebase(file, filePath);
+  await userDataAccess.Update(id, { image_URL }); // Pass object with image_URL field
+  return image_URL;
+}
 export async function addUser(user_email: string, password: string) {
   const newUser = new UserModel({ user_email, password });
   return userDataAccess.InsertOne(newUser);
@@ -70,19 +78,6 @@ export async function addUser(user_email: string, password: string) {
 
 export async function getAllUsers() {
   return userDataAccess.FindAllUsers({deleted:false}); 
-}
-
-export async function markUserAsDeleted(id: string) {
-  return userDataAccess.UpdateUserDeletionStatus(id);
-}
-
-export async function uploadImageToFirebaseAndUpdateUser(
-  file: Express.Multer.File,
-  filePath: string,
-  userId: string
-) {
-  const image_URL = await uploadImageToFirebase(file, filePath);
-  return userDataAccess.UpdateUserDetails(userId, { image_URL });
 }
 
 export async function createUser(user: UserModel) {
@@ -137,4 +132,17 @@ export async function updateUserDetails(id: string, userDetails: UserModel, file
     }   
     throw new BadRequestException("Error updating user details: "+  error);
   }
+}
+
+export async function deleteUserById(id: string) {
+  return userDataAccess.DeleteUserById(id);
+}
+
+export async function uploadImageToFirebaseAndUpdateUser(
+  file: Express.Multer.File,
+  filePath: string,
+  userId: string
+) {
+  const image_URL = await uploadImageToFirebase(file, filePath);
+  return userDataAccess.UpdateUserDetails(userId, { image_URL });
 }

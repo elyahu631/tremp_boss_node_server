@@ -9,13 +9,7 @@ import giftRoutes from './resources/gifts/GiftRoutes';
 import groupRoutes from './resources/groups/GroupRoutes';
 import { jsonErrorHandler } from './middleware/jsonErrorHandler';
 import kpiRoutes from './resources/kpis/KpiRoutes';
-/** 
-app object represents the entire web application and is responsible
 
-for handling incoming requests, routing them to the appropriate handlers,
-
-and generating responses.
-*/
 const app = express();
 app.use(cors());// enable CORS 
 app.use(express.json());// parse incoming requests with JSON

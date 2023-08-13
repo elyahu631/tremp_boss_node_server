@@ -15,25 +15,32 @@ import {
   markUserAsDeleted,
   AdminAddUser,
   updateUserDetails,
+  addNotificationToken,
+  uploadUserImage
 } from "./UserController";
 import multerConfig from "../../config/multerConfig";
+
 // multer middleware for file upload handling
 const upload = multer(multerConfig); 
 const usersRouter: Router = express.Router();
 
-usersRouter.post("/register", registerUser);
-usersRouter.post("/login", loginUser);
-usersRouter.get("/all", authenticateToken, getAllUsers);
-usersRouter.get("/:id", authenticateToken, getUserById);
-usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
+// for app users
+usersRouter.post("/register", registerUser);// v
+usersRouter.post("/login", loginUser);// v
+usersRouter.get("/:id", authenticateToken, getUserById);// v
 usersRouter.put("/markDeleted/:id", authenticateToken, markUserAsDeleted);
-usersRouter.put("/update/:id", authenticateToken, updateUser);
+usersRouter.put("/update/:id", authenticateToken, updateUser);// V
+usersRouter.post("/upload-image/:id", authenticateToken, upload.any(), uploadUserImage);
+
+// for admin
+usersRouter.get("/all", authenticateToken, getAllUsers);
 usersRouter.post("/add", addUser);
+usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
 usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
 usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
-// usersRouter.put("/update-user-image/:id", authenticateToken, upload.single('image_URL'), updateUserImage);
 
-// usersRouter.post("/add-notification-token", addNotificationToken);
+usersRouter.post("/add-notification-token", addNotificationToken);
+
 
 usersRouter.use(handleErrors); 
 

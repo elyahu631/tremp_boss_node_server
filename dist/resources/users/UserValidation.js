@@ -21,9 +21,6 @@ function validateUpdatedUser(updatedUser) {
     });
     const { error } = schema.validate(updatedUser);
     if (error) {
-        console.log('====================================');
-        console.log(error.details[0].message);
-        console.log('====================================');
         return false;
     }
     return true;

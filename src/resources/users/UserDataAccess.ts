@@ -24,7 +24,7 @@ class UserDataAccess  {
     return await new DB().Insert(UserDataAccess .collection, user);
   }
 
-  async Update(id: string, updatedUser: UserModel) {
+  async Update(id: string, updatedUser: Partial<UserModel>) {
     return await new DB().Update(UserDataAccess .collection, id, updatedUser);
   }
 

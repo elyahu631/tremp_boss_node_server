@@ -13,18 +13,20 @@ const multerConfig_1 = __importDefault(require("../../config/multerConfig"));
 // multer middleware for file upload handling
 const upload = (0, multer_1.default)(multerConfig_1.default);
 const usersRouter = express_1.default.Router();
-usersRouter.post("/register", UserController_1.registerUser);
-usersRouter.post("/login", UserController_1.loginUser);
-usersRouter.get("/all", auth_1.authenticateToken, UserController_1.getAllUsers);
-usersRouter.get("/:id", auth_1.authenticateToken, UserController_1.getUserById);
-usersRouter.delete("/delete/:id", auth_1.authenticateToken, UserController_1.deleteUserById);
+// for app users
+usersRouter.post("/register", UserController_1.registerUser); // v
+usersRouter.post("/login", UserController_1.loginUser); // v
+usersRouter.get("/:id", auth_1.authenticateToken, UserController_1.getUserById); // v
 usersRouter.put("/markDeleted/:id", auth_1.authenticateToken, UserController_1.markUserAsDeleted);
-usersRouter.put("/update/:id", auth_1.authenticateToken, UserController_1.updateUser);
+usersRouter.put("/update/:id", auth_1.authenticateToken, UserController_1.updateUser); // V
+usersRouter.post("/upload-image/:id", auth_1.authenticateToken, upload.any(), UserController_1.uploadUserImage);
+// for admin
+usersRouter.get("/all", auth_1.authenticateToken, UserController_1.getAllUsers);
 usersRouter.post("/add", UserController_1.addUser);
+usersRouter.delete("/delete/:id", auth_1.authenticateToken, UserController_1.deleteUserById);
 usersRouter.post("/admin-add-user", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.AdminAddUser);
 usersRouter.put("/update-user/:id", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.updateUserDetails);
-// usersRouter.put("/update-user-image/:id", authenticateToken, upload.single('image_URL'), updateUserImage);
-// usersRouter.post("/add-notification-token", addNotificationToken);
+usersRouter.post("/add-notification-token", UserController_1.addNotificationToken);
 usersRouter.use(handleErrors_1.handleErrors);
 exports.default = usersRouter;
 //# sourceMappingURL=UserRoutes.js.map

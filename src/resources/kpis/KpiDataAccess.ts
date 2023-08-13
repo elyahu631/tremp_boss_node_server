@@ -1,31 +1,47 @@
 // src/resources/kpis/KpiDataAccess.ts
 
-import { ObjectId, AggregationCursor } from "mongodb";
 import DB from "../../utils/db";
-import { getCurrentTimeInIsrael } from "../../services/TimeService";
 const db = new DB();
 class KpiDataAccess {
   static trempCollection = 'Tremps';
   static UserCollection = 'Users';
 
- 
+
   async getPeopleAndTrempCounts() {
+
+    // Pipeline for MongoDB aggregation is defined here.
     const pipeline = [
+
+      // Documents marked as 'deleted' are filtered out in the 'match' stage.
       {
-        $match: {
-          deleted: false
-        }
+        $match: { deleted: false }
       },
+
+      // New fields are added to each document in the 'addFields' stage.
+      // 'approved_users_count' is the count of approved users in the trip.
+      // 'is_approved_trip' indicates if the trip is approved or not.
       {
         $addFields: {
-          approved_users_count: { $size: { $filter: { input: "$users_in_tremp", as: "user", cond: { $eq: ["$$user.is_approved", "approved"] } } } },
+          approved_users_count: {
+            $size: {
+              $filter: {
+                input: "$users_in_tremp",
+                as: "user",
+                cond: { $eq: ["$$user.is_approved", "approved"] }
+              }
+            }
+          },
           is_approved_trip: { $in: ["approved", "$users_in_tremp.is_approved"] }
         }
       },
+
+      // The 'project' stage controls the fields that are included in the output.
+      // 'total_people' represents the total number of people (the count of approved users plus one).
+      // It also keeps the 'is_approved_trip' field.
       {
         $project: {
           total_people: {
-            $cond: { 
+            $cond: {
               if: { $gt: ["$approved_users_count", 0] },
               then: { $add: [1, "$approved_users_count"] },
               else: "$approved_users_count"
@@ -34,6 +50,9 @@ class KpiDataAccess {
           is_approved_trip: 1
         }
       },
+
+      // The 'group' stage groups the documents. In this case, all documents are grouped together (_id: 1).
+      // It sums up the 'total_people' and 'total_approved_trips'.
       {
         $group: {
           _id: 1,
@@ -41,15 +60,23 @@ class KpiDataAccess {
           total_approved_trips: { $sum: { $cond: { if: "$is_approved_trip", then: 1, else: 0 } } }
         }
       },
+
+      // Another 'project' stage is used to modify the structure of the result.
+      // It calculates 'average_people_per_trip' which is the ratio of total people to the total approved trips.
       {
         $project: {
           total_people: 1,
           total_approved_trips: 1,
-          average_people_per_trip: { $cond: { if: { $eq: [ "$total_approved_trips", 0 ] }, then: 0, else: { $divide: [ "$total_people", "$total_approved_trips" ] } } }
+          average_people_per_trip: {
+            $cond: {
+              if: { $eq: ["$total_approved_trips", 0] },
+              then: 0,
+              else: { $divide: ["$total_people", "$total_approved_trips"] }
+            }
+          }
         }
       }
     ];
-
     const result = await db.aggregate(KpiDataAccess.trempCollection, pipeline);
 
     return result;
@@ -105,6 +132,9 @@ class KpiDataAccess {
       },
       {
         $sort: { count: -1 }
+      },
+      {
+        $limit: 5
       },
     ];
 
@@ -201,12 +231,12 @@ class KpiDataAccess {
         }
       },
     ];
-    
+
 
     const result = await db.aggregate(KpiDataAccess.trempCollection, pipeline);
     return result;
   }
-  
+
   async getHitchhikerMonthlyCountsByGender() {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);

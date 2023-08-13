@@ -23,13 +23,6 @@ const GiftRoutes_1 = __importDefault(require("./resources/gifts/GiftRoutes"));
 const GroupRoutes_1 = __importDefault(require("./resources/groups/GroupRoutes"));
 const jsonErrorHandler_1 = require("./middleware/jsonErrorHandler");
 const KpiRoutes_1 = __importDefault(require("./resources/kpis/KpiRoutes"));
-/**
-app object represents the entire web application and is responsible
-
-for handling incoming requests, routing them to the appropriate handlers,
-
-and generating responses.
-*/
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)()); // enable CORS 
 app.use(express_1.default.json()); // parse incoming requests with JSON

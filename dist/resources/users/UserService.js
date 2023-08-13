@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserDetails = exports.createUser = exports.uploadImageToFirebaseAndUpdateUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.updateUser = exports.deleteUserById = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
+exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.addUser = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserModel_1 = __importDefault(require("./UserModel"));
 const UserDataAccess_1 = __importDefault(require("./UserDataAccess"));
@@ -53,9 +53,9 @@ function loginUser(user_email, password) {
             deleted: false,
         })) || [];
         const user = users[0];
+        // return null if user not found or password doesn't match
         if (!user || !(yield bcrypt_1.default.compare(password, user.password))) {
-            // return null if user not found or password doesn't match
-            return null;
+            throw new HttpException_1.UnauthorizedException('Invalid email or password.');
         }
         // Update the last_login_date field when the user logs in successfully
         user.last_login_date = (0, TimeService_1.getCurrentTimeInIsrael)();
@@ -70,18 +70,27 @@ function getUserById(id) {
     });
 }
 exports.getUserById = getUserById;
-function deleteUserById(id) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return userDataAccess.DeleteUserById(id);
-    });
-}
-exports.deleteUserById = deleteUserById;
 function updateUser(id, updatedUser) {
     return __awaiter(this, void 0, void 0, function* () {
         return userDataAccess.Update(id, updatedUser);
     });
 }
 exports.updateUser = updateUser;
+function markUserAsDeleted(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return userDataAccess.UpdateUserDeletionStatus(id);
+    });
+}
+exports.markUserAsDeleted = markUserAsDeleted;
+function uploadUserImage(id, file) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const filePath = `usersimages/${id}`;
+        const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        yield userDataAccess.Update(id, { image_URL }); // Pass object with image_URL field
+        return image_URL;
+    });
+}
+exports.uploadUserImage = uploadUserImage;
 function addUser(user_email, password) {
     return __awaiter(this, void 0, void 0, function* () {
         const newUser = new UserModel_1.default({ user_email, password });
@@ -95,19 +104,6 @@ function getAllUsers() {
     });
 }
 exports.getAllUsers = getAllUsers;
-function markUserAsDeleted(id) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return userDataAccess.UpdateUserDeletionStatus(id);
-    });
-}
-exports.markUserAsDeleted = markUserAsDeleted;
-function uploadImageToFirebaseAndUpdateUser(file, filePath, userId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
-        return userDataAccess.UpdateUserDetails(userId, { image_URL });
-    });
-}
-exports.uploadImageToFirebaseAndUpdateUser = uploadImageToFirebaseAndUpdateUser;
 function createUser(user) {
     return __awaiter(this, void 0, void 0, function* () {
         // Check if user with this username or email already exists
@@ -161,4 +157,17 @@ function updateUserDetails(id, userDetails, file) {
     });
 }
 exports.updateUserDetails = updateUserDetails;
+function deleteUserById(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return userDataAccess.DeleteUserById(id);
+    });
+}
+exports.deleteUserById = deleteUserById;
+function uploadImageToFirebaseAndUpdateUser(file, filePath, userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        return userDataAccess.UpdateUserDetails(userId, { image_URL });
+    });
+}
+exports.uploadImageToFirebaseAndUpdateUser = uploadImageToFirebaseAndUpdateUser;
 //# sourceMappingURL=UserService.js.map
