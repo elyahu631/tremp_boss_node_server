@@ -1,4 +1,3 @@
-import { handleErrors } from './../../middleware/handleErrors';
 // src/resources/tremps/trempService.ts
 import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
@@ -94,9 +93,16 @@ export async function getTrempsByFilters(filters: any) {
 }
 
 export async function addUserToTremp(tremp_id: string, user_id: string) {
-  let id = new ObjectId(user_id);
-  const user = { user_id: id, is_approved: "pending" };
+  let userId = new ObjectId(user_id);
+  const user = { user_id: userId, is_approved: "pending" };
   const query = ({ $push: { users_in_tremp: user } });
+
+  const tremp = await trempDataAccess.FindByID(tremp_id);
+  const creatorId = tremp.creator_id;
+
+  if (userId.equals(creatorId)) {
+    throw new BadRequestException('The creator can not join to tremp');
+  }
   const updatedTremp = await trempDataAccess.addUserToTremp(tremp_id, query)
   if (updatedTremp.matchedCount === 0) {
     throw new NotFoundException('Tremp not found');
@@ -104,8 +110,7 @@ export async function addUserToTremp(tremp_id: string, user_id: string) {
   if (updatedTremp.modifiedCount === 0) {
     throw new BadRequestException('User not added to the tremp');
   }
-  const tremp = await trempDataAccess.FindByID(tremp_id);
-  const creatorId = tremp.creator_id;
+  
   const creator = await userDataAccess.FindById(creatorId);
   const fcmToken = creator.notification_token;
   if (fcmToken) {
@@ -146,7 +151,7 @@ export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
 }
 
-const mapTrempWithoutUsersInTremp = (tremp: Tremp, approvalStatus: string) => {
+function mapTrempWithoutUsersInTremp(tremp: Tremp, approvalStatus: string) {
   const { users_in_tremp, ...otherProps } = tremp;
   return { ...otherProps, approvalStatus };
 };
@@ -360,22 +365,18 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 }
 
 
-
 async function getUserDetailsById(userId: ObjectId) {
   try {
     const user = await userDataAccess.FindById(userId.toString());
     if (!user) {
       throw new Error('User not found');
     }
-
-    // Returning the needed details
     return {
       user_id: user._id,
       first_name: user.first_name,
       last_name: user.last_name
     };
   } catch (error) {
-    // Handle any errors (e.g., log them and/or throw a specific error)
     console.error('Error getting user details:', error);
     throw error;
   }

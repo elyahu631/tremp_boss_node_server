@@ -106,9 +106,14 @@ function getTrempsByFilters(filters) {
 exports.getTrempsByFilters = getTrempsByFilters;
 function addUserToTremp(tremp_id, user_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        let id = new mongodb_1.ObjectId(user_id);
-        const user = { user_id: id, is_approved: "pending" };
+        let userId = new mongodb_1.ObjectId(user_id);
+        const user = { user_id: userId, is_approved: "pending" };
         const query = ({ $push: { users_in_tremp: user } });
+        const tremp = yield trempDataAccess.FindByID(tremp_id);
+        const creatorId = tremp.creator_id;
+        if (userId.equals(creatorId)) {
+            throw new HttpException_1.BadRequestException('The creator can not join to tremp');
+        }
         const updatedTremp = yield trempDataAccess.addUserToTremp(tremp_id, query);
         if (updatedTremp.matchedCount === 0) {
             throw new HttpException_1.NotFoundException('Tremp not found');
@@ -116,8 +121,6 @@ function addUserToTremp(tremp_id, user_id) {
         if (updatedTremp.modifiedCount === 0) {
             throw new HttpException_1.BadRequestException('User not added to the tremp');
         }
-        const tremp = yield trempDataAccess.FindByID(tremp_id);
-        const creatorId = tremp.creator_id;
         const creator = yield userDataAccess.FindById(creatorId);
         const fcmToken = creator.notification_token;
         if (fcmToken) {
@@ -161,10 +164,11 @@ function getTrempById(id) {
     });
 }
 exports.getTrempById = getTrempById;
-const mapTrempWithoutUsersInTremp = (tremp, approvalStatus) => {
+function mapTrempWithoutUsersInTremp(tremp, approvalStatus) {
     const { users_in_tremp } = tremp, otherProps = __rest(tremp, ["users_in_tremp"]);
     return Object.assign(Object.assign({}, otherProps), { approvalStatus });
-};
+}
+;
 function getUserTremps(user_id, tremp_type) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
@@ -350,7 +354,6 @@ function getUserDetailsById(userId) {
             if (!user) {
                 throw new Error('User not found');
             }
-            // Returning the needed details
             return {
                 user_id: user._id,
                 first_name: user.first_name,
@@ -358,7 +361,6 @@ function getUserDetailsById(userId) {
             };
         }
         catch (error) {
-            // Handle any errors (e.g., log them and/or throw a specific error)
             console.error('Error getting user details:', error);
             throw error;
         }
