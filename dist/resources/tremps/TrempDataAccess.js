@@ -32,6 +32,7 @@ class TrempDataAccess {
                 to_route: 1,
                 note: 1,
                 seats_amount: 1,
+                users_in_tremp: 1,
             };
             return yield db.FindAll(TrempDataAccess.collection, query, projection, { tremp_time: 1 });
         });

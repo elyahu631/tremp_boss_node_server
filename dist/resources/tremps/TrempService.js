@@ -86,6 +86,7 @@ function getTrempsByFilters(filters) {
         // Add user details to tremps
         tremps.forEach(tremp => {
             tremp.participants_amount = getNumberOfApprovedUsers(tremp);
+            tremp.users_in_tremp = undefined;
             let user = usersMap.get(tremp.creator_id.toString());
             if (user) {
                 tremp.creator = {
