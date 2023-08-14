@@ -75,7 +75,6 @@ export async function getTrempsByFilters(filters: any) {
 
   // Add user details to tremps
   tremps.forEach(tremp => {
-    tremp.participants_amount = getNumberOfApprovedUsers(tremp)
     let user = usersMap.get(tremp.creator_id.toString());
     if (user) {
       tremp.creator = {
