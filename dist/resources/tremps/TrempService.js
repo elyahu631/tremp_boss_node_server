@@ -138,17 +138,17 @@ function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
         const tremp = yield trempDataAccess.FindByID(tremp_id);
         // Check if the tremp exists
         if (!tremp) {
-            throw new Error('Tremp does not exist');
+            throw new HttpException_1.BadRequestException('Tremp does not exist');
         }
         // Check if the user making the request is the creator of the tremp
         if (tremp.creator_id.toString() !== creator_id) {
-            throw new Error('Only the creator of the tremp can approve or disapprove participants');
+            throw new HttpException_1.UnauthorizedException('Only the creator of the tremp can approve or disapprove participants');
         }
         // Find the user in the tremp
         const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id.toString() === user_id);
         // Check if the user is a participant in the tremp
         if (userIndex === -1) {
-            throw new Error('User is not a participant in this tremp');
+            throw new HttpException_1.BadRequestException('User is not a participant in this tremp');
         }
         // Update the user's approval status
         tremp.users_in_tremp[userIndex].is_approved = approval;
@@ -238,33 +238,55 @@ function getApprovalStatus(tremp, userId, tremp_type) {
     console.log('User is neither the creator nor in users_in_tremp');
     return 'not involved'; // default value, if none of the conditions are met
 }
+// delete or cancel tremp
+function cancelTremp(tremp, user_id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id.toString() === user_id);
+        tremp.users_in_tremp[userIndex].is_approved = 'canceled';
+        const creatorId = tremp.creator_id;
+        const user_in_tremp = yield userDataAccess.FindById(creatorId);
+        const fcmToken = user_in_tremp.notification_token;
+        if (fcmToken) {
+            yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, `The joiner canceled`, `The joiner canceled his request`, { creatorId, tremp_id: tremp._id, user_id });
+        }
+        else {
+            console.log('User does not have a valid FCM token');
+        }
+        return { message: "Tremp is canceled" };
+    });
+}
+function notifyUsers(usersToNotify, tremp_id, user_id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const userTokens = yield userDataAccess.FindAllUsers({ _id: { $in: usersToNotify.map((u) => new mongodb_1.ObjectId(u.user_id)) } }, { notification_token: 1 });
+        for (const userToken of userTokens) {
+            if (userToken.notification_token) {
+                yield (0, sendNotification_1.sendNotificationToUser)(userToken.notification_token, "Tremp cancellation notice", "The tremp you joined has been cancelled.", { tremp_id, user_id });
+            }
+        }
+    });
+}
 function deleteTremp(tremp_id, user_id) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
         const tremp = yield trempDataAccess.FindByID(tremp_id);
         // Check if the tremp exists
         if (!tremp) {
-            throw new Error('Tremp does not exist');
+            throw new HttpException_1.BadRequestException('Tremp does not exist');
         }
-        // Check if the user requesting the delete is the creator of the tremp
+        // Check if the user requesting the delete is not the creator of the tremp
         if (!tremp.creator_id.equals(userId)) {
-            throw new Error('Only the creator of the tremp can delete it');
+            return cancelTremp(tremp, user_id);
         }
         // Find users in the tremp who need to be notified
         const usersToNotify = tremp.users_in_tremp.filter((user) => user.is_approved === 'approved' || 'pending');
         if (usersToNotify.length > 0) {
-            // Send notifications to all approved users
-            // You'll need to fetch these users from the user database to get their notification tokens
-            const userTokens = yield userDataAccess.FindAllUsers({ _id: { $in: usersToNotify.map((u) => new mongodb_1.ObjectId(u.user_id)) } }, { notification_token: 1 });
-            for (const userToken of userTokens) {
-                if (userToken.notification_token) {
-                    // Use your notification function here
-                    yield (0, sendNotification_1.sendNotificationToUser)(userToken.notification_token, "Tremp cancellation notice", "The tremp you joined has been cancelled.", { tremp_id: tremp_id, user_id: user_id });
-                }
-            }
+            yield notifyUsers(usersToNotify, tremp_id, user_id);
         }
-        // Delete the tremp
-        return yield trempDataAccess.Update(tremp_id, { deleted: true });
+        const result = yield trempDataAccess.Update(tremp_id, { deleted: true });
+        if (result.modifiedCount === 0) {
+            throw new HttpException_1.BadRequestException('Tremp could not be deleted');
+        }
+        return result;
     });
 }
 exports.deleteTremp = deleteTremp;
