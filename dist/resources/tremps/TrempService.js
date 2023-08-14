@@ -79,7 +79,7 @@ function getTrempsByFilters(filters) {
         let uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))]; //
         console.log(uniqueUserIds);
         // Fetch all users in one operation
-        let users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, image_URL: 1 });
+        let users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, image_URL: 1, gender: 1 });
         console.log(users);
         // Convert users array to a map for efficient access
         let usersMap = new Map(users.map(user => [user._id.toString(), user]));

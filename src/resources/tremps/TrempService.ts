@@ -65,7 +65,7 @@ export async function getTrempsByFilters(filters: any) {
   // Fetch all users in one operation
   let users = await userDataAccess.FindAllUsers(
     { _id: { $in: uniqueUserIds } },
-    { first_name: 1, last_name: 1, image_URL: 1 }
+    { first_name: 1, last_name: 1, image_URL: 1 , gender:1}
   );
 
   console.log(users);
