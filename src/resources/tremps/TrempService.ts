@@ -235,13 +235,13 @@ function getApprovalStatus(tremp: Tremp, userId: ObjectId, tremp_type: string): 
 async function cancelTremp(tremp: any, user_id: string) {
   const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id.toString() === user_id);
   tremp.users_in_tremp[userIndex].is_approved = 'canceled';
-
+  await trempDataAccess.Update(tremp._id, tremp)
   const creatorId = tremp.creator_id;
   const user_in_tremp = await userDataAccess.FindById(creatorId);
   const fcmToken = user_in_tremp.notification_token;
   if (fcmToken) {
     await sendNotificationToUser(fcmToken, `The joiner canceled`, 
-    `The joiner canceled his request`, { creatorId, tremp_id: tremp._id, user_id });
+    `The joiner canceled his request`);
   } else {
     console.log('User does not have a valid FCM token');
   }
@@ -274,6 +274,8 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
 
   // Check if the user requesting the delete is not the creator of the tremp
   if (!tremp.creator_id.equals(userId)) {
+    console.log("gdfg");
+    
     return cancelTremp(tremp, user_id);
   }
 
@@ -289,7 +291,7 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
     throw new BadRequestException('Tremp could not be deleted');
   }
 
-  return result;
+  return { message: "Tremp is deleted" };
 }
 
 

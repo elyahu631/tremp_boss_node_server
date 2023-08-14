@@ -104,7 +104,7 @@ export async function deleteTremp(req: Request, res: Response, next: NextFunctio
       throw new BadRequestException('Tremp ID and User ID are required');
     }
     const result = await TrempService.deleteTremp(tremp_id, user_id);
-    res.status(200).json({ status: true, message: 'Tremp successfully deleted' });
+    res.status(200).json({ status: true, result });
   } catch (err) {
     next(err);
   }

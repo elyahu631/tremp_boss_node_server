@@ -161,7 +161,7 @@ function deleteTremp(req, res, next) {
                 throw new HttpException_1.BadRequestException('Tremp ID and User ID are required');
             }
             const result = yield TrempService.deleteTremp(tremp_id, user_id);
-            res.status(200).json({ status: true, message: 'Tremp successfully deleted' });
+            res.status(200).json({ status: true, result });
         }
         catch (err) {
             next(err);
