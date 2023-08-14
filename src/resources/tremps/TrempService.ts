@@ -80,7 +80,8 @@ export async function getTrempsByFilters(filters: any) {
       tremp.creator = {
         first_name: user.first_name,
         last_name: user.last_name,
-        image_URL: user.image_URL
+        image_URL: user.image_URL,
+        gender:user.gender,
       };
     }
   });
