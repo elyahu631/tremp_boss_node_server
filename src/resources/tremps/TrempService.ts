@@ -168,7 +168,10 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
   };
 
   const hitchhikerQuery = {
-    "users_in_tremp.user_id": userId,
+    $and: [
+      { "users_in_tremp.user_id": userId },
+      { "users_in_tremp.is_approved": { $ne: 'canceled' } }
+    ],
     tremp_type: second,
     deleted: false
   };
@@ -294,7 +297,6 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
   return { message: "Tremp is deleted" };
 }
 
-
 export async function getUsersInTremp(trempId: string): Promise<any[]> {
   const tremp = await trempDataAccess.FindByID(trempId);
   if (!tremp) {
@@ -318,7 +320,6 @@ export async function getUsersInTremp(trempId: string): Promise<any[]> {
 
   return usersDetails;
 };
-
 
 export async function getApprovedTremps(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
@@ -390,7 +391,6 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
   return trampsToShow;
 }
-
 
 async function getUserDetailsById(userId: ObjectId) {
   try {

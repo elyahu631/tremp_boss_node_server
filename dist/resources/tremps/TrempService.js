@@ -180,7 +180,10 @@ function getUserTremps(user_id, tremp_type) {
             deleted: false
         };
         const hitchhikerQuery = {
-            "users_in_tremp.user_id": userId,
+            $and: [
+                { "users_in_tremp.user_id": userId },
+                { "users_in_tremp.is_approved": { $ne: 'canceled' } }
+            ],
             tremp_type: second,
             deleted: false
         };
