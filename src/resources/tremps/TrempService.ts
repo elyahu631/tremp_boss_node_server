@@ -335,6 +335,7 @@ export async function getUsersInTremp(trempId: string): Promise<any[]> {
         image_URL: user.image_URL,
         gender: user.gender,
         is_approved: userInTremp.is_approved,
+        participants_amount: userInTremp.participants_amount,
       };
     })
   );
