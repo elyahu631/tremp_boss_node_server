@@ -17,15 +17,6 @@ export async function createTremp(req: Request, res: Response, next: NextFunctio
   }
 }
 
-export async function getAllTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    let trepms = await TrempService.getAllTremps();
-    trepms = trepms.map(tremp => ({ ...tremp, password: "user1234" }));
-    res.status(200).json({ status: true, data: trepms });
-  } catch (err) {
-    next(err);
-  }
-}
 
 export async function getTrempsByFilters(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -124,6 +115,17 @@ export async function getApprovedTremps(req: Request, res: Response, next: NextF
       throw new NotFoundException("No Tremps found for this user and ride type");
     }
     res.status(200).json({ status: true, data:{approved_tremps:approvedTremps} });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+export async function getAllTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    let trepms = await TrempService.getAllTremps();
+    trepms = trepms.map(tremp => ({ ...tremp, password: "user1234" }));
+    res.status(200).json({ status: true, data: trepms });
   } catch (err) {
     next(err);
   }

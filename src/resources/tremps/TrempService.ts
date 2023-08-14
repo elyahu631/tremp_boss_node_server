@@ -40,10 +40,6 @@ export async function createTremp(tremp: TrempModel) {
   return await trempDataAccess.insertTremp(tremp);
 }
 
-export async function getAllTremps() {
-  return trempDataAccess.FindAll({ deleted: false });
-}
-
 export async function getTrempsByFilters(filters: any) {
   const userId = new ObjectId(filters.creator_id);
   const date = new Date(filters.tremp_time)
@@ -322,8 +318,6 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
   return { message: "Tremp is deleted" };
 }
 
-
-
 export async function getUsersInTremp(trempId: string): Promise<any[]> {
   const tremp = await trempDataAccess.FindByID(trempId);
   if (!tremp) {
@@ -434,4 +428,9 @@ async function getUserDetailsById(userId: ObjectId) {
     console.error('Error getting user details:', error);
     throw error;
   }
+}
+
+
+export async function getAllTremps() {
+  return trempDataAccess.FindAll({ deleted: false });
 }

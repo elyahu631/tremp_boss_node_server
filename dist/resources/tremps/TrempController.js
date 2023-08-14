@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.getAllTremps = exports.createTremp = void 0;
+exports.getAllTremps = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const TrempModel_1 = __importDefault(require("./TrempModel"));
@@ -54,19 +54,6 @@ function createTremp(req, res, next) {
     });
 }
 exports.createTremp = createTremp;
-function getAllTremps(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            let trepms = yield TrempService.getAllTremps();
-            trepms = trepms.map(tremp => (Object.assign(Object.assign({}, tremp), { password: "user1234" })));
-            res.status(200).json({ status: true, data: trepms });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getAllTremps = getAllTremps;
 function getTrempsByFilters(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -188,4 +175,17 @@ function getApprovedTremps(req, res, next) {
     });
 }
 exports.getApprovedTremps = getApprovedTremps;
+function getAllTremps(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let trepms = yield TrempService.getAllTremps();
+            trepms = trepms.map(tremp => (Object.assign(Object.assign({}, tremp), { password: "user1234" })));
+            res.status(200).json({ status: true, data: trepms });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getAllTremps = getAllTremps;
 //# sourceMappingURL=TrempController.js.map
