@@ -75,6 +75,7 @@ export async function getTrempsByFilters(filters: any) {
 
   // Add user details to tremps
   tremps.forEach(tremp => {
+    tremp.participants_amount = getNumberOfApprovedUsers(tremp)
     let user = usersMap.get(tremp.creator_id.toString());
     if (user) {
       tremp.creator = {
@@ -120,10 +121,15 @@ export async function addUserToTremp(tremp_id: string, user_id: string,participa
 }
 
 function getNumberOfApprovedUsers(tremp: any): number {
+  if (!tremp.users_in_tremp || tremp.users_in_tremp.length === 0) {
+    return 0;
+  }
+
   return tremp.users_in_tremp.reduce((sum: number, user: UserInTremp) => {
     return user.is_approved === 'approved' ? sum + (user.participants_amount || 1) : sum;
   }, 0);
 }
+
 
 async function validateTremp(tremp_id: string, creator_id: string): Promise<any> {
   const tremp = await trempDataAccess.FindByID(tremp_id);

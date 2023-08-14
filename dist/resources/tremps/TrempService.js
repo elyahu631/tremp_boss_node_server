@@ -85,6 +85,7 @@ function getTrempsByFilters(filters) {
         let usersMap = new Map(users.map(user => [user._id.toString(), user]));
         // Add user details to tremps
         tremps.forEach(tremp => {
+            tremp.participants_amount = getNumberOfApprovedUsers(tremp);
             let user = usersMap.get(tremp.creator_id.toString());
             if (user) {
                 tremp.creator = {
@@ -129,6 +130,9 @@ function addUserToTremp(tremp_id, user_id, participants_amount) {
 }
 exports.addUserToTremp = addUserToTremp;
 function getNumberOfApprovedUsers(tremp) {
+    if (!tremp.users_in_tremp || tremp.users_in_tremp.length === 0) {
+        return 0;
+    }
     return tremp.users_in_tremp.reduce((sum, user) => {
         return user.is_approved === 'approved' ? sum + (user.participants_amount || 1) : sum;
     }, 0);
