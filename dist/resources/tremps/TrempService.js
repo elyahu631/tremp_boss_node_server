@@ -132,17 +132,24 @@ function addUserToTremp(tremp_id, user_id) {
     });
 }
 exports.addUserToTremp = addUserToTremp;
+function getNumberOfApprovedUsers() {
+    return this.users_in_tremp.filter((user) => user.is_approved === 'approved').length;
+}
 function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
     return __awaiter(this, void 0, void 0, function* () {
         // Fetch the tremp using tremp_id
         const tremp = yield trempDataAccess.FindByID(tremp_id);
-        // Check if the tremp exists
+        // is tremp exists
         if (!tremp) {
             throw new HttpException_1.BadRequestException('Tremp does not exist');
         }
-        // Check if the user making the request is the creator of the tremp
+        // if the user making the request is the creator of the tremp
         if (tremp.creator_id.toString() !== creator_id) {
             throw new HttpException_1.UnauthorizedException('Only the creator of the tremp can approve or disapprove participants');
+        }
+        // if all seats are occupied
+        if (tremp.is_full) {
+            throw new HttpException_1.BadRequestException('User cannot be approved, all seats are occupied');
         }
         // Find the user in the tremp
         const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id.toString() === user_id);
@@ -152,6 +159,12 @@ function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
         }
         // Update the user's approval status
         tremp.users_in_tremp[userIndex].is_approved = approval;
+        if (approval === 'approved') {
+            const numberOfApprovedUsers = getNumberOfApprovedUsers();
+            if (numberOfApprovedUsers >= tremp.seats_amount || tremp.tremp_type === 'hitchhiker') {
+                tremp.is_full = true;
+            }
+        }
         // Update the tremp in the database
         const result = yield trempDataAccess.Update(tremp_id, tremp);
         return result;
