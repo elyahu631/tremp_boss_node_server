@@ -19,9 +19,9 @@ export interface Tremp {
 
 export interface UserInTremp {
   user_id: ObjectId;
+  participants_amount: number;
   is_approved: string;
 }  
-
 
 export interface UsersApprovedInTremp {
   tremp_type: string;

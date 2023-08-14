@@ -39,11 +39,11 @@ export async function getTrempsByFilters(req: Request, res: Response, next: Next
 
 export async function addUserToTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { tremp_id, user_id } = req.body;
+    const { tremp_id, user_id,participants_amount} = req.body;
     if (!tremp_id || !user_id) {
       throw new BadRequestException('Tremp ID and User ID are required');
     }
-    await TrempService.addUserToTremp(tremp_id, user_id);
+    await TrempService.addUserToTremp(tremp_id, user_id,participants_amount);
     res.status(200).json({ status: true, message: 'User successfully added to the tremp' });
   } catch (err) {
     next(err);
@@ -53,11 +53,14 @@ export async function addUserToTremp(req: Request, res: Response, next: NextFunc
 export async function approveUserInTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { tremp_id, creator_id, user_id, approval } = req.body;
-    await TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
     if (approval !== "approved" && approval !== "denied"){
       throw new BadRequestException('invalid approval');
     }
+
+    await TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
+
     const user_in_tremp = await UserService.getUserById(user_id);
+    
     const fcmToken = user_in_tremp.notification_token;
     if (fcmToken) {
       await sendNotificationToUser(fcmToken, `The creator ${approval}`, 

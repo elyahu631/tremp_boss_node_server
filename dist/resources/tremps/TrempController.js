@@ -83,11 +83,11 @@ exports.getTrempsByFilters = getTrempsByFilters;
 function addUserToTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { tremp_id, user_id } = req.body;
+            const { tremp_id, user_id, participants_amount } = req.body;
             if (!tremp_id || !user_id) {
                 throw new HttpException_1.BadRequestException('Tremp ID and User ID are required');
             }
-            yield TrempService.addUserToTremp(tremp_id, user_id);
+            yield TrempService.addUserToTremp(tremp_id, user_id, participants_amount);
             res.status(200).json({ status: true, message: 'User successfully added to the tremp' });
         }
         catch (err) {
@@ -100,10 +100,10 @@ function approveUserInTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { tremp_id, creator_id, user_id, approval } = req.body;
-            yield TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
             if (approval !== "approved" && approval !== "denied") {
                 throw new HttpException_1.BadRequestException('invalid approval');
             }
+            yield TrempService.approveUserInTremp(tremp_id, creator_id, user_id, approval);
             const user_in_tremp = yield UserService.getUserById(user_id);
             const fcmToken = user_in_tremp.notification_token;
             if (fcmToken) {

@@ -104,10 +104,11 @@ function getTrempsByFilters(filters) {
     });
 }
 exports.getTrempsByFilters = getTrempsByFilters;
-function addUserToTremp(tremp_id, user_id) {
+function addUserToTremp(tremp_id, user_id, participants_amount) {
     return __awaiter(this, void 0, void 0, function* () {
         let userId = new mongodb_1.ObjectId(user_id);
-        const user = { user_id: userId, is_approved: "pending" };
+        const participantsAmount = participants_amount ? participants_amount : 1;
+        const user = { user_id: userId, participants_amount: participantsAmount, is_approved: "pending" };
         const query = ({ $push: { users_in_tremp: user } });
         const tremp = yield trempDataAccess.FindByID(tremp_id);
         const creatorId = tremp.creator_id;
@@ -132,42 +133,46 @@ function addUserToTremp(tremp_id, user_id) {
     });
 }
 exports.addUserToTremp = addUserToTremp;
-function getNumberOfApprovedUsers() {
-    return this.users_in_tremp.filter((user) => user.is_approved === 'approved').length;
+function getNumberOfApprovedUsers(tremp) {
+    return tremp.users_in_tremp.reduce((sum, user) => {
+        return user.is_approved === 'approved' ? sum + (user.participants_amount || 1) : sum;
+    }, 0);
 }
-function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
+function validateTremp(tremp_id, creator_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        // Fetch the tremp using tremp_id
         const tremp = yield trempDataAccess.FindByID(tremp_id);
-        // is tremp exists
         if (!tremp) {
             throw new HttpException_1.BadRequestException('Tremp does not exist');
         }
-        // if the user making the request is the creator of the tremp
         if (tremp.creator_id.toString() !== creator_id) {
             throw new HttpException_1.UnauthorizedException('Only the creator of the tremp can approve or disapprove participants');
         }
-        // if all seats are occupied
+        return tremp;
+    });
+}
+function findUserIndex(users, user_id) {
+    return users.findIndex((user) => user.user_id.toString() === user_id);
+}
+function approveUserInTremp(tremp_id, creator_id, user_id, approval) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tremp = yield validateTremp(tremp_id, creator_id);
         if (tremp.is_full) {
             throw new HttpException_1.BadRequestException('User cannot be approved, all seats are occupied');
         }
-        // Find the user in the tremp
-        const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id.toString() === user_id);
-        // Check if the user is a participant in the tremp
+        const userIndex = findUserIndex(tremp.users_in_tremp, user_id);
         if (userIndex === -1) {
             throw new HttpException_1.BadRequestException('User is not a participant in this tremp');
         }
-        // Update the user's approval status
-        tremp.users_in_tremp[userIndex].is_approved = approval;
-        if (approval === 'approved') {
-            const numberOfApprovedUsers = getNumberOfApprovedUsers();
-            if (numberOfApprovedUsers >= tremp.seats_amount || tremp.tremp_type === 'hitchhiker') {
-                tremp.is_full = true;
-            }
+        const numberOfApprovedUsers = getNumberOfApprovedUsers(tremp);
+        if (tremp.seats_amount - numberOfApprovedUsers < tremp.users_in_tremp[userIndex].participants_amount) {
+            throw new HttpException_1.BadRequestException('There are not enough seats to approve this request');
         }
-        // Update the tremp in the database
-        const result = yield trempDataAccess.Update(tremp_id, tremp);
-        return result;
+        tremp.users_in_tremp[userIndex].is_approved = approval;
+        if (approval === 'approved' && (numberOfApprovedUsers >= tremp.seats_amount ||
+            tremp.tremp_type === 'hitchhiker')) {
+            tremp.is_full = true;
+        }
+        return yield trempDataAccess.Update(tremp_id, tremp);
     });
 }
 exports.approveUserInTremp = approveUserInTremp;

@@ -92,9 +92,10 @@ export async function getTrempsByFilters(filters: any) {
   return tremps;
 }
 
-export async function addUserToTremp(tremp_id: string, user_id: string) {
+export async function addUserToTremp(tremp_id: string, user_id: string,participants_amount: number) {
   let userId = new ObjectId(user_id);
-  const user = { user_id: userId, is_approved: "pending" };
+  const participantsAmount = participants_amount ? participants_amount : 1;
+  const user = { user_id: userId,participants_amount :participantsAmount, is_approved: "pending" };
   const query = ({ $push: { users_in_tremp: user } });
 
   const tremp = await trempDataAccess.FindByID(tremp_id);
@@ -121,53 +122,53 @@ export async function addUserToTremp(tremp_id: string, user_id: string) {
   }
 }
 
-function getNumberOfApprovedUsers(): number {
-  return this.users_in_tremp.filter((user: UserInTremp) => user.is_approved === 'approved').length;
+function getNumberOfApprovedUsers(tremp: any): number {
+  return tremp.users_in_tremp.reduce((sum: number, user: UserInTremp) => {
+    return user.is_approved === 'approved' ? sum + (user.participants_amount || 1) : sum;
+  }, 0);
 }
 
-export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: string): Promise<any> {
-
-  // Fetch the tremp using tremp_id
+async function validateTremp(tremp_id: string, creator_id: string): Promise<any> {
   const tremp = await trempDataAccess.FindByID(tremp_id);
-
-  // is tremp exists
   if (!tremp) {
     throw new BadRequestException('Tremp does not exist');
   }
-
-  // if the user making the request is the creator of the tremp
   if (tremp.creator_id.toString() !== creator_id) {
     throw new UnauthorizedException('Only the creator of the tremp can approve or disapprove participants');
   }
+  return tremp;
+}
 
-  // if all seats are occupied
+function findUserIndex(users: any[], user_id: string): number {
+  return users.findIndex((user: any) => user.user_id.toString() === user_id);
+}
+
+export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: string): Promise<any> {
+  const tremp = await validateTremp(tremp_id, creator_id);
+
   if (tremp.is_full) {
-      throw new BadRequestException('User cannot be approved, all seats are occupied');
+    throw new BadRequestException('User cannot be approved, all seats are occupied');
   }
 
-  // Find the user in the tremp
-  const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id.toString() === user_id);
-
-  // Check if the user is a participant in the tremp
+  const userIndex = findUserIndex(tremp.users_in_tremp, user_id);
   if (userIndex === -1) {
     throw new BadRequestException('User is not a participant in this tremp');
   }
 
-  // Update the user's approval status
+  const numberOfApprovedUsers = getNumberOfApprovedUsers(tremp);
+  if (tremp.seats_amount - numberOfApprovedUsers < tremp.users_in_tremp[userIndex].participants_amount) {
+    throw new BadRequestException('There are not enough seats to approve this request');
+  }
+
   tremp.users_in_tremp[userIndex].is_approved = approval;
 
-  if (approval === 'approved') {
-    const numberOfApprovedUsers = getNumberOfApprovedUsers();
-
-    if (numberOfApprovedUsers >= tremp.seats_amount || tremp.tremp_type === 'hitchhiker') {
-      tremp.is_full = true;
-    }
+  if (approval === 'approved' && (numberOfApprovedUsers >= tremp.seats_amount ||
+     tremp.tremp_type === 'hitchhiker')) {
+      
+    tremp.is_full = true;
   }
-  
-  // Update the tremp in the database
-  const result = await trempDataAccess.Update(tremp_id, tremp);
 
-  return result;
+  return await trempDataAccess.Update(tremp_id, tremp);
 }
 
 export async function getTrempById(id: string) {

@@ -47,6 +47,7 @@ class TrempModel {
             seats_amount: joi_1.default.number().integer().min(1).required(),
             users_in_tremp: joi_1.default.array().items(joi_1.default.object({
                 user_id: joi_1.default.string().required(),
+                participants_amount: joi_1.default.number().default(1),
                 is_approved: joi_1.default.string().valid('approved', 'pending', 'denied,', 'canceled').default('pending').required(),
             })).optional(),
             is_full: joi_1.default.boolean().required(),

@@ -73,6 +73,7 @@ class TrempModel {
       users_in_tremp: Joi.array().items(
         Joi.object({
           user_id: Joi.string().required(),
+          participants_amount: Joi.number().default(1),
           is_approved: Joi.string().valid('approved', 'pending', 'denied,','canceled' ).default('pending').required(),
         })
       ).optional(),
