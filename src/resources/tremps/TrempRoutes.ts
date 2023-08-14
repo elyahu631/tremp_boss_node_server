@@ -13,7 +13,7 @@ trempRoutes.put('/approve-user-in-tremp',authenticateToken ,TrempController.appr
 trempRoutes.get('/users-in-tremp/:tremp_id',authenticateToken ,TrempController.getUsersInTremp);
 trempRoutes.post('/approved-tremps',authenticateToken ,TrempController.getApprovedTremps);
 
-trempRoutes.delete('/delete-tremp',authenticateToken, TrempController.deleteTremp);
+trempRoutes.put('/delete-tremp',authenticateToken, TrempController.deleteTremp);
 
 //for admin
 trempRoutes.get("/all", authenticateToken, TrempController.getAllTremps);
