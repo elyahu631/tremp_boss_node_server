@@ -60,7 +60,6 @@ export async function getTrempsByFilters(filters: any) {
 
   // Get all unique user IDs
   let uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];//
-  console.log(uniqueUserIds);
 
   // Fetch all users in one operation
   let users = await userDataAccess.FindAllUsers(
@@ -68,7 +67,6 @@ export async function getTrempsByFilters(filters: any) {
     { first_name: 1, last_name: 1, image_URL: 1 , gender:1}
   );
 
-  console.log(users);
 
   // Convert users array to a map for efficient access
   let usersMap = new Map(users.map(user => [user._id.toString(), user]));
@@ -130,7 +128,6 @@ function getNumberOfApprovedUsers(tremp: any): number {
     return user.is_approved === 'approved' ? sum + (user.participants_amount || 1) : sum;
   }, 0);
 }
-
 
 async function validateTremp(tremp_id: string, creator_id: string): Promise<any> {
   const tremp = await trempDataAccess.FindByID(tremp_id);
