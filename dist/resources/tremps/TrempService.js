@@ -46,19 +46,22 @@ function createTremp(clientData) {
         };
         const today = new Date();
         today.setUTCHours(0, 0, 0, 0);
+        const createAndHandleRides = (date) => __awaiter(this, void 0, void 0, function* () {
+            yield createSingleRide(date, from_route, to_route);
+            if (return_drive.is_active) {
+                yield handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
+            }
+            date.setDate(date.getDate() + 7);
+        });
         for (const dateValue of Object.values(dates)) {
             if (dateValue) {
                 let date = buildDate(dateValue, hour);
-                console.log(today);
                 if (date < today) {
-                    date.setDate(date.getDate() + 7); // Increment the date by one week
-                }
-                for (let i = 0; i < (is_permanent ? 4 : 1); i++) {
-                    yield createSingleRide(date, from_route, to_route);
-                    if (return_drive.is_active) {
-                        yield handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
-                    }
                     date.setDate(date.getDate() + 7);
+                }
+                const repetitions = is_permanent ? 4 : 1;
+                for (let i = 0; i < repetitions; i++) {
+                    yield createAndHandleRides(date);
                 }
             }
         }

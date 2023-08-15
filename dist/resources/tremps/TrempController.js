@@ -41,7 +41,7 @@ function createTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const result = yield TrempService.createTremp(req.body);
-            res.status(201).json({ status: true, data: result });
+            res.status(201).json({ status: true, message: 'tremp created successfully' });
         }
         catch (err) {
             next(err);

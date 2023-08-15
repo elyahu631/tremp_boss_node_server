@@ -13,10 +13,9 @@ const userDataAccess = new UserDataAccess();
 
 // createTremp
 export async function createTremp(clientData: TrempRequest) {
-
   validateTrempRequest(clientData);
-  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount } = clientData;
 
+  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount } = clientData;
   const creatorIdObj = new ObjectId(creator_id);
   const groupIdObj = new ObjectId(group_id);
 
@@ -25,24 +24,27 @@ export async function createTremp(clientData: TrempRequest) {
   };
 
   const today = new Date();
-  today.setUTCHours(0, 0, 0, 0); 
+  today.setUTCHours(0, 0, 0, 0);
+  
+  const createAndHandleRides = async (date: Date) => {
+    await createSingleRide(date, from_route, to_route);
+    if (return_drive.is_active) {
+      await handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
+    }
+    date.setDate(date.getDate() + 7);
+  }
+
   for (const dateValue of Object.values(dates)) {
     if (dateValue) {
       let date = buildDate(dateValue, hour);
-
-      console.log(today);      
+      
       if (date < today) {
-        date.setDate(date.getDate() + 7); // Increment the date by one week
+        date.setDate(date.getDate() + 7);
       }
 
-      for (let i = 0; i < (is_permanent ? 4 : 1); i++) {
-        await createSingleRide(date, from_route, to_route);
-
-        if (return_drive.is_active) {
-          await handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
-        }
-
-        date.setDate(date.getDate() + 7);
+      const repetitions = is_permanent ? 4 : 1;
+      for (let i = 0; i < repetitions; i++) {
+        await createAndHandleRides(date);
       }
     }
   }
@@ -94,7 +96,7 @@ async function createRide(date: Date, creatorIdObj: ObjectId, groupIdObj: Object
     to_route,
     seats_amount
   });
-  await trempDataAccess.insertTremp(newTremp);
+  await trempDataAccess.insertTremp(newTremp);  
 }
 
 

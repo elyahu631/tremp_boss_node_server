@@ -3,14 +3,13 @@ import { ObjectId } from 'mongodb';
 import { NextFunction, Request, Response } from "express";
 import * as TrempService from "./TrempService";
 import * as UserService from "../users/UserService";
-import TrempModel from "./TrempModel";
 import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 import { sendNotificationToUser } from '../../services/sendNotification';
 
 export async function createTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const result = await TrempService.createTremp(req.body);
-    res.status(201).json({ status: true, data: result });
+    res.status(201).json({ status: true, message: 'tremp created successfully' });
   } catch (err) {
     next(err);
   }
