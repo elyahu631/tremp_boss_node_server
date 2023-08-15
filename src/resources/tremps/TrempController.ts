@@ -17,7 +17,6 @@ export async function createTremp(req: Request, res: Response, next: NextFunctio
   }
 }
 
-
 export async function getTrempsByFilters(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const filters = req.body;
@@ -119,7 +118,6 @@ export async function getApprovedTremps(req: Request, res: Response, next: NextF
     next(err);
   }
 }
-
 
 export async function getAllTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

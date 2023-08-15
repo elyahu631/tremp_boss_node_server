@@ -31,7 +31,7 @@ const TrempController = __importStar(require("./TrempController"));
 const handleErrors_1 = require("../../middleware/handleErrors");
 const auth_1 = require("../../middleware/auth");
 const trempRoutes = express_1.default.Router();
-trempRoutes.post("/add", auth_1.authenticateToken, TrempController.createTremp); // V
+trempRoutes.post("/add", auth_1.authenticateToken, TrempController.createTremp);
 trempRoutes.post('/tremps-by-filters', auth_1.authenticateToken, TrempController.getTrempsByFilters);
 trempRoutes.put('/join-ride', auth_1.authenticateToken, TrempController.addUserToTremp);
 trempRoutes.post("/user-tremps", auth_1.authenticateToken, TrempController.getUserTremps);
