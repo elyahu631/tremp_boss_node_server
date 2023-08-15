@@ -10,18 +10,6 @@ import { BadRequestException, NotFoundException, UnauthorizedException } from '.
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
 
-// createTremp
-export async function createTremp(tremp: TrempModel) {
-  validateTrempData(tremp);
-  tremp.creator_id = new ObjectId(tremp.creator_id)
-  tremp.group_id = new ObjectId(tremp.group_id)
-  tremp.tremp_time = new Date(tremp.tremp_time)
-  const user = await userDataAccess.FindById(tremp.creator_id.toString());
-  if (!user) {
-    throw new NotFoundException("Creator user does not exist");
-  }
-  return await trempDataAccess.insertTremp(tremp);
-}
 const validateTrempData = (tremp: TrempModel) => {
   tremp.validateTremp();
 
@@ -40,26 +28,22 @@ const validateTrempData = (tremp: TrempModel) => {
   }
 }
 
-// getTrempsByFilters
-export async function getTrempsByFilters(filters: any): Promise<any> {
-  const query = constructQueryFromFilters(filters);
-  const tremps = await trempDataAccess.FindTrempsByFilters(query);
-  const uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];
-
-  const users = await userDataAccess.FindAllUsers(
-    { _id: { $in: uniqueUserIds } },
-    { first_name: 1, last_name: 1, image_URL: 1,gender:1 }
-  );
-
-  const usersMap = createUserMapFromList(users);
-  appendCreatorInformationToTremps(tremps, usersMap);
-
-  return tremps;
+export async function createTremp(tremp: TrempModel) {
+  validateTrempData(tremp);
+  tremp.creator_id = new ObjectId(tremp.creator_id)
+  tremp.group_id = new ObjectId(tremp.group_id)
+  tremp.tremp_time = new Date(tremp.tremp_time)
+  const user = await userDataAccess.FindById(tremp.creator_id.toString());
+  if (!user) {
+    throw new NotFoundException("Creator user does not exist");
+  }
+  return await trempDataAccess.insertTremp(tremp);
 }
-function constructQueryFromFilters(filters: any): object {
+
+export async function getTrempsByFilters(filters: any) {
   const userId = new ObjectId(filters.creator_id);
-  const date = new Date(filters.tremp_time);
-  return {
+  const date = new Date(filters.tremp_time)
+  const query = {
     deleted: false,
     is_full: false,
     creator_id: { $ne: userId },
@@ -67,15 +51,27 @@ function constructQueryFromFilters(filters: any): object {
     tremp_type: filters.tremp_type,
     users_in_tremp: {
       $not: {
-        $elemMatch: { user_id: userId },
-      },
+        $elemMatch: { user_id: userId }
+      }
     },
   };
-}
-function createUserMapFromList(users: any[]): Map<string, any> {
-  return new Map(users.map(user => [user._id.toString(), user]));
-}
-function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, any>): void {
+
+  let tremps = await trempDataAccess.FindTrempsByFilters(query);
+
+  // Get all unique user IDs
+  let uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];//
+
+  // Fetch all users in one operation
+  let users = await userDataAccess.FindAllUsers(
+    { _id: { $in: uniqueUserIds } },
+    { first_name: 1, last_name: 1, image_URL: 1 , gender:1}
+  );
+
+
+  // Convert users array to a map for efficient access
+  let usersMap = new Map(users.map(user => [user._id.toString(), user]));
+
+  // Add user details to tremps
   tremps.forEach(tremp => {
     tremp.participants_amount = getNumberOfApprovedUsers(tremp)
     tremp.users_in_tremp = undefined
@@ -89,37 +85,30 @@ function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, a
       };
     }
   });
+  return tremps;
 }
 
+export async function addUserToTremp(tremp_id: string, user_id: string,participants_amount: number) {
+  let userId = new ObjectId(user_id);
+  const participantsAmount = participants_amount ? participants_amount : 1;
+  const user = { user_id: userId,participants_amount :participantsAmount, is_approved: "pending" };
+  const query = ({ $push: { users_in_tremp: user } });
 
-// addUserToTremp
-export async function addUserToTremp(tremp_id: string, user_id: string, participants_amount: number = 1) {
-  const userId = new ObjectId(user_id);
-  const user = { user_id: userId, participants_amount, is_approved: "pending" };
-
-  const tremp = await validateUserAndTremp(tremp_id, userId);
-  await updateTrempWithUser(tremp_id, user);
-  await notifyCreatorOfNewJoin(tremp.creator_id, tremp_id, user_id);
-}
-async function validateUserAndTremp(tremp_id: string, userId: ObjectId) {
   const tremp = await trempDataAccess.FindByID(tremp_id);
-  if (!tremp) {
+  const creatorId = tremp.creator_id;
+
+  if (userId.equals(creatorId)) {
+    throw new BadRequestException('The creator can not join to tremp');
+  }
+  const updatedTremp = await trempDataAccess.addUserToTremp(tremp_id, query)
+  if (updatedTremp.matchedCount === 0) {
     throw new NotFoundException('Tremp not found');
   }
-  if (userId.equals(tremp.creator_id)) {
-    throw new BadRequestException('The creator cannot join the tremp');
-  }
-  return tremp;
-}
-async function updateTrempWithUser(tremp_id: string, user: any) {
-  const query = { $push: { users_in_tremp: user } };
-  const updatedTremp = await trempDataAccess.addUserToTremp(tremp_id, query);
-  if (updatedTremp.matchedCount === 0 || updatedTremp.modifiedCount === 0) {
+  if (updatedTremp.modifiedCount === 0) {
     throw new BadRequestException('User not added to the tremp');
   }
-}
-async function notifyCreatorOfNewJoin(creatorId: ObjectId, tremp_id: string, user_id: string) {
-  const creator = await userDataAccess.FindById(creatorId.toString());
+
+  const creator = await userDataAccess.FindById(creatorId);
   const fcmToken = creator.notification_token;
   if (fcmToken) {
     await sendNotificationToUser(fcmToken, 'New User Joined Drive',
@@ -129,8 +118,32 @@ async function notifyCreatorOfNewJoin(creatorId: ObjectId, tremp_id: string, use
   }
 }
 
+function getNumberOfApprovedUsers(tremp: any): number {
+  
+  if (!tremp.users_in_tremp || tremp.users_in_tremp.length === 0) {
+    return 0;
+  }
 
-// approveUserInTremp
+  return tremp.users_in_tremp.reduce((sum: number, user: UserInTremp) => {
+    return user.is_approved === 'approved' ? sum + (user.participants_amount || 1) : sum;
+  }, 0);
+}
+
+async function validateTremp(tremp_id: string, creator_id: string): Promise<any> {
+  const tremp = await trempDataAccess.FindByID(tremp_id);
+  if (!tremp) {
+    throw new BadRequestException('Tremp does not exist');
+  }
+  if (tremp.creator_id.toString() !== creator_id) {
+    throw new UnauthorizedException('Only the creator of the tremp can approve or disapprove participants');
+  }
+  return tremp;
+}
+
+function findUserIndex(users: any[], user_id: string): number {
+  return users.findIndex((user: any) => user.user_id.toString() === user_id);
+}
+
 export async function approveUserInTremp(tremp_id: string, creator_id: string, user_id: string, approval: string): Promise<any> {
   const tremp = await validateTremp(tremp_id, creator_id);
 
@@ -151,93 +164,134 @@ export async function approveUserInTremp(tremp_id: string, creator_id: string, u
   tremp.users_in_tremp[userIndex].is_approved = approval;
 
   if (approval === 'approved' && (numberOfApprovedUsers >= tremp.seats_amount ||
-    tremp.tremp_type === 'hitchhiker')) {
-
+     tremp.tremp_type === 'hitchhiker')) {
+      
     tremp.is_full = true;
   }
 
   return await trempDataAccess.Update(tremp_id, tremp);
 }
-function getNumberOfApprovedUsers(tremp: any): number {
-  return tremp.users_in_tremp.reduce((sum: number, user: UserInTremp) => {
-    return user.is_approved === 'approved' ? sum + (user.participants_amount || 1) : sum;
-  }, 0);
-}
-async function validateTremp(tremp_id: string, creator_id: string): Promise<any> {
-  const tremp = await trempDataAccess.FindByID(tremp_id);
-  if (!tremp) {
-    throw new BadRequestException('Tremp does not exist');
-  }
-  if (tremp.creator_id.toString() !== creator_id) {
-    throw new UnauthorizedException('Only the creator of the tremp can approve or disapprove participants');
-  }
-  return tremp;
-}
-function findUserIndex(users: any[], user_id: string): number {
-  return users.findIndex((user: any) => user.user_id.toString() === user_id);
+
+export async function getTrempById(id: string) {
+  return trempDataAccess.FindByID(id);
 }
 
+function mapTrempWithoutUsersInTremp(tremp: Tremp, approvalStatus: string) {
+  const { users_in_tremp, ...otherProps } = tremp;
+  return { ...otherProps, approvalStatus };
+};
 
-// getUserTremp
 export async function getUserTremps(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
-  const primaryType = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
-  const secondaryType = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
+  const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
+  const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
 
-  const driverTremps = (await trempDataAccess.FindAll({ creator_id: userId, tremp_type: primaryType, deleted: false })) as unknown as Tremp[];
-  const hitchhikerTremps = (await trempDataAccess.FindAll({
+  const driverQuery = {
+    creator_id: userId,
+    tremp_type: first,
+    deleted: false
+  };
+
+  const hitchhikerQuery = {
     $and: [
       { "users_in_tremp.user_id": userId },
       { "users_in_tremp.is_approved": { $ne: 'canceled' } }
     ],
-    tremp_type: secondaryType,
+    tremp_type: second,
     deleted: false
-  })) as unknown as Tremp[];
+  };
 
+  const driverTremps: Tremp[] = await trempDataAccess.FindAll(driverQuery) as any;
 
-  const driverTrempsMapped = driverTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, primaryType));
-  const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, secondaryType));
+  const driverTrempsMapped = driverTremps.map(tremp => {
+    const approvalStatus = getApprovalStatus(tremp, userId, first);
+    return mapTrempWithoutUsersInTremp(tremp, approvalStatus);
+  });
 
-  return [...driverTrempsMapped, ...hitchhikerTrempsMapped];
+  const hitchhikerTremps: Tremp[] = await trempDataAccess.FindAll(hitchhikerQuery) as any;
+
+  const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => {
+    const approvalStatus = getApprovalStatus(tremp, userId, second);
+    return mapTrempWithoutUsersInTremp(tremp, approvalStatus);
+  });
+
+  const tremps = [...driverTrempsMapped, ...hitchhikerTrempsMapped];
+
+  return tremps;
 }
-function mapTrempWithApprovalStatus(tremp: Tremp, userId: ObjectId, type: string) {
-  const { users_in_tremp, ...otherProps } = tremp;
-  const approvalStatus = getApprovalStatus(tremp, userId, type);
-  return { ...otherProps, approvalStatus };
-}
-function getApprovalStatusForCreator(tremp: Tremp): string {
-  if (tremp.users_in_tremp.length === 0) return 'no applicants';
-  const pending = tremp.users_in_tremp.some((user: UserInTremp) => user.is_approved === 'pending');
-  const denied = tremp.users_in_tremp.every((user: UserInTremp) => user.is_approved === 'denied');
-  if (pending) return 'awaiting approval from me';
-  if (denied) return 'no applicants';
-  return 'all approved';
-}
-function getApprovalStatusForParticipant(userInTremp: UserInTremp, type: string): string {
-  switch (userInTremp.is_approved) {
-    case 'pending':
-      return type === 'driver' ? 'waiting for approval from driver' : 'waiting for approval from hitchhiker';
-    case 'denied':
-      return 'not approved';
-    case 'approved':
-      return 'approved';
-    default:
-      return 'not involved';
-  }
-}
-function getApprovalStatus(tremp: Tremp, userId: ObjectId, type: string): string {
-  if (tremp.creator_id.equals(userId)) {
-    return getApprovalStatusForCreator(tremp);
-  }
+
+function getApprovalStatus(tremp: Tremp, userId: ObjectId, tremp_type: string): string {
+  const isCreator = tremp.creator_id.equals(userId);
   const userInTremp = tremp.users_in_tremp.find((user: UserInTremp) => user.user_id.equals(userId));
-  if (userInTremp) {
-    return getApprovalStatusForParticipant(userInTremp, type);
+  const noApplicantsMessage = tremp_type === 'driver' ? 'no applicants' : 'no bidders';
+  const awaitingApprovalMessage = 'awaiting approval from me';
+  const allApprovedMessage = 'all approved';
+
+  // Check if the user is the creator
+  if (isCreator) {
+    console.log('User is the creator');
+    if (tremp.users_in_tremp.length === 0) {
+      return noApplicantsMessage;
+    } else {
+      const pending = tremp.users_in_tremp.some((user: UserInTremp) => user.is_approved === 'pending');
+      const denied = tremp.users_in_tremp.every((user: UserInTremp) => user.is_approved === 'denied');
+      if (pending) return awaitingApprovalMessage;
+      if (denied) return noApplicantsMessage;
+      return allApprovedMessage;
+    }
   }
-  return 'not involved';
+
+  // Check if the user is in users_in_tremp
+  if (userInTremp) {
+    console.log('User is in users_in_tremp');
+    switch (userInTremp.is_approved) {
+      case 'pending':
+        return tremp_type === 'driver' ? 'waiting for approval from driver' : 'waiting for approval from hitchhiker';
+      case 'denied':
+        return 'not approved';
+      case 'approved':
+        return 'approved';
+      default:
+        return 'not involved';
+    }
+  }
+
+  console.log('User is neither the creator nor in users_in_tremp');
+  return 'not involved'; // default value, if none of the conditions are met
 }
 
+// delete or cancel tremp
+async function cancelTremp(tremp: any, user_id: string) {
+  const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id.toString() === user_id);
+  tremp.users_in_tremp[userIndex].is_approved = 'canceled';
+  await trempDataAccess.Update(tremp._id, tremp)
+  const creatorId = tremp.creator_id;
+  const user_in_tremp = await userDataAccess.FindById(creatorId);
+  const fcmToken = user_in_tremp.notification_token;
+  if (fcmToken) {
+    await sendNotificationToUser(fcmToken, `The joiner canceled`,
+      `The joiner canceled his request`);
+  } else {
+    console.log('User does not have a valid FCM token');
+  }
 
-// deleteTremp --> delete or cancel tremp
+  return { message: "Tremp is canceled" };
+}
+
+async function notifyUsers(usersToNotify: UserInTremp[], tremp_id: string, user_id: string) {
+  const userTokens = await userDataAccess.FindAllUsers(
+    { _id: { $in: usersToNotify.map((u: UserInTremp) => new ObjectId(u.user_id)) } },
+    { notification_token: 1 }
+  );
+
+  for (const userToken of userTokens) {
+    if (userToken.notification_token) {
+      await sendNotificationToUser(userToken.notification_token, "Tremp cancellation notice",
+        "The tremp you joined has been cancelled.", { tremp_id, user_id });
+    }
+  }
+}
+
 export async function deleteTremp(tremp_id: string, user_id: string) {
   const userId = new ObjectId(user_id);
   const tremp = await trempDataAccess.FindByID(tremp_id);
@@ -268,38 +322,7 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
 
   return { message: "Tremp is deleted" };
 }
-async function cancelTremp(tremp: any, user_id: string) {
-  const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id.toString() === user_id);
-  tremp.users_in_tremp[userIndex].is_approved = 'canceled';
-  await trempDataAccess.Update(tremp._id, tremp)
-  const creatorId = tremp.creator_id;
-  const user_in_tremp = await userDataAccess.FindById(creatorId);
-  const fcmToken = user_in_tremp.notification_token;
-  if (fcmToken) {
-    await sendNotificationToUser(fcmToken, `The joiner canceled`,
-      `The joiner canceled his request`);
-  } else {
-    console.log('User does not have a valid FCM token');
-  }
 
-  return { message: "Tremp is canceled" };
-}
-async function notifyUsers(usersToNotify: UserInTremp[], tremp_id: string, user_id: string) {
-  const userTokens = await userDataAccess.FindAllUsers(
-    { _id: { $in: usersToNotify.map((u: UserInTremp) => new ObjectId(u.user_id)) } },
-    { notification_token: 1 }
-  );
-
-  for (const userToken of userTokens) {
-    if (userToken.notification_token) {
-      await sendNotificationToUser(userToken.notification_token, "Tremp cancellation notice",
-        "The tremp you joined has been cancelled.", { tremp_id, user_id });
-    }
-  }
-}
-
-
-// getUsersInTremp
 export async function getUsersInTremp(trempId: string): Promise<any[]> {
   const tremp = await trempDataAccess.FindByID(trempId);
   if (!tremp) {
@@ -317,7 +340,7 @@ export async function getUsersInTremp(trempId: string): Promise<any[]> {
         image_URL: user.image_URL,
         gender: user.gender,
         is_approved: userInTremp.is_approved,
-        participants_amount:userInTremp.participants_amount
+        participants_amount: userInTremp.participants_amount,
       };
     })
   );
@@ -325,8 +348,6 @@ export async function getUsersInTremp(trempId: string): Promise<any[]> {
   return usersDetails;
 };
 
-
-// getApprovedTremps
 export async function getApprovedTremps(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
   const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
@@ -416,11 +437,6 @@ async function getUserDetailsById(userId: ObjectId) {
 }
 
 
-
-// ##############################################
 export async function getAllTremps() {
   return trempDataAccess.FindAll({ deleted: false });
-}
-export async function getTrempById(id: string) {
-  return trempDataAccess.FindByID(id);
 }
