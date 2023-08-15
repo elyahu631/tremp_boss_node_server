@@ -21,10 +21,61 @@ export interface UserInTremp {
   user_id: ObjectId;
   participants_amount: number;
   is_approved: string;
-}  
+}
 
 export interface UsersApprovedInTremp {
   tremp_type: string;
   is_approved: string;
-  user_id: ObjectId; 
-}  
+  user_id: ObjectId;
+}
+
+export interface TrempRequest {
+  creator_id: string;
+  group_id: string;
+  tremp_type: string;
+  dates: {
+    sun?: string;
+    mon?: string;
+    Tue?: string;
+    Wed?: string;
+    Thu?: string;
+    Fri?: string;
+    Sat?: string;
+  };
+  hour: string;
+  from_route: {
+    name: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  to_route: {
+    name: string;
+    coordinates: {
+      latitude: number;
+      longitude: number;
+    };
+  };
+  seats_amount: number
+  is_permanent: boolean;
+  return_drive: {
+    is_active: boolean;
+    return_hour: string;
+  };
+}
+
+export interface ReturnDrive {
+  is_active: boolean;
+  return_hour: string;
+}
+
+export interface Route {
+  name: string;
+  coordinates: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+

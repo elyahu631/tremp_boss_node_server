@@ -31,22 +31,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAllTremps = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
-const TrempModel_1 = __importDefault(require("./TrempModel"));
 const HttpException_1 = require("../../middleware/HttpException");
 const sendNotification_1 = require("../../services/sendNotification");
 function createTremp(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const newTremp = new TrempModel_1.default(req.body);
-            const result = yield TrempService.createTremp(newTremp);
-            res.status(200).json({ status: true, data: result });
+            const result = yield TrempService.createTremp(req.body);
+            res.status(201).json({ status: true, data: result });
         }
         catch (err) {
             next(err);

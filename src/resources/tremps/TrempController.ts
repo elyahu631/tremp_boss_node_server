@@ -9,9 +9,8 @@ import { sendNotificationToUser } from '../../services/sendNotification';
 
 export async function createTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const newTremp = new TrempModel(req.body);   
-    const result = await TrempService.createTremp(newTremp);
-    res.status(200).json({ status: true, data: result });
+    const result = await TrempService.createTremp(req.body);
+    res.status(201).json({ status: true, data: result });
   } catch (err) {
     next(err);
   }

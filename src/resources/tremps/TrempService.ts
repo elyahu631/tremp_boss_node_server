@@ -3,42 +3,92 @@ import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
-import { Tremp, UserInTremp, UsersApprovedInTremp } from './TrempInterfaces';
+import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp,ReturnDrive, Route } from './TrempInterfaces';
 import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../../middleware/HttpException';
+import { validateTrempRequest } from './TrempRequestValidation';
 
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
 
 // createTremp
-export async function createTremp(tremp: TrempModel) {
-  validateTrempData(tremp);
-  tremp.creator_id = new ObjectId(tremp.creator_id)
-  tremp.group_id = new ObjectId(tremp.group_id)
-  tremp.tremp_time = new Date(tremp.tremp_time)
-  const user = await userDataAccess.FindById(tremp.creator_id.toString());
-  if (!user) {
-    throw new NotFoundException("Creator user does not exist");
+export async function createTremp(clientData: TrempRequest) {
+  validateTrempRequest(clientData);
+  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount } = clientData;
+
+  const creatorIdObj = new ObjectId(creator_id);
+  const groupIdObj = new ObjectId(group_id);
+
+  const createSingleRide = (rideDate: Date, fromRoute: typeof from_route, toRoute: typeof to_route) => {
+    return createRide(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount);
+  };
+
+  for (const dateValue of Object.values(dates)) {
+    if (dateValue) {
+      let date = buildDate(dateValue, hour);
+
+      for (let i = 0; i < (is_permanent ? 4 : 1); i++) {
+        await createSingleRide(date, from_route, to_route);
+
+        if (return_drive.is_active) {
+          await handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
+        }
+
+        date.setDate(date.getDate() + 7);
+      }
+    }
   }
-  return await trempDataAccess.insertTremp(tremp);
 }
-const validateTrempData = (tremp: TrempModel) => {
-  tremp.validateTremp();
+function validateRideHours(hour: string, return_hour: string, date: Date, returnDate: Date) {
+  const [hourH, hourM] = hour.split(':').map(Number);
+  const [returnHourH, returnHourM] = return_hour.split(':').map(Number);
 
-  const { creator_id, tremp_time, from_route, to_route } = tremp;
+  let hourInMinutes = hourH * 60 + hourM;
+  let returnHourInMinutes = returnHourH * 60 + returnHourM;
 
-  if (!creator_id || !tremp_time || !from_route || !to_route) {
-    throw new Error("Missing required tremp data");
+  // If return hour is less than departure hour, assume it's the next day
+  if (returnHourInMinutes < hourInMinutes) {
+    returnHourInMinutes += 24 * 60; // Add 24 hours to the return hour
+    returnDate.setDate(returnDate.getDate() + 1); // Increment the return date by one day
   }
 
-  if (new Date(tremp_time) < new Date()) {
-    throw new Error("Tremp time has already passed");
-  }
+  const differenceInMinutes = returnHourInMinutes - hourInMinutes;
 
-  if (from_route.name === to_route.name) {
-    throw new Error("The 'from' and 'to' locations cannot be the same");
+  const threeHoursInMinutes = 3 * 60;
+  const fourteenHoursInMinutes = 14 * 60;
+
+  if (differenceInMinutes < threeHoursInMinutes || differenceInMinutes > fourteenHoursInMinutes) {
+    throw new BadRequestException("Return time must be at least 3 hours and no more than 14 hours from departure time");
   }
 }
+function buildDate(dateValue: string, hour: string) {
+  const date = new Date(dateValue);
+  const [hours, minutes, seconds] = hour.split(':').map(Number);
+  date.setUTCHours(hours, minutes, seconds);
+  return date;
+}
+async function handleReturnDrive(date: Date, hour: string, return_drive: ReturnDrive, from_route: Route,
+   to_route: Route, createSingleRide: Function) {
+  const returnDate = new Date(date);
+  const [returnHours, returnMinutes, returnSeconds] = return_drive.return_hour.split(':').map(Number);
+  returnDate.setUTCHours(returnHours, returnMinutes, returnSeconds);
+  validateRideHours(hour, return_drive.return_hour, date, returnDate);
+  await createSingleRide(returnDate, from_route, to_route);
+}
+async function createRide(date: Date, creatorIdObj: ObjectId, groupIdObj: ObjectId, tremp_type:
+   string, from_route: Route, to_route: Route, seats_amount: number) {
+  const newTremp = new TrempModel({
+    creator_id: creatorIdObj,
+    group_id: groupIdObj,
+    tremp_type,
+    tremp_time: date,
+    from_route,
+    to_route,
+    seats_amount
+  });
+  await trempDataAccess.insertTremp(newTremp);
+}
+
 
 // getTrempsByFilters
 export async function getTrempsByFilters(filters: any): Promise<any> {
@@ -48,7 +98,7 @@ export async function getTrempsByFilters(filters: any): Promise<any> {
 
   const users = await userDataAccess.FindAllUsers(
     { _id: { $in: uniqueUserIds } },
-    { first_name: 1, last_name: 1, image_URL: 1,gender:1 }
+    { first_name: 1, last_name: 1, image_URL: 1, gender: 1 }
   );
 
   const usersMap = createUserMapFromList(users);
@@ -85,7 +135,7 @@ function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, a
         first_name: user.first_name,
         last_name: user.last_name,
         image_URL: user.image_URL,
-        gender:user.gender,
+        gender: user.gender,
       };
     }
   });
@@ -317,7 +367,7 @@ export async function getUsersInTremp(trempId: string): Promise<any[]> {
         image_URL: user.image_URL,
         gender: user.gender,
         is_approved: userInTremp.is_approved,
-        participants_amount:userInTremp.participants_amount
+        participants_amount: userInTremp.participants_amount
       };
     })
   );
@@ -380,7 +430,6 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
         hitchhikers = await getUserDetailsById(tramp.creator_id);
       }
       const driver = await getUserDetailsById(driverId);
-
 
       return {
         ...tramp,

@@ -24,41 +24,87 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTrempById = exports.getAllTremps = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+// src/resources/tremps/trempService.ts
+const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const mongodb_1 = require("mongodb");
 const sendNotification_1 = require("../../services/sendNotification");
 const HttpException_1 = require("../../middleware/HttpException");
+const TrempRequestValidation_1 = require("./TrempRequestValidation");
 const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
 // createTremp
-function createTremp(tremp) {
+function createTremp(clientData) {
     return __awaiter(this, void 0, void 0, function* () {
-        validateTrempData(tremp);
-        tremp.creator_id = new mongodb_1.ObjectId(tremp.creator_id);
-        tremp.group_id = new mongodb_1.ObjectId(tremp.group_id);
-        tremp.tremp_time = new Date(tremp.tremp_time);
-        const user = yield userDataAccess.FindById(tremp.creator_id.toString());
-        if (!user) {
-            throw new HttpException_1.NotFoundException("Creator user does not exist");
+        (0, TrempRequestValidation_1.validateTrempRequest)(clientData);
+        const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount } = clientData;
+        const creatorIdObj = new mongodb_1.ObjectId(creator_id);
+        const groupIdObj = new mongodb_1.ObjectId(group_id);
+        const createSingleRide = (rideDate, fromRoute, toRoute) => {
+            return createRide(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount);
+        };
+        for (const dateValue of Object.values(dates)) {
+            if (dateValue) {
+                let date = buildDate(dateValue, hour);
+                for (let i = 0; i < (is_permanent ? 4 : 1); i++) {
+                    yield createSingleRide(date, from_route, to_route);
+                    if (return_drive.is_active) {
+                        yield handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
+                    }
+                    date.setDate(date.getDate() + 7);
+                }
+            }
         }
-        return yield trempDataAccess.insertTremp(tremp);
     });
 }
 exports.createTremp = createTremp;
-const validateTrempData = (tremp) => {
-    tremp.validateTremp();
-    const { creator_id, tremp_time, from_route, to_route } = tremp;
-    if (!creator_id || !tremp_time || !from_route || !to_route) {
-        throw new Error("Missing required tremp data");
+function validateRideHours(hour, return_hour, date, returnDate) {
+    const [hourH, hourM] = hour.split(':').map(Number);
+    const [returnHourH, returnHourM] = return_hour.split(':').map(Number);
+    let hourInMinutes = hourH * 60 + hourM;
+    let returnHourInMinutes = returnHourH * 60 + returnHourM;
+    // If return hour is less than departure hour, assume it's the next day
+    if (returnHourInMinutes < hourInMinutes) {
+        returnHourInMinutes += 24 * 60; // Add 24 hours to the return hour
+        returnDate.setDate(returnDate.getDate() + 1); // Increment the return date by one day
     }
-    if (new Date(tremp_time) < new Date()) {
-        throw new Error("Tremp time has already passed");
+    const differenceInMinutes = returnHourInMinutes - hourInMinutes;
+    const threeHoursInMinutes = 3 * 60;
+    const fourteenHoursInMinutes = 14 * 60;
+    if (differenceInMinutes < threeHoursInMinutes || differenceInMinutes > fourteenHoursInMinutes) {
+        throw new HttpException_1.BadRequestException("Return time must be at least 3 hours and no more than 14 hours from departure time");
     }
-    if (from_route.name === to_route.name) {
-        throw new Error("The 'from' and 'to' locations cannot be the same");
-    }
-};
+}
+function buildDate(dateValue, hour) {
+    const date = new Date(dateValue);
+    const [hours, minutes, seconds] = hour.split(':').map(Number);
+    date.setUTCHours(hours, minutes, seconds);
+    return date;
+}
+function handleReturnDrive(date, hour, return_drive, from_route, to_route, createSingleRide) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const returnDate = new Date(date);
+        const [returnHours, returnMinutes, returnSeconds] = return_drive.return_hour.split(':').map(Number);
+        returnDate.setUTCHours(returnHours, returnMinutes, returnSeconds);
+        validateRideHours(hour, return_drive.return_hour, date, returnDate);
+        yield createSingleRide(returnDate, from_route, to_route);
+    });
+}
+function createRide(date, creatorIdObj, groupIdObj, tremp_type, from_route, to_route, seats_amount) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const newTremp = new TrempModel_1.default({
+            creator_id: creatorIdObj,
+            group_id: groupIdObj,
+            tremp_type,
+            tremp_time: date,
+            from_route,
+            to_route,
+            seats_amount
+        });
+        yield trempDataAccess.insertTremp(newTremp);
+    });
+}
 // getTrempsByFilters
 function getTrempsByFilters(filters) {
     return __awaiter(this, void 0, void 0, function* () {
