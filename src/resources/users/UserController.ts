@@ -37,9 +37,9 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
 export async function loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const {email, password } = req.body;
-    const user = await UserService.loginUser(email, password);
+    const { user, isProfileComplete } = await UserService.loginUser(email, password);
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30d' });
-    res.status(200).json({ status: true, data: { user, token } });
+    res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete } });
   } catch (err) {
     next(err);
   }

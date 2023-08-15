@@ -1,5 +1,4 @@
 // src/resources/users/UserService.ts
-
 import bcrypt from 'bcrypt';
 import UserModel from "./UserModel";
 import UserDataAccess from "./UserDataAccess";
@@ -48,9 +47,13 @@ export async function loginUser(email: string, password: string) {
 
   // Update the last_login_date field when the user logs in successfully
   user.last_login_date = getCurrentTimeInIsrael();
-  await userDataAccess.UpdateUserDetails(user._id.toString(), user);
 
-  return user;
+  await userDataAccess.UpdateUserDetails(user._id.toString(), user);
+  
+  const userModel = UserModel.fromUserDocument(user);
+  const isProfileComplete = userModel.isProfileComplete();
+
+  return { user, isProfileComplete };
 }
 
 export async function getUserById(id: string) {

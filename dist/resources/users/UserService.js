@@ -1,5 +1,4 @@
 "use strict";
-// src/resources/users/UserService.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -14,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.addUser = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
+// src/resources/users/UserService.ts
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserModel_1 = __importDefault(require("./UserModel"));
 const UserDataAccess_1 = __importDefault(require("./UserDataAccess"));
@@ -60,7 +60,9 @@ function loginUser(email, password) {
         // Update the last_login_date field when the user logs in successfully
         user.last_login_date = (0, TimeService_1.getCurrentTimeInIsrael)();
         yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
-        return user;
+        const userModel = UserModel_1.default.fromUserDocument(user);
+        const isProfileComplete = userModel.isProfileComplete();
+        return { user, isProfileComplete };
     });
 }
 exports.loginUser = loginUser;

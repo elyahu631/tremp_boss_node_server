@@ -75,9 +75,9 @@ function loginUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, password } = req.body;
-            const user = yield UserService.loginUser(email, password);
+            const { user, isProfileComplete } = yield UserService.loginUser(email, password);
             const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '30d' });
-            res.status(200).json({ status: true, data: { user, token } });
+            res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete } });
         }
         catch (err) {
             next(err);

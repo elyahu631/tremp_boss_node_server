@@ -74,12 +74,21 @@ class UserModel {
     }
   }
 
-
-  
   static fromUserDocument(userDocument: UserInterface): UserModel {
-    // This creates a new UserModel and copies all properties from the userDocument to it
     return new UserModel(userDocument);
   }
   
+  isProfileComplete(): boolean {
+    return (
+      !!this.email &&
+      !!this.password &&
+      !!this.phone_number &&
+      !!this.image_URL &&
+      !!this.first_name &&
+      !!this.last_name &&
+      !!this.gender
+    );
+  }
+
 }
 export default UserModel;
