@@ -44,9 +44,15 @@ function createTremp(clientData) {
         const createSingleRide = (rideDate, fromRoute, toRoute) => {
             return createRide(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount);
         };
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
         for (const dateValue of Object.values(dates)) {
             if (dateValue) {
                 let date = buildDate(dateValue, hour);
+                console.log(today);
+                if (date < today) {
+                    date.setDate(date.getDate() + 7); // Increment the date by one week
+                }
                 for (let i = 0; i < (is_permanent ? 4 : 1); i++) {
                     yield createSingleRide(date, from_route, to_route);
                     if (return_drive.is_active) {
