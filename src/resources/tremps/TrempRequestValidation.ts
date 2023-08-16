@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { BadRequestException } from '../../middleware/HttpException';
 
-const timePattern = Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/).required();
+const timePattern = Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required();
 const sixDaysAgo = new Date();
 sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
 

@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateTrempRequest = exports.trempSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 const HttpException_1 = require("../../middleware/HttpException");
-const timePattern = joi_1.default.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/).required();
+const timePattern = joi_1.default.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required();
 const sixDaysAgo = new Date();
 sixDaysAgo.setDate(sixDaysAgo.getDate() - 6);
 exports.trempSchema = joi_1.default.object({
