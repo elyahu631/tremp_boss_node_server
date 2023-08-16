@@ -32,9 +32,8 @@ export const trempSchema = Joi.object({
   note: Joi.string().optional(),
   is_permanent: Joi.boolean().required(),
   return_drive: Joi.object({
-    is_active: Joi.boolean().required(),
     return_hour: timePattern,
-  }).required(),
+  }).optional(),
 });
 
 export function validateTrempRequest(data: any) {

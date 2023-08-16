@@ -33,9 +33,8 @@ exports.trempSchema = joi_1.default.object({
     note: joi_1.default.string().optional(),
     is_permanent: joi_1.default.boolean().required(),
     return_drive: joi_1.default.object({
-        is_active: joi_1.default.boolean().required(),
         return_hour: timePattern,
-    }).required(),
+    }).optional(),
 });
 function validateTrempRequest(data) {
     const { error } = exports.trempSchema.validate(data);

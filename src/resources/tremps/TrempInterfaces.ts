@@ -60,16 +60,11 @@ export interface TrempRequest {
   seats_amount: number;
   note: string;
   is_permanent: boolean;
-  return_drive: {
-    is_active: boolean;
+  return_drive?: {
     return_hour: string;
   };
 }
 
-export interface ReturnDrive {
-  is_active: boolean;
-  return_hour: string;
-}
 
 export interface Route {
   name: string;

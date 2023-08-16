@@ -3,7 +3,7 @@ import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
-import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp, ReturnDrive, Route } from './TrempInterfaces';
+import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp, Route } from './TrempInterfaces';
 import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../../middleware/HttpException';
 import { validateTrempRequest } from './TrempRequestValidation';
@@ -27,8 +27,9 @@ export async function createTremp(clientData: TrempRequest) {
 
   const createAndHandleRides = async (date: Date) => {
     await createSingleRide(date, from_route, to_route);
-    if (return_drive.is_active) {
-      await handleReturnDrive(date, fullHour, return_drive, to_route, from_route, createSingleRide);
+    if (return_drive) {
+      const fullReturnHour = return_drive.return_hour + ':00'
+      await handleReturnDrive(date, fullHour, fullReturnHour, to_route, from_route, createSingleRide);
     }
     date.setDate(date.getDate() + 7);
   }
@@ -90,12 +91,12 @@ function buildTrempTime(dateValue: string, hour: string) {
   date.setUTCHours(hours, minutes, seconds);
   return date;
 }
-async function handleReturnDrive(date: Date, hour: string, return_drive: ReturnDrive, from_route: Route,
+async function handleReturnDrive(date: Date, hour: string, fullReturnHour: string, from_route: Route,
   to_route: Route, createSingleRide: Function) {
   const returnDate = new Date(date);
-  const [returnHours, returnMinutes, returnSeconds] = return_drive.return_hour.split(':').map(Number);
+  const [returnHours, returnMinutes, returnSeconds] = fullReturnHour.split(':').map(Number);
   returnDate.setUTCHours(returnHours, returnMinutes, returnSeconds);
-  validateTrempHours(hour, return_drive.return_hour, date, returnDate);
+  validateTrempHours(hour, fullReturnHour, date, returnDate);
   await createSingleRide(returnDate, from_route, to_route);
 }
 async function createSingleTremp(date: Date, creatorIdObj: ObjectId, groupIdObj: ObjectId, tremp_type:

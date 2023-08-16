@@ -48,8 +48,9 @@ function createTremp(clientData) {
         };
         const createAndHandleRides = (date) => __awaiter(this, void 0, void 0, function* () {
             yield createSingleRide(date, from_route, to_route);
-            if (return_drive.is_active) {
-                yield handleReturnDrive(date, fullHour, return_drive, to_route, from_route, createSingleRide);
+            if (return_drive) {
+                const fullReturnHour = return_drive.return_hour + ':00';
+                yield handleReturnDrive(date, fullHour, fullReturnHour, to_route, from_route, createSingleRide);
             }
             date.setDate(date.getDate() + 7);
         });
@@ -106,12 +107,12 @@ function buildTrempTime(dateValue, hour) {
     date.setUTCHours(hours, minutes, seconds);
     return date;
 }
-function handleReturnDrive(date, hour, return_drive, from_route, to_route, createSingleRide) {
+function handleReturnDrive(date, hour, fullReturnHour, from_route, to_route, createSingleRide) {
     return __awaiter(this, void 0, void 0, function* () {
         const returnDate = new Date(date);
-        const [returnHours, returnMinutes, returnSeconds] = return_drive.return_hour.split(':').map(Number);
+        const [returnHours, returnMinutes, returnSeconds] = fullReturnHour.split(':').map(Number);
         returnDate.setUTCHours(returnHours, returnMinutes, returnSeconds);
-        validateTrempHours(hour, return_drive.return_hour, date, returnDate);
+        validateTrempHours(hour, fullReturnHour, date, returnDate);
         yield createSingleRide(returnDate, from_route, to_route);
     });
 }
