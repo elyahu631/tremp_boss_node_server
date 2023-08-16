@@ -18,6 +18,7 @@ export async function createTremp(clientData: TrempRequest) {
   const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount,note} = clientData;
   const creatorIdObj = new ObjectId(creator_id);
   const groupIdObj = new ObjectId(group_id);
+  const fullHour = hour + ':00'
   const today = getTodayDate()
 
   const createSingleRide = (rideDate: Date, fromRoute: typeof from_route, toRoute: typeof to_route) => {
@@ -27,14 +28,14 @@ export async function createTremp(clientData: TrempRequest) {
   const createAndHandleRides = async (date: Date) => {
     await createSingleRide(date, from_route, to_route);
     if (return_drive.is_active) {
-      await handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
+      await handleReturnDrive(date, fullHour, return_drive, to_route, from_route, createSingleRide);
     }
     date.setDate(date.getDate() + 7);
   }
 
   for (const dateValue of Object.values(dates)) {
     if (dateValue) {
-      let date = buildTrempTime(dateValue, hour);
+      let date = buildTrempTime(dateValue, fullHour);
 
       if (date < today) {
         date.setDate(date.getDate() + 7);

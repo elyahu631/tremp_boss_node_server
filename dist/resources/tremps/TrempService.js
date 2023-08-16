@@ -41,6 +41,7 @@ function createTremp(clientData) {
         const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount, note } = clientData;
         const creatorIdObj = new mongodb_1.ObjectId(creator_id);
         const groupIdObj = new mongodb_1.ObjectId(group_id);
+        const fullHour = hour + ':00';
         const today = getTodayDate();
         const createSingleRide = (rideDate, fromRoute, toRoute) => {
             return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount, note);
@@ -48,13 +49,13 @@ function createTremp(clientData) {
         const createAndHandleRides = (date) => __awaiter(this, void 0, void 0, function* () {
             yield createSingleRide(date, from_route, to_route);
             if (return_drive.is_active) {
-                yield handleReturnDrive(date, hour, return_drive, to_route, from_route, createSingleRide);
+                yield handleReturnDrive(date, fullHour, return_drive, to_route, from_route, createSingleRide);
             }
             date.setDate(date.getDate() + 7);
         });
         for (const dateValue of Object.values(dates)) {
             if (dateValue) {
-                let date = buildTrempTime(dateValue, hour);
+                let date = buildTrempTime(dateValue, fullHour);
                 if (date < today) {
                     date.setDate(date.getDate() + 7);
                 }
