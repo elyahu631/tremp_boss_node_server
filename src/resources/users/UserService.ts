@@ -49,7 +49,7 @@ export async function loginUser(email: string, password: string) {
   user.last_login_date = getCurrentTimeInIsrael();
 
   await userDataAccess.UpdateUserDetails(user._id.toString(), user);
-  
+
   const userModel = UserModel.fromUserDocument(user);
   const isProfileComplete = userModel.isProfileComplete();
 
@@ -74,6 +74,7 @@ export async function uploadUserImage(id: string, file?: Express.Multer.File) {
   await userDataAccess.Update(id, { image_URL }); // Pass object with image_URL field
   return image_URL;
 }
+
 export async function addUser(email: string, password: string) {
   const newUser = new UserModel({ email, password });
   return userDataAccess.InsertOne(newUser);

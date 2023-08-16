@@ -41,11 +41,10 @@ function createTremp(clientData) {
         const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount } = clientData;
         const creatorIdObj = new mongodb_1.ObjectId(creator_id);
         const groupIdObj = new mongodb_1.ObjectId(group_id);
+        const today = getTodayDate();
         const createSingleRide = (rideDate, fromRoute, toRoute) => {
-            return createRide(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount);
+            return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount);
         };
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
         const createAndHandleRides = (date) => __awaiter(this, void 0, void 0, function* () {
             yield createSingleRide(date, from_route, to_route);
             if (return_drive.is_active) {
@@ -55,9 +54,13 @@ function createTremp(clientData) {
         });
         for (const dateValue of Object.values(dates)) {
             if (dateValue) {
-                let date = buildDate(dateValue, hour);
+                let date = buildTrempTime(dateValue, hour);
                 if (date < today) {
                     date.setDate(date.getDate() + 7);
+                }
+                const existingTremps = yield findExistingTremps(creatorIdObj, date);
+                if (existingTremps.length > 0) {
+                    throw new HttpException_1.BadRequestException('You already have a tremp scheduled for this date and time.');
                 }
                 const repetitions = is_permanent ? 4 : 1;
                 for (let i = 0; i < repetitions; i++) {
@@ -68,7 +71,18 @@ function createTremp(clientData) {
     });
 }
 exports.createTremp = createTremp;
-function validateRideHours(hour, return_hour, date, returnDate) {
+function getTodayDate() {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    return today;
+}
+function findExistingTremps(creatorIdObj, date) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const existingTrempsQuery = { creator_id: creatorIdObj, tremp_time: date };
+        return yield trempDataAccess.FindTrempsByFilters(existingTrempsQuery);
+    });
+}
+function validateTrempHours(hour, return_hour, date, returnDate) {
     const [hourH, hourM] = hour.split(':').map(Number);
     const [returnHourH, returnHourM] = return_hour.split(':').map(Number);
     let hourInMinutes = hourH * 60 + hourM;
@@ -85,7 +99,7 @@ function validateRideHours(hour, return_hour, date, returnDate) {
         throw new HttpException_1.BadRequestException("Return time must be at least 3 hours and no more than 14 hours from departure time");
     }
 }
-function buildDate(dateValue, hour) {
+function buildTrempTime(dateValue, hour) {
     const date = new Date(dateValue);
     const [hours, minutes, seconds] = hour.split(':').map(Number);
     date.setUTCHours(hours, minutes, seconds);
@@ -96,11 +110,11 @@ function handleReturnDrive(date, hour, return_drive, from_route, to_route, creat
         const returnDate = new Date(date);
         const [returnHours, returnMinutes, returnSeconds] = return_drive.return_hour.split(':').map(Number);
         returnDate.setUTCHours(returnHours, returnMinutes, returnSeconds);
-        validateRideHours(hour, return_drive.return_hour, date, returnDate);
+        validateTrempHours(hour, return_drive.return_hour, date, returnDate);
         yield createSingleRide(returnDate, from_route, to_route);
     });
 }
-function createRide(date, creatorIdObj, groupIdObj, tremp_type, from_route, to_route, seats_amount) {
+function createSingleTremp(date, creatorIdObj, groupIdObj, tremp_type, from_route, to_route, seats_amount) {
     return __awaiter(this, void 0, void 0, function* () {
         const newTremp = new TrempModel_1.default({
             creator_id: creatorIdObj,

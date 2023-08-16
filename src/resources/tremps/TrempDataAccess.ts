@@ -1,5 +1,4 @@
 // src/resources/tremps/TrempDataAccess.ts
-import { ObjectId } from 'mongodb';
 import DB from '../../utils/db';
 import TrempModel from './TrempModel';
 import { UserInTrempUpdateQuery } from './TrempInterfaces';

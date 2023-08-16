@@ -36,11 +36,11 @@ export interface TrempRequest {
   dates: {
     sun?: string;
     mon?: string;
-    Tue?: string;
-    Wed?: string;
-    Thu?: string;
-    Fri?: string;
-    Sat?: string;
+    tue?: string;
+    wed?: string;
+    thu?: string;
+    fri?: string;
+    sat?: string;
   };
   hour: string;
   from_route: {
