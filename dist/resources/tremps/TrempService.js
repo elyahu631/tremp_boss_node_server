@@ -38,12 +38,12 @@ const userDataAccess = new UserDataAccess_1.default();
 function createTremp(clientData) {
     return __awaiter(this, void 0, void 0, function* () {
         (0, TrempRequestValidation_1.validateTrempRequest)(clientData);
-        const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount } = clientData;
+        const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount, note } = clientData;
         const creatorIdObj = new mongodb_1.ObjectId(creator_id);
         const groupIdObj = new mongodb_1.ObjectId(group_id);
         const today = getTodayDate();
         const createSingleRide = (rideDate, fromRoute, toRoute) => {
-            return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount);
+            return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount, note);
         };
         const createAndHandleRides = (date) => __awaiter(this, void 0, void 0, function* () {
             yield createSingleRide(date, from_route, to_route);
@@ -114,7 +114,7 @@ function handleReturnDrive(date, hour, return_drive, from_route, to_route, creat
         yield createSingleRide(returnDate, from_route, to_route);
     });
 }
-function createSingleTremp(date, creatorIdObj, groupIdObj, tremp_type, from_route, to_route, seats_amount) {
+function createSingleTremp(date, creatorIdObj, groupIdObj, tremp_type, from_route, to_route, seats_amount, note) {
     return __awaiter(this, void 0, void 0, function* () {
         const newTremp = new TrempModel_1.default({
             creator_id: creatorIdObj,
@@ -123,7 +123,8 @@ function createSingleTremp(date, creatorIdObj, groupIdObj, tremp_type, from_rout
             tremp_time: date,
             from_route,
             to_route,
-            seats_amount
+            seats_amount,
+            note
         });
         yield trempDataAccess.insertTremp(newTremp);
     });

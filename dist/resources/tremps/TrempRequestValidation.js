@@ -30,6 +30,7 @@ exports.trempSchema = joi_1.default.object({
         }).required(),
     }),
     seats_amount: joi_1.default.number().required(),
+    note: joi_1.default.string().optional(),
     is_permanent: joi_1.default.boolean().required(),
     return_drive: joi_1.default.object({
         is_active: joi_1.default.boolean().required(),

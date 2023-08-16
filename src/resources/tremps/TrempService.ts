@@ -15,13 +15,13 @@ const userDataAccess = new UserDataAccess();
 export async function createTremp(clientData: TrempRequest) {
   validateTrempRequest(clientData);
 
-  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount } = clientData;
+  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount,note} = clientData;
   const creatorIdObj = new ObjectId(creator_id);
   const groupIdObj = new ObjectId(group_id);
   const today = getTodayDate()
 
   const createSingleRide = (rideDate: Date, fromRoute: typeof from_route, toRoute: typeof to_route) => {
-    return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount);
+    return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount,note);
   };
 
   const createAndHandleRides = async (date: Date) => {
@@ -98,7 +98,7 @@ async function handleReturnDrive(date: Date, hour: string, return_drive: ReturnD
   await createSingleRide(returnDate, from_route, to_route);
 }
 async function createSingleTremp(date: Date, creatorIdObj: ObjectId, groupIdObj: ObjectId, tremp_type:
-  string, from_route: Route, to_route: Route, seats_amount: number) {
+  string, from_route: Route, to_route: Route, seats_amount: number,note: string) {
   const newTremp = new TrempModel({
     creator_id: creatorIdObj,
     group_id: groupIdObj,
@@ -106,7 +106,8 @@ async function createSingleTremp(date: Date, creatorIdObj: ObjectId, groupIdObj:
     tremp_time: date,
     from_route,
     to_route,
-    seats_amount
+    seats_amount,
+    note
   });
   await trempDataAccess.insertTremp(newTremp);
 }
@@ -468,7 +469,6 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
   return trampsToShow;
 }
-
 async function getUserDetailsById(userId: ObjectId) {
   try {
     const user = await userDataAccess.FindById(userId.toString());

@@ -57,7 +57,8 @@ export interface TrempRequest {
       longitude: number;
     };
   };
-  seats_amount: number
+  seats_amount: number;
+  note: string;
   is_permanent: boolean;
   return_drive: {
     is_active: boolean;

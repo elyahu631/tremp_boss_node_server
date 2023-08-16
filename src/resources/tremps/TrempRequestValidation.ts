@@ -29,6 +29,7 @@ export const trempSchema = Joi.object({
     }).required(),
   }),
   seats_amount: Joi.number().required(),
+  note: Joi.string().optional(),
   is_permanent: Joi.boolean().required(),
   return_drive: Joi.object({
     is_active: Joi.boolean().required(),
