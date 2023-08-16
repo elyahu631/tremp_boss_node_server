@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.addUser = exports.deleteUserById = exports.uploadUserImage = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
+exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.uploadUserImage = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
@@ -53,7 +53,7 @@ function registerUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, password } = req.body;
-            const result = yield UserService.registerUser(email, password);
+            const result = yield UserService.registerUser(email.toLowerCase(), password);
             if (!result) {
                 throw new HttpException_1.BadRequestException("Failed to register user");
             }
@@ -65,6 +65,21 @@ function registerUser(req, res, next) {
     });
 }
 exports.registerUser = registerUser;
+// export async function verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+//   try {
+//     const token = req.query.token as string;
+//     const user = await UserModel.findOne({ verificationToken: token });
+//     if (!user) {
+//       throw new BadRequestException("Invalid verification link.");
+//     }
+//     user.isVerified = true;
+//     user.verificationToken = undefined; // remove the token
+//     await user.save();
+//     res.status(200).json({ status: true, message: "Email verified successfully" });
+//   } catch (err) {
+//     next(err);
+//   }
+// }
 /**
   Logs in a user.
   It validates the email and password in the request body,
@@ -75,7 +90,7 @@ function loginUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, password } = req.body;
-            const { user, isProfileComplete } = yield UserService.loginUser(email, password);
+            const { user, isProfileComplete } = yield UserService.loginUser(email.toLowerCase(), password);
             const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '30d' });
             res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete } });
         }
@@ -128,6 +143,10 @@ function updateUser(req, res, next) {
     });
 }
 exports.updateUser = updateUser;
+/**
+ * The function `uploadUserImage` is an asynchronous function that handles the uploading of a user
+ * image, and it returns a JSON response with the status, message, and image URL.
+ */
 function uploadUserImage(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -171,27 +190,6 @@ function deleteUserById(req, res, next) {
     });
 }
 exports.deleteUserById = deleteUserById;
-/**
- Adds a new user.
- It creates a new UserModel instance using the request body,
- calls the createUser function from UserService to save the user in the database,
- and returns the saved user in the response.
- If there is an uploaded file, it updates the user's image using
- the uploadImageToFirebaseAndUpdateUser function from UserService.
- */
-function addUser(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const { email, password } = req.body;
-            const result = yield UserService.addUser(email, password);
-            res.status(201).json({ status: true, data: result });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.addUser = addUser;
 /**
  Retrieves all users.
  It calls the getAllUsers function from UserService to fetch all users,

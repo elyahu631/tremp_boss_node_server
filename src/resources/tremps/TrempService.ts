@@ -18,7 +18,7 @@ export async function createTremp(clientData: TrempRequest) {
   const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount,note} = clientData;
   const creatorIdObj = new ObjectId(creator_id);
   const groupIdObj = new ObjectId(group_id);
-  const fullHour = hour + ':00'
+  const fullHour = reformatHour(hour)
   const today = getTodayDate()
 
   const createSingleRide = (rideDate: Date, fromRoute: typeof from_route, toRoute: typeof to_route) => {
@@ -53,6 +53,9 @@ export async function createTremp(clientData: TrempRequest) {
       }
     }
   }
+}
+function reformatHour(hour:string) :string {
+  return hour + ':00';
 }
 function getTodayDate() {
   const today = new Date();

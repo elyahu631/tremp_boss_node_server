@@ -22,7 +22,6 @@ usersRouter.post("/update-image/:id", auth_1.authenticateToken, upload.any(), Us
 usersRouter.put("/mark-deleted/:id", auth_1.authenticateToken, UserController_1.markUserAsDeleted);
 // for admin
 usersRouter.get("/all", auth_1.authenticateToken, UserController_1.getAllUsers);
-usersRouter.post("/add", UserController_1.addUser);
 usersRouter.delete("/delete/:id", auth_1.authenticateToken, UserController_1.deleteUserById);
 usersRouter.post("/admin-add-user", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.AdminAddUser);
 usersRouter.put("/update-user/:id", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.updateUserDetails);

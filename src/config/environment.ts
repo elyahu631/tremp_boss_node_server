@@ -6,6 +6,8 @@ export const DB_URI = process.env.DB_URI || "";
 export const DB_NAME = process.env.DB_NAME || "";
 export const PORT = process.env.PORT || 8000;
 export const JWT_SECRET = process.env.JWT_SECRET || "";
+export const EMAIL_PASS = process.env.EMAIL_PASS || "";
+export const SERVER_KEY = process.env.SERVER_KEY || "";
 export const FIREBASE_ENV = 
 {
   type:process.env.TYPE,
@@ -19,5 +21,5 @@ export const FIREBASE_ENV =
   auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_X509_CERT_URL || "",
   client_x509_cert_url: process.env.CLIENT_X509_CERT_URL || "",
 }
-export const SERVER_KEY = process.env.SERVER_KEY || "";
+
 

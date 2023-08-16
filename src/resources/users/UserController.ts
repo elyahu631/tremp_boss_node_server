@@ -18,7 +18,7 @@ import { BadRequestException } from "../../middleware/HttpException";
 export async function registerUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { email, password } = req.body;
-    const result = await UserService.registerUser(email, password);
+    const result = await UserService.registerUser(email.toLowerCase(), password);
     if (!result) {
       throw new BadRequestException("Failed to register user");
     }
@@ -27,6 +27,25 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
     next(err);
   }
 }
+
+// export async function verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+//   try {
+//     const token = req.query.token as string;
+//     const user = await UserModel.findOne({ verificationToken: token });
+
+//     if (!user) {
+//       throw new BadRequestException("Invalid verification link.");
+//     }
+
+//     user.isVerified = true;
+//     user.verificationToken = undefined; // remove the token
+//     await user.save();
+
+//     res.status(200).json({ status: true, message: "Email verified successfully" });
+//   } catch (err) {
+//     next(err);
+//   }
+// }
 
 /**
   Logs in a user.
@@ -37,7 +56,7 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
 export async function loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const {email, password } = req.body;
-    const { user, isProfileComplete } = await UserService.loginUser(email, password);
+    const { user, isProfileComplete } = await UserService.loginUser(email.toLowerCase(), password);
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30d' });
     res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete } });
   } catch (err) {
@@ -82,6 +101,10 @@ export async function getUserById(req: Request, res: Response, next: NextFunctio
   }
 }
 
+/**
+ * The function `uploadUserImage` is an asynchronous function that handles the uploading of a user
+ * image, and it returns a JSON response with the status, message, and image URL.
+ */
 export async function uploadUserImage(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     let file: Express.Multer.File;
@@ -105,7 +128,6 @@ export async function uploadUserImage(req: Request, res: Response, next: NextFun
   }
 }
 
-
 /**
 Deletes a user by ID.
 It validates the user ID in the request params,
@@ -121,25 +143,6 @@ export async function deleteUserById(req: Request, res: Response, next: NextFunc
     next(err);
   }
 }
-
-/**
- Adds a new user.
- It creates a new UserModel instance using the request body,
- calls the createUser function from UserService to save the user in the database,
- and returns the saved user in the response.
- If there is an uploaded file, it updates the user's image using
- the uploadImageToFirebaseAndUpdateUser function from UserService.
- */
-export async function addUser(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const { email, password } = req.body;
-    const result = await UserService.addUser(email, password);
-    res.status(201).json({ status: true, data: result });
-  } catch (err) {
-    next(err);
-  }
-}
-
 
 /**
  Retrieves all users.

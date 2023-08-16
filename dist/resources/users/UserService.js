@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.addUser = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
+exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
 // src/resources/users/UserService.ts
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserModel_1 = __importDefault(require("./UserModel"));
@@ -41,7 +41,13 @@ function registerUser(email, password) {
             email,
             password: hashedPassword,
         });
-        return userDataAccess.InsertOne(newUser);
+        // const verificationToken = crypto.randomBytes(20).toString('hex');
+        const result = yield userDataAccess.InsertOne(newUser);
+        // if (result) {
+        //   const emailService = new EmailService();
+        //   emailService.sendVerificationEmail(email, verificationToken); // Send a verification email
+        // }
+        return result;
     });
 }
 exports.registerUser = registerUser;
@@ -93,13 +99,6 @@ function uploadUserImage(id, file) {
     });
 }
 exports.uploadUserImage = uploadUserImage;
-function addUser(email, password) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const newUser = new UserModel_1.default({ email, password });
-        return userDataAccess.InsertOne(newUser);
-    });
-}
-exports.addUser = addUser;
 function getAllUsers() {
     return __awaiter(this, void 0, void 0, function* () {
         return userDataAccess.FindAllUsers({ deleted: false });
@@ -108,16 +107,17 @@ function getAllUsers() {
 exports.getAllUsers = getAllUsers;
 function createUser(user) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (!user.email) {
+            throw new HttpException_1.BadRequestException("email field is empty.");
+        }
+        user.email = user.email.toLowerCase();
         // Check if user with this username or email already exists
         const existingUsers = yield userDataAccess.FindAllUsers({
             $or: [
                 { email: user.email },
             ],
         });
-        if (!user.email) {
-            throw new HttpException_1.BadRequestException("email field is empty.");
-        }
-        else if (existingUsers.length > 0) {
+        if (existingUsers.length > 0) {
             throw new HttpException_1.BadRequestException("User with this email already exists.");
         }
         // Encrypt the user's password before saving to database

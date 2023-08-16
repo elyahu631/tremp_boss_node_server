@@ -10,7 +10,6 @@ import {
   getUserById,
   deleteUserById,
   updateUser,
-  addUser,
   getAllUsers,
   markUserAsDeleted,
   AdminAddUser,
@@ -34,7 +33,6 @@ usersRouter.put("/mark-deleted/:id", authenticateToken, markUserAsDeleted);
 
 // for admin
 usersRouter.get("/all", authenticateToken, getAllUsers);
-usersRouter.post("/add", addUser);
 usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
 usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
 usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);

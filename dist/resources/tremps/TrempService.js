@@ -41,7 +41,7 @@ function createTremp(clientData) {
         const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount, note } = clientData;
         const creatorIdObj = new mongodb_1.ObjectId(creator_id);
         const groupIdObj = new mongodb_1.ObjectId(group_id);
-        const fullHour = hour + ':00';
+        const fullHour = reformatHour(hour);
         const today = getTodayDate();
         const createSingleRide = (rideDate, fromRoute, toRoute) => {
             return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount, note);
@@ -73,6 +73,9 @@ function createTremp(clientData) {
     });
 }
 exports.createTremp = createTremp;
+function reformatHour(hour) {
+    return hour + ':00';
+}
 function getTodayDate() {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
