@@ -3,10 +3,10 @@ import * as GroupService from './GroupService';
 import GroupModel from "./GroupModel";
 import { NotFoundException } from '../../middleware/HttpException';
 
-
-export async function getAllGroups(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getGroupsUserNotConnected(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const groups = await GroupService.getAllGroups();
+    const { user_id,type} = req.body;
+    const groups = await GroupService.getGroupsUserNotConnected(user_id,type);
     res.status(200).json({ status: true, data: groups });
   } catch (err) {
     next(err);
@@ -26,6 +26,45 @@ export async function getGroupById(req: Request, res: Response, next: NextFuncti
   }
 }
 
+export async function getConnectedGroups(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id } = req.params;
+    const groups = await GroupService.getConnectedGroups(user_id);
+    res.status(200).json({ status: true, data: groups });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function addGroupToUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id,group_id } = req.body;
+    const groupToAdd  = await GroupService.addGroupToUser(user_id,group_id);
+    res.status(200).json({ status: true, message: `Successfully signed up for the group ${groupToAdd.group_name}!`  });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function removeGroupFromUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id, group_id } = req.body;
+    const message = await GroupService.removeGroupFromUser(user_id, group_id);
+    res.status(200).json({ status: true, message: message });
+  } catch (err) {
+    next(err);
+  }
+}
+
+//admin
+export async function getAllGroups(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const groups = await GroupService.getAllGroups();
+    res.status(200).json({ status: true, data: groups });
+  } catch (err) {
+    next(err);
+  }
+}
 export async function deleteGroupById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -35,7 +74,6 @@ export async function deleteGroupById(req: Request, res: Response, next: NextFun
     next(err);
   }
 }
-
 export async function markGroupAsDeleted(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -45,7 +83,6 @@ export async function markGroupAsDeleted(req: Request, res: Response, next: Next
     next(err);
   }
 }
-
 export async function updateGroupDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
@@ -56,7 +93,6 @@ export async function updateGroupDetails(req: Request, res: Response, next: Next
     next(err);
   }
 }
-
 export async function addGroup(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const newGroup = new GroupModel(req.body);

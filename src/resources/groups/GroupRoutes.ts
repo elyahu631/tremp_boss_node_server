@@ -6,7 +6,11 @@ import {
   deleteGroupById,
   markGroupAsDeleted,
   addGroup,
-  updateGroupDetails
+  updateGroupDetails,
+  getGroupsUserNotConnected,
+  getConnectedGroups,
+  addGroupToUser,
+  removeGroupFromUser
 } from "./GroupController";
 import multer from "multer";
 import multerConfig from "../../config/multerConfig";
@@ -16,8 +20,14 @@ const upload = multer(multerConfig);
 
 const groupRoutes: Router = express.Router();
 
-groupRoutes.get("/all", authenticateToken, getAllGroups);
 groupRoutes.get("/getById/:id", authenticateToken, getGroupById);
+groupRoutes.post("/groups-user-not-connected", authenticateToken, getGroupsUserNotConnected); // הצגת כל הקבוצות שהוא לא התחבר אליהן
+groupRoutes.get("/get-connected-groups/:user_id", authenticateToken, getConnectedGroups);
+groupRoutes.put("/add-group-to-user", authenticateToken, addGroupToUser);
+groupRoutes.put("/remove-group-from-user", authenticateToken, removeGroupFromUser);
+
+// admin
+groupRoutes.get("/all", authenticateToken, getAllGroups);
 groupRoutes.delete("/delete/:id", authenticateToken, deleteGroupById);
 groupRoutes.put("/markDeleted/:id", authenticateToken, markGroupAsDeleted);
 groupRoutes.post("/add-group", authenticateToken,upload.single('image_URL'), addGroup);

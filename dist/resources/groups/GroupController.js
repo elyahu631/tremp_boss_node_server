@@ -35,14 +35,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getGroupById = exports.getAllGroups = void 0;
+exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.getGroupById = exports.getGroupsUserNotConnected = void 0;
 const GroupService = __importStar(require("./GroupService"));
 const GroupModel_1 = __importDefault(require("./GroupModel"));
 const HttpException_1 = require("../../middleware/HttpException");
-function getAllGroups(req, res, next) {
+function getGroupsUserNotConnected(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const groups = yield GroupService.getAllGroups();
+            const { user_id, type } = req.body;
+            const groups = yield GroupService.getGroupsUserNotConnected(user_id, type);
             res.status(200).json({ status: true, data: groups });
         }
         catch (err) {
@@ -50,7 +51,7 @@ function getAllGroups(req, res, next) {
         }
     });
 }
-exports.getAllGroups = getAllGroups;
+exports.getGroupsUserNotConnected = getGroupsUserNotConnected;
 function getGroupById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -67,6 +68,58 @@ function getGroupById(req, res, next) {
     });
 }
 exports.getGroupById = getGroupById;
+function getConnectedGroups(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id } = req.params;
+            const groups = yield GroupService.getConnectedGroups(user_id);
+            res.status(200).json({ status: true, data: groups });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getConnectedGroups = getConnectedGroups;
+function addGroupToUser(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id, group_id } = req.body;
+            const groupToAdd = yield GroupService.addGroupToUser(user_id, group_id);
+            res.status(200).json({ status: true, message: `Successfully signed up for the group ${groupToAdd.group_name}!` });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.addGroupToUser = addGroupToUser;
+function removeGroupFromUser(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id, group_id } = req.body;
+            const message = yield GroupService.removeGroupFromUser(user_id, group_id);
+            res.status(200).json({ status: true, message: message });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.removeGroupFromUser = removeGroupFromUser;
+//admin
+function getAllGroups(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const groups = yield GroupService.getAllGroups();
+            res.status(200).json({ status: true, data: groups });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getAllGroups = getAllGroups;
 function deleteGroupById(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
