@@ -32,6 +32,7 @@ const mongodb_1 = require("mongodb");
 const sendNotification_1 = require("../../services/sendNotification");
 const HttpException_1 = require("../../middleware/HttpException");
 const TrempRequestValidation_1 = require("./TrempRequestValidation");
+const TimeService_1 = require("../../services/TimeService");
 const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
 // createTremp
@@ -275,11 +276,19 @@ function getUserTremps(user_id, tremp_type) {
         const userId = new mongodb_1.ObjectId(user_id);
         const primaryType = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
         const secondaryType = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
-        const driverTremps = (yield trempDataAccess.FindAll({ creator_id: userId, tremp_type: primaryType, deleted: false }));
+        const currentDate = (0, TimeService_1.getCurrentTimeInIsrael)();
+        currentDate.setUTCHours(0, 0, 0, 0);
+        const driverTremps = (yield trempDataAccess.FindAll({
+            creator_id: userId,
+            tremp_type: primaryType,
+            deleted: false,
+            tremp_time: { $gte: currentDate } // Only include tremps with a date greater than or equal to the current date
+        }));
         const hitchhikerTremps = (yield trempDataAccess.FindAll({
             $and: [
                 { "users_in_tremp.user_id": userId },
-                { "users_in_tremp.is_approved": { $ne: 'canceled' } }
+                { "users_in_tremp.is_approved": { $ne: 'canceled' } },
+                { tremp_time: { $gte: currentDate } }
             ],
             tremp_type: secondaryType,
             deleted: false
@@ -413,11 +422,14 @@ function getApprovedTremps(user_id, tremp_type) {
         const userId = new mongodb_1.ObjectId(user_id);
         const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
         const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
+        const currentDate = (0, TimeService_1.getCurrentTimeInIsrael)();
+        currentDate.setUTCHours(0, 0, 0, 0);
         // First, find the tramps where the user is the creator and has type 'first' and there is
         // at least one different user who is approved and type 'second'
         const createdByUserQuery = {
             creator_id: userId,
             tremp_type: first,
+            tremp_tyme: currentDate,
             "users_in_tremp": {
                 "$elemMatch": {
                     "user_id": { "$ne": userId },
@@ -429,6 +441,7 @@ function getApprovedTremps(user_id, tremp_type) {
         // Then, find the tramps where the user has joined as type 'second' and is approved
         const joinedByUserQuery = {
             tremp_type: second,
+            tremp_tyme: currentDate,
             "users_in_tremp": {
                 "$elemMatch": {
                     "user_id": userId,

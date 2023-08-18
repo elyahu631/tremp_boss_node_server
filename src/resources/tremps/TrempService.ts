@@ -7,6 +7,7 @@ import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp, Route } from '.
 import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../../middleware/HttpException';
 import { validateTrempRequest } from './TrempRequestValidation';
+import { getCurrentTimeInIsrael } from '../../services/TimeService';
 
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
@@ -15,14 +16,14 @@ const userDataAccess = new UserDataAccess();
 export async function createTremp(clientData: TrempRequest) {
   validateTrempRequest(clientData);
 
-  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount,note} = clientData;
+  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount, note } = clientData;
   const creatorIdObj = new ObjectId(creator_id);
   const groupIdObj = new ObjectId(group_id);
   const fullHour = reformatHour(hour)
   const today = getTodayDate()
 
   const createSingleRide = (rideDate: Date, fromRoute: typeof from_route, toRoute: typeof to_route) => {
-    return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount,note);
+    return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount, note);
   };
 
   const createAndHandleRides = async (date: Date) => {
@@ -54,7 +55,7 @@ export async function createTremp(clientData: TrempRequest) {
     }
   }
 }
-function reformatHour(hour:string) :string {
+function reformatHour(hour: string): string {
   return hour + ':00';
 }
 function getTodayDate() {
@@ -103,7 +104,7 @@ async function handleReturnDrive(date: Date, hour: string, fullReturnHour: strin
   await createSingleRide(returnDate, from_route, to_route);
 }
 async function createSingleTremp(date: Date, creatorIdObj: ObjectId, groupIdObj: ObjectId, tremp_type:
-  string, from_route: Route, to_route: Route, seats_amount: number,note: string) {
+  string, from_route: Route, to_route: Route, seats_amount: number, note: string) {
   const newTremp = new TrempModel({
     creator_id: creatorIdObj,
     group_id: groupIdObj,
@@ -262,11 +263,21 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
   const primaryType = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
   const secondaryType = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
 
-  const driverTremps = (await trempDataAccess.FindAll({ creator_id: userId, tremp_type: primaryType, deleted: false })) as unknown as Tremp[];
+  const currentDate = getCurrentTimeInIsrael()
+  currentDate.setUTCHours(0, 0, 0, 0);
+
+  const driverTremps = (await trempDataAccess.FindAll({
+    creator_id: userId,
+    tremp_type: primaryType,
+    deleted: false,
+    tremp_time: { $gte: currentDate } // Only include tremps with a date greater than or equal to the current date
+  })) as unknown as Tremp[];
+
   const hitchhikerTremps = (await trempDataAccess.FindAll({
     $and: [
       { "users_in_tremp.user_id": userId },
-      { "users_in_tremp.is_approved": { $ne: 'canceled' } }
+      { "users_in_tremp.is_approved": { $ne: 'canceled' } },
+      { tremp_time: { $gte: currentDate } }
     ],
     tremp_type: secondaryType,
     deleted: false
@@ -410,11 +421,14 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
   const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
 
+  const currentDate = getCurrentTimeInIsrael()
+  currentDate.setUTCHours(0, 0, 0, 0);
   // First, find the tramps where the user is the creator and has type 'first' and there is
   // at least one different user who is approved and type 'second'
   const createdByUserQuery = {
     creator_id: userId,
     tremp_type: first,
+    tremp_tyme: currentDate,
     "users_in_tremp": {
       "$elemMatch": {
         "user_id": { "$ne": userId },
@@ -428,6 +442,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   // Then, find the tramps where the user has joined as type 'second' and is approved
   const joinedByUserQuery = {
     tremp_type: second,
+    tremp_tyme: currentDate,
     "users_in_tremp": {
       "$elemMatch": {
         "user_id": userId,

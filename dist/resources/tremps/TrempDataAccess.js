@@ -38,9 +38,9 @@ class TrempDataAccess {
             return yield db.FindAll(TrempDataAccess.collection, query, projection, { tremp_time: 1 });
         });
     }
-    FindAll(query = {}) {
+    FindAll(query = {}, projection = {}, sort = { tremp_time: 1 }) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db.FindAll(TrempDataAccess.collection, query);
+            return yield db.FindAll(TrempDataAccess.collection, query, projection, sort);
         });
     }
     addUserToTremp(tremp_id, query) {

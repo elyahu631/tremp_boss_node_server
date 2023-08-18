@@ -28,8 +28,8 @@ class TrempDataAccess {
     return await db.FindAll(TrempDataAccess.collection, query, projection,{ tremp_time: 1 });
   }
 
-  async FindAll(query = {}) {
-    return await db.FindAll(TrempDataAccess.collection, query);
+  async FindAll(query = {}, projection = {},sort = { tremp_time: 1 }) {
+    return await db.FindAll(TrempDataAccess.collection, query, projection,sort);
   }
 
   async addUserToTremp(tremp_id: string, query: UserInTrempUpdateQuery) {
