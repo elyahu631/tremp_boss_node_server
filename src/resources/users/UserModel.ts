@@ -23,23 +23,7 @@ class UserModel {
   notification_token ?: string;
 
 
-  constructor(userData: {
-    email?: string;
-    password?: string;
-    phone_number?: string;
-    image_URL?: string;
-    first_name?: string;
-    last_name?: string;
-    gender?: string;
-    coins?: number;
-    createdAt?: Date;
-    updatedAt?: Date;
-    last_login_date?: Date;
-    groups?: ObjectId[];
-    status?: string;
-    deleted ?: boolean;
-    notification_token ?: string;
-  }) {
+  constructor(userData: Partial<UserModel>) {
     this.email = userData.email;
     this.password = userData.password;
     this.phone_number = userData.phone_number;

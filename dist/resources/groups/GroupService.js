@@ -12,15 +12,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImageToFirebaseAndUpdateGroup = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.getGroupsUserNotConnected = exports.getGroupById = void 0;
+exports.uploadImageToFirebaseAndUpdateGroup = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.addAdminToGroup = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.allGroupsWithUserStatus = exports.getGroupsUserNotConnected = exports.getGroupById = void 0;
 const GroupDataAccess_1 = __importDefault(require("./GroupDataAccess"));
 const mongodb_1 = require("mongodb");
 const fileUpload_1 = require("../../firebase/fileUpload");
 const HttpException_1 = require("../../middleware/HttpException");
 const mongodb_2 = require("mongodb");
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
+const UserGroupsDataAccess_1 = __importDefault(require("../usersGroups/UserGroupsDataAccess"));
+const UserGroupsModel_1 = __importDefault(require("../usersGroups/UserGroupsModel"));
 const groupDataAccess = new GroupDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
+const userGroupsDataAccess = new UserGroupsDataAccess_1.default();
 function getGroupById(id) {
     return __awaiter(this, void 0, void 0, function* () {
         return groupDataAccess.FindById(id);
@@ -48,6 +51,54 @@ function getGroupsUserNotConnected(userId, type) {
     });
 }
 exports.getGroupsUserNotConnected = getGroupsUserNotConnected;
+function findUserGroups(userIdAsObj, status) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const groups = yield userGroupsDataAccess.FindAllUserGroups({ user_id: userIdAsObj, is_approved: status }, { group_id: 1 });
+        return groups.map(group => group.group_id.toString()); // Extract the group_id as a string
+    });
+}
+function getGroupDetailsWithUsersCount(groupId, connectedGroups) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const group = yield groupDataAccess.FindById(groupId);
+        group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
+        return group;
+    });
+}
+function getDetailedGroups(groupIds, connectedGroups) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield Promise.all(groupIds.map(groupId => getGroupDetailsWithUsersCount(groupId, connectedGroups)));
+    });
+}
+function getNotJoinGroups(allGroups, connectedGroups, pendingGroups) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return allGroups.filter(group => {
+            return !connectedGroups.some(cg => cg === group._id.toString()) &&
+                !pendingGroups.some(pg => pg === group._id.toString());
+        });
+    });
+}
+function allGroupsWithUserStatus(userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = yield userDataAccess.FindById(userId);
+        assertUserHasGroups(user);
+        const userIdAsObj = new mongodb_1.ObjectId(userId);
+        const connectedGroups = yield findUserGroups(userIdAsObj, 'approved');
+        const pendingGroups = yield findUserGroups(userIdAsObj, 'pending');
+        const allGroups = yield groupDataAccess.FindAllGroups();
+        const connectedGroupsDetails = yield getDetailedGroups(connectedGroups, connectedGroups);
+        const pendingGroupsDetails = yield getDetailedGroups(pendingGroups, connectedGroups);
+        const notJoinGroups = yield getNotJoinGroups(allGroups, connectedGroups, pendingGroups);
+        notJoinGroups.forEach(group => {
+            group.amount_of_users = connectedGroups.filter(cg => cg === group._id.toString()).length;
+        });
+        return {
+            approved: connectedGroupsDetails,
+            pending: pendingGroupsDetails,
+            not_join: notJoinGroups,
+        };
+    });
+}
+exports.allGroupsWithUserStatus = allGroupsWithUserStatus;
 function getConnectedGroups(userId) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = yield userDataAccess.FindById(userId);
@@ -72,10 +123,20 @@ function addGroupToUser(userId, groupId) {
         if (user.groups.some((group) => group.toString() === groupId)) {
             throw new HttpException_1.BadRequestException("Group already connected to the user.");
         }
+        if (groupToAdd.type === "PRIVATE") {
+            const query = { user_id: new mongodb_1.ObjectId(userId), group_id: new mongodb_1.ObjectId(groupId) };
+            const userGroupReq = new UserGroupsModel_1.default(query);
+            const request = yield userGroupsDataAccess.FindAllUserGroups(query);
+            if (request.length > 0) {
+                throw new HttpException_1.BadRequestException("You have already requested to join.");
+            }
+            yield userGroupsDataAccess.InsertOne(userGroupReq);
+            return `Your request to join ${groupToAdd.group_name} has been successfully sent.`;
+        }
         // Add the group to the user's groups
         user.groups.push(new mongodb_1.ObjectId(groupId));
-        yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
-        return groupToAdd;
+        yield userDataAccess.UpdateUserDetails((user._id).toString(), user);
+        return `Successfully signed up for the group ${groupToAdd.group_name}`;
     });
 }
 exports.addGroupToUser = addGroupToUser;
@@ -100,6 +161,36 @@ function removeGroupFromUser(userId, groupId) {
     });
 }
 exports.removeGroupFromUser = removeGroupFromUser;
+function addAdminToGroup(adminId, new_admin_email, groupId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const users = yield userDataAccess.FindAllUsers({ email: new_admin_email }, { _id: 1, groups: 1 });
+        if (users.length === 0) {
+            throw new HttpException_1.NotFoundException("User with given email not found.");
+        }
+        const user = users[0];
+        assertUserHasGroups(user);
+        const userId = user._id;
+        // Check if group ID is valid
+        const group = yield groupDataAccess.FindById(groupId);
+        if (!group || group.deleted) {
+            throw new HttpException_1.NotFoundException("Group not found or deleted.");
+        }
+        // Check if user is connected to the group
+        const groupIndex = user.groups.findIndex((group) => group.toString() === groupId);
+        if (groupIndex === -1) {
+            throw new HttpException_1.BadRequestException("User not connected to the Group.");
+        }
+        if (!group.admin_ids.includes(new mongodb_1.ObjectId(adminId))) {
+            throw new HttpException_1.UnauthorizedException("User not Unauthorized to add admin to this group");
+        }
+        if (!group.admin_ids.includes(userId)) {
+            group.admin_ids.push(userId);
+        }
+        yield groupDataAccess.UpdateGroup(groupId.toString(), group);
+        return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
+    });
+}
+exports.addAdminToGroup = addAdminToGroup;
 function getAllGroups() {
     return __awaiter(this, void 0, void 0, function* () {
         return groupDataAccess.FindAllGroups({ deleted: false, type: { $ne: "GENERAL" } });

@@ -2,12 +2,15 @@ import GroupDataAccess from "./GroupDataAccess";
 import GroupModel from "./GroupModel";
 import { ObjectId } from 'mongodb';
 import { uploadImageToFirebase } from '../../firebase/fileUpload';
-import { BadRequestException, InternalServerException, NotFoundException } from "../../middleware/HttpException";
+import { BadRequestException, InternalServerException, NotFoundException, UnauthorizedException } from "../../middleware/HttpException";
 import { MongoError } from "mongodb";
 import UserDataAccess from "../users/UserDataAccess";
+import UserGroupsDataAccess from "../usersGroups/UserGroupsDataAccess";
+import UserGroupsModel from "../usersGroups/UserGroupsModel";
 
 const groupDataAccess = new GroupDataAccess();
 const userDataAccess = new UserDataAccess();
+const userGroupsDataAccess = new UserGroupsDataAccess();
 
 export async function getGroupById(id: string) {
   return groupDataAccess.FindById(id);
@@ -36,6 +39,58 @@ export async function getGroupsUserNotConnected(userId: string, type: string) {
   return groups;
 }
 
+type UserGroup = string;
+
+async function findUserGroups(userIdAsObj: ObjectId, status: string): Promise<UserGroup[]> {
+  const groups = await userGroupsDataAccess.FindAllUserGroups({ user_id: userIdAsObj, is_approved: status }, { group_id: 1 });
+  return groups.map(group => group.group_id.toString()); // Extract the group_id as a string
+}
+
+async function getGroupDetailsWithUsersCount(groupId: UserGroup, connectedGroups: UserGroup[]) {
+  const group = await groupDataAccess.FindById(groupId);
+  group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
+  return group;
+}
+
+async function getDetailedGroups(groupIds: UserGroup[], connectedGroups: UserGroup[]) {
+  return await Promise.all(groupIds.map(groupId => getGroupDetailsWithUsersCount(groupId, connectedGroups)));
+}
+
+async function getNotJoinGroups(allGroups: any[], connectedGroups: UserGroup[], pendingGroups: UserGroup[]) {
+  return allGroups.filter(group => {
+    return !connectedGroups.some(cg => cg === group._id.toString()) &&
+      !pendingGroups.some(pg => pg === group._id.toString());
+  });
+}
+
+export async function allGroupsWithUserStatus(userId: string) {
+  const user = await userDataAccess.FindById(userId);
+  assertUserHasGroups(user);
+  const userIdAsObj = new ObjectId(userId);
+
+  const connectedGroups = await findUserGroups(userIdAsObj, 'approved');
+  const pendingGroups = await findUserGroups(userIdAsObj, 'pending');
+  const allGroups = await groupDataAccess.FindAllGroups();
+
+  const connectedGroupsDetails = await getDetailedGroups(connectedGroups, connectedGroups);
+  const pendingGroupsDetails = await getDetailedGroups(pendingGroups, connectedGroups);
+  const notJoinGroups = await getNotJoinGroups(allGroups, connectedGroups, pendingGroups);
+
+  notJoinGroups.forEach(group => {
+    group.amount_of_users = connectedGroups.filter(cg => cg === group._id.toString()).length;
+  });
+
+  return {
+      approved: connectedGroupsDetails,
+      pending: pendingGroupsDetails,
+      not_join: notJoinGroups,
+  };
+}
+
+
+
+
+
 export async function getConnectedGroups(userId: string) {
   const user = await userDataAccess.FindById(userId);
   assertUserHasGroups(user);
@@ -61,11 +116,22 @@ export async function addGroupToUser(userId: string, groupId: string) {
     throw new BadRequestException("Group already connected to the user.");
   }
 
+  if (groupToAdd.type === "PRIVATE") {
+    const query = { user_id: new ObjectId(userId), group_id: new ObjectId(groupId) };
+    const userGroupReq = new UserGroupsModel(query)
+    const request = await userGroupsDataAccess.FindAllUserGroups(query)
+    if (request.length > 0) {
+      throw new BadRequestException("You have already requested to join.");
+    }
+    await userGroupsDataAccess.InsertOne(userGroupReq)
+    return `Your request to join ${groupToAdd.group_name} has been successfully sent.`;
+  }
+
   // Add the group to the user's groups
   user.groups.push(new ObjectId(groupId));
-  await userDataAccess.UpdateUserDetails(user._id.toString(),user);
+  await userDataAccess.UpdateUserDetails((user._id).toString(), user);
 
-  return groupToAdd;
+  return `Successfully signed up for the group ${groupToAdd.group_name}`;
 }
 
 export async function removeGroupFromUser(userId: string, groupId: string): Promise<string> {
@@ -90,6 +156,43 @@ export async function removeGroupFromUser(userId: string, groupId: string): Prom
   await userDataAccess.UpdateUserDetails(user._id.toString(), user);
 
   return `Successfully disconnected from the group ${groupToRemove.group_name}`;
+}
+
+export async function addAdminToGroup(adminId: string, new_admin_email: string, groupId: string): Promise<string> {
+
+  const users = await userDataAccess.FindAllUsers({ email: new_admin_email }, { _id: 1, groups: 1 });
+
+  if (users.length === 0) {
+    throw new NotFoundException("User with given email not found.");
+  }
+
+  const user = users[0];
+  assertUserHasGroups(user);
+  const userId = user._id;
+
+  // Check if group ID is valid
+  const group = await groupDataAccess.FindById(groupId);
+  if (!group || group.deleted) {
+    throw new NotFoundException("Group not found or deleted.");
+  }
+
+  // Check if user is connected to the group
+  const groupIndex = user.groups.findIndex((group: ObjectId) => group.toString() === groupId);
+  if (groupIndex === -1) {
+    throw new BadRequestException("User not connected to the Group.");
+  }
+
+  if (!group.admin_ids.includes(new ObjectId(adminId))) {
+    throw new UnauthorizedException("User not Unauthorized to add admin to this group")
+  }
+
+  if (!group.admin_ids.includes(userId)) {
+    group.admin_ids.push(userId);
+  }
+
+  await groupDataAccess.UpdateGroup(groupId.toString(), group);
+
+  return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
 }
 
 

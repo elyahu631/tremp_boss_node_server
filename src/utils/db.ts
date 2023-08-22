@@ -81,6 +81,7 @@ class DB {
 
   async aggregate(collection: string, pipeline = [{}]) {
     try {
+      await this.client.connect();
       return await this.client.db(this.dbName).collection(collection).aggregate(pipeline).toArray();
     } catch (error) {
       throw error;

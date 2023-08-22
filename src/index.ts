@@ -9,6 +9,7 @@ import giftRoutes from './resources/gifts/GiftRoutes';
 import groupRoutes from './resources/groups/GroupRoutes';
 import { jsonErrorHandler } from './middleware/jsonErrorHandler';
 import kpiRoutes from './resources/kpis/KpiRoutes';
+import userGroupsRoutes from './resources/usersGroups/UserGroupsRoutes';
 
 const app = express();
 app.use(cors());// enable CORS 
@@ -25,6 +26,7 @@ app.use('/api/adminUsers', adminRoutes);
 app.use("/api/tremps", trempRoutes);
 app.use('/api/gifts', giftRoutes);
 app.use('/api/groups', groupRoutes);
+app.use('/api/user-groups', userGroupsRoutes);
 app.use('/api/kpis', kpiRoutes);
 
 

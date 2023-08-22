@@ -8,18 +8,20 @@ class GroupModel {
   image_URL: string;
   location: Array<{ latitude: number; longitude: number; }>;
   active: string;
+  admins_ids: ObjectId[];
   deleted: boolean;
 
-  constructor(groupData: any) {
+  constructor(groupData:  Partial<GroupModel>) {
     this._id = groupData._id || new ObjectId();
     this.group_name = groupData.group_name;
     this.type = groupData.type;
     this.image_URL = groupData.image_URL;
     this.location = groupData.location;
     this.active = groupData.active || 'active';
+    this.admins_ids = groupData.admins_ids || [];
     this.deleted = groupData.deleted || false;
   }
-
+  
   validateGroup() {
     const schema = Joi.object({
       _id: Joi.any().optional(),
@@ -41,6 +43,7 @@ class GroupModel {
       active: Joi.string()
         .required()
         .valid('active', 'inactive'),
+      admins_ids: Joi.array().items(Joi.string()).optional(),
       deleted: Joi.boolean().required(),
     });
 

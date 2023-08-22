@@ -6,7 +6,9 @@ import TrempModel from '../resources/tremps/TrempModel';
 import GiftModel from '../resources/gifts/GiftModel';
 import { UserInTrempUpdateQuery } from '../resources/tremps/TrempInterfaces';
 import GroupModel from '../resources/groups/GroupModel';
+import UserGroupsModel from '../resources/usersGroups/UserGroupsModel';
 
-type Model = UserModel | AdminModel | TrempModel | UserInTrempUpdateQuery | GiftModel |GroupModel; 
+type Model = UserModel | AdminModel | TrempModel 
+| UserInTrempUpdateQuery | GiftModel |GroupModel| UserGroupsModel; 
 
 export type { Model };

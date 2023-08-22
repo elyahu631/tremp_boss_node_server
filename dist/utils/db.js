@@ -100,6 +100,7 @@ class DB {
     aggregate(collection, pipeline = [{}]) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
+                yield this.client.connect();
                 return yield this.client.db(this.dbName).collection(collection).aggregate(pipeline).toArray();
             }
             catch (error) {

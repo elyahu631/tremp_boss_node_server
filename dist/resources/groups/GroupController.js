@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.getGroupById = exports.getGroupsUserNotConnected = void 0;
+exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.addAdminToGroup = exports.allGroupsWithUserStatus = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.getGroupById = exports.getGroupsUserNotConnected = void 0;
 const GroupService = __importStar(require("./GroupService"));
 const GroupModel_1 = __importDefault(require("./GroupModel"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -85,8 +85,8 @@ function addGroupToUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { user_id, group_id } = req.body;
-            const groupToAdd = yield GroupService.addGroupToUser(user_id, group_id);
-            res.status(200).json({ status: true, message: `Successfully signed up for the group ${groupToAdd.group_name}!` });
+            const message = yield GroupService.addGroupToUser(user_id, group_id);
+            res.status(200).json({ status: true, message: message });
         }
         catch (err) {
             next(err);
@@ -107,6 +107,32 @@ function removeGroupFromUser(req, res, next) {
     });
 }
 exports.removeGroupFromUser = removeGroupFromUser;
+function allGroupsWithUserStatus(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id } = req.body;
+            const data = yield GroupService.allGroupsWithUserStatus(user_id);
+            res.status(200).json({ status: true, data });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.allGroupsWithUserStatus = allGroupsWithUserStatus;
+function addAdminToGroup(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { admin_id, new_admin_email, group_id } = req.body;
+            const message = yield GroupService.addAdminToGroup(admin_id, new_admin_email, group_id);
+            res.status(200).json({ status: true, message: message });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.addAdminToGroup = addAdminToGroup;
 //admin
 function getAllGroups(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {

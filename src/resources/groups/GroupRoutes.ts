@@ -10,7 +10,9 @@ import {
   getGroupsUserNotConnected,
   getConnectedGroups,
   addGroupToUser,
-  removeGroupFromUser
+  removeGroupFromUser,
+  addAdminToGroup,
+  allGroupsWithUserStatus
 } from "./GroupController";
 import multer from "multer";
 import multerConfig from "../../config/multerConfig";
@@ -22,9 +24,12 @@ const groupRoutes: Router = express.Router();
 
 groupRoutes.get("/getById/:id", authenticateToken, getGroupById);
 groupRoutes.post("/groups-user-not-connected", authenticateToken, getGroupsUserNotConnected); // הצגת כל הקבוצות שהוא לא התחבר אליהן
-groupRoutes.get("/get-connected-groups/:user_id", authenticateToken, getConnectedGroups);
-groupRoutes.put("/add-group-to-user", authenticateToken, addGroupToUser);
-groupRoutes.put("/remove-group-from-user", authenticateToken, removeGroupFromUser);
+groupRoutes.get("/groups-user-connected/:user_id", authenticateToken, getConnectedGroups);
+groupRoutes.put("/join-group-request", authenticateToken, addGroupToUser);
+groupRoutes.put("/disconnect-from-group", authenticateToken, removeGroupFromUser);
+groupRoutes.put("/add-admin-to-group", authenticateToken, addAdminToGroup);
+groupRoutes.post("/all-groups-with-user-status", authenticateToken, allGroupsWithUserStatus);
+
 
 // admin
 groupRoutes.get("/all", authenticateToken, getAllGroups);

@@ -39,8 +39,8 @@ export async function getConnectedGroups(req: Request, res: Response, next: Next
 export async function addGroupToUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { user_id,group_id } = req.body;
-    const groupToAdd  = await GroupService.addGroupToUser(user_id,group_id);
-    res.status(200).json({ status: true, message: `Successfully signed up for the group ${groupToAdd.group_name}!`  });
+    const message  = await GroupService.addGroupToUser(user_id,group_id);
+    res.status(200).json({ status: true, message: message  });
   } catch (err) {
     next(err);
   }
@@ -50,6 +50,24 @@ export async function removeGroupFromUser(req: Request, res: Response, next: Nex
   try {
     const { user_id, group_id } = req.body;
     const message = await GroupService.removeGroupFromUser(user_id, group_id);
+    res.status(200).json({ status: true, message: message });
+  } catch (err) {
+    next(err);
+  }
+}
+export async function allGroupsWithUserStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const {user_id } = req.body;
+    const data = await GroupService.allGroupsWithUserStatus(user_id);
+    res.status(200).json({ status: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+export async function addAdminToGroup(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const {admin_id, new_admin_email, group_id } = req.body;
+    const message = await GroupService.addAdminToGroup(admin_id,new_admin_email, group_id);
     res.status(200).json({ status: true, message: message });
   } catch (err) {
     next(err);

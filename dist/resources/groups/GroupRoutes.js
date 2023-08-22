@@ -13,9 +13,11 @@ const upload = (0, multer_1.default)(multerConfig_1.default);
 const groupRoutes = express_1.default.Router();
 groupRoutes.get("/getById/:id", auth_1.authenticateToken, GroupController_1.getGroupById);
 groupRoutes.post("/groups-user-not-connected", auth_1.authenticateToken, GroupController_1.getGroupsUserNotConnected); // הצגת כל הקבוצות שהוא לא התחבר אליהן
-groupRoutes.get("/get-connected-groups/:user_id", auth_1.authenticateToken, GroupController_1.getConnectedGroups);
-groupRoutes.put("/add-group-to-user", auth_1.authenticateToken, GroupController_1.addGroupToUser);
-groupRoutes.put("/remove-group-from-user", auth_1.authenticateToken, GroupController_1.removeGroupFromUser);
+groupRoutes.get("/groups-user-connected/:user_id", auth_1.authenticateToken, GroupController_1.getConnectedGroups);
+groupRoutes.put("/join-group-request", auth_1.authenticateToken, GroupController_1.addGroupToUser);
+groupRoutes.put("/disconnect-from-group", auth_1.authenticateToken, GroupController_1.removeGroupFromUser);
+groupRoutes.put("/add-admin-to-group", auth_1.authenticateToken, GroupController_1.addAdminToGroup);
+groupRoutes.post("/all-groups-with-user-status", auth_1.authenticateToken, GroupController_1.allGroupsWithUserStatus);
 // admin
 groupRoutes.get("/all", auth_1.authenticateToken, GroupController_1.getAllGroups);
 groupRoutes.delete("/delete/:id", auth_1.authenticateToken, GroupController_1.deleteGroupById);
