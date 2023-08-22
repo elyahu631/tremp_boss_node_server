@@ -15,33 +15,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
 class GiftDataAccess {
-    constructor() {
-        this.db = new db_1.default();
-    }
     FindAllGifts(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.FindAll(GiftDataAccess.collection, query);
+            return yield db_1.default.FindAll(GiftDataAccess.collection, query);
         });
     }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.FindByID(GiftDataAccess.collection, id);
+            return yield db_1.default.FindByID(GiftDataAccess.collection, id);
         });
     }
     InsertOne(gift) {
         return __awaiter(this, void 0, void 0, function* () {
             gift.validateGift();
-            return yield this.db.Insert(GiftDataAccess.collection, gift);
+            return yield db_1.default.Insert(GiftDataAccess.collection, gift);
         });
     }
     DeleteGiftById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.DeleteById(GiftDataAccess.collection, id);
+            return yield db_1.default.DeleteById(GiftDataAccess.collection, id);
         });
     }
     UpdateGift(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.Update(GiftDataAccess.collection, id, updateData);
+            return yield db_1.default.Update(GiftDataAccess.collection, id, updateData);
         });
     }
 }

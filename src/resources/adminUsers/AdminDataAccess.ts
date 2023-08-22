@@ -1,6 +1,6 @@
 // src/resources/adminUsers/AdminDataAccess.ts
 
-import DB from '../../utils/db';
+import db from '../../utils/db';
 import AdminModel from './AdminModel';
 
 class AdminDataAccess {
@@ -8,20 +8,20 @@ class AdminDataAccess {
 
   async FindAllUsers(query = {}, projection = {}) {
 
-    return await new DB().FindAll(AdminDataAccess.collection, query, projection);
+    return await db.FindAll(AdminDataAccess.collection, query, projection);
   }
 
   async FindById(id: string) {
-    return await new DB().FindByID(AdminDataAccess.collection, id);
+    return await db.FindByID(AdminDataAccess.collection, id);
   }
 
   async DeleteUserById(id: string) {
-    return await new DB().DeleteById(AdminDataAccess.collection, id);
+    return await db.DeleteById(AdminDataAccess.collection, id);
   }
 
   async InsertOne(admin: AdminModel) {
     admin.validateNewAdmin();
-    return await new DB().Insert(AdminDataAccess.collection, admin);
+    return await db.Insert(AdminDataAccess.collection, admin);
   }
 
   /**
@@ -31,7 +31,7 @@ class AdminDataAccess {
  */
   async UpdateUserDeletionStatus(id: string): Promise<any> {
     try {
-      return await new DB().Update(AdminDataAccess.collection, id, {
+      return await db.Update(AdminDataAccess.collection, id, {
         deleted: true,
         account_activated: false
       });
@@ -41,7 +41,7 @@ class AdminDataAccess {
   }
 
   async UpdateUserDetails(id: string, updateData: Partial<AdminModel>) {
-    return await new DB().Update(AdminDataAccess.collection, id, updateData);
+    return await db.Update(AdminDataAccess.collection, id, updateData);
   }
 }
 

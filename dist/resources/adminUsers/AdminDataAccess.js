@@ -17,23 +17,23 @@ const db_1 = __importDefault(require("../../utils/db"));
 class AdminDataAccess {
     FindAllUsers(query = {}, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().FindAll(AdminDataAccess.collection, query, projection);
+            return yield db_1.default.FindAll(AdminDataAccess.collection, query, projection);
         });
     }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().FindByID(AdminDataAccess.collection, id);
+            return yield db_1.default.FindByID(AdminDataAccess.collection, id);
         });
     }
     DeleteUserById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().DeleteById(AdminDataAccess.collection, id);
+            return yield db_1.default.DeleteById(AdminDataAccess.collection, id);
         });
     }
     InsertOne(admin) {
         return __awaiter(this, void 0, void 0, function* () {
             admin.validateNewAdmin();
-            return yield new db_1.default().Insert(AdminDataAccess.collection, admin);
+            return yield db_1.default.Insert(AdminDataAccess.collection, admin);
         });
     }
     /**
@@ -44,7 +44,7 @@ class AdminDataAccess {
     UpdateUserDeletionStatus(id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield new db_1.default().Update(AdminDataAccess.collection, id, {
+                return yield db_1.default.Update(AdminDataAccess.collection, id, {
                     deleted: true,
                     account_activated: false
                 });
@@ -56,7 +56,7 @@ class AdminDataAccess {
     }
     UpdateUserDetails(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().Update(AdminDataAccess.collection, id, updateData);
+            return yield db_1.default.Update(AdminDataAccess.collection, id, updateData);
         });
     }
 }

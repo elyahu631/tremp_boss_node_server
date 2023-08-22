@@ -14,22 +14,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
 class GroupDataAccess {
-    constructor() {
-        this.db = new db_1.default();
-    }
     FindAllGroups(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.FindAll(GroupDataAccess.collection, query);
+            return yield db_1.default.FindAll(GroupDataAccess.collection, query);
         });
     }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.FindByID(GroupDataAccess.collection, id);
+            return yield db_1.default.FindByID(GroupDataAccess.collection, id);
         });
     }
     DeleteGroupById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.DeleteById(GroupDataAccess.collection, id);
+            return yield db_1.default.DeleteById(GroupDataAccess.collection, id);
         });
     }
     InsertOne(group) {
@@ -44,12 +41,12 @@ class GroupDataAccess {
                 }
             }
             group.validateGroup();
-            return yield this.db.Insert(GroupDataAccess.collection, group);
+            return yield db_1.default.Insert(GroupDataAccess.collection, group);
         });
     }
     UpdateGroup(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.Update(GroupDataAccess.collection, id, updateData);
+            return yield db_1.default.Update(GroupDataAccess.collection, id, updateData);
         });
     }
 }

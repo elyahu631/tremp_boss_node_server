@@ -1,24 +1,20 @@
-import DB from '../../utils/db';
+import db from '../../utils/db';
 import GroupModel from './GroupModel';
 
 class GroupDataAccess {
   static collection = 'Groups';
-  private db: DB;
 
-  constructor() {
-    this.db = new DB();
-  }
 
   async FindAllGroups(query = {}) {
-    return await this.db.FindAll(GroupDataAccess.collection, query);
+    return await db.FindAll(GroupDataAccess.collection, query);
   }
 
   async FindById(id: string) {
-    return await this.db.FindByID(GroupDataAccess.collection, id);
+    return await db.FindByID(GroupDataAccess.collection, id);
   }
 
   async DeleteGroupById(id: string) {
-    return await this.db.DeleteById(GroupDataAccess.collection, id);
+    return await db.DeleteById(GroupDataAccess.collection, id);
   }
 
   async InsertOne(group: GroupModel) {
@@ -31,12 +27,12 @@ class GroupDataAccess {
       }
     }
     group.validateGroup();
-    return await this.db.Insert(GroupDataAccess.collection, group);
+    return await db.Insert(GroupDataAccess.collection, group);
   }
 
 
   async UpdateGroup(id: string, updateData: Partial<GroupModel>) {
-    return await this.db.Update(GroupDataAccess.collection, id, updateData);
+    return await db.Update(GroupDataAccess.collection, id, updateData);
   } 
 }
 

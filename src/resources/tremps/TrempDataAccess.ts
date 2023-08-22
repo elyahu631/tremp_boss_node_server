@@ -1,8 +1,7 @@
 // src/resources/tremps/TrempDataAccess.ts
-import DB from '../../utils/db';
+import db from '../../utils/db';
 import TrempModel from './TrempModel';
 import { UserInTrempUpdateQuery } from './TrempInterfaces';
-const db = new DB();
 
 class TrempDataAccess {
   static collection = 'Tremps';
@@ -41,7 +40,6 @@ class TrempDataAccess {
   }
 
   async Update(id: string, updateQuery: any) {
-    const db = new DB();
     return await db.Update(TrempDataAccess.collection, id, updateQuery);
   }
 

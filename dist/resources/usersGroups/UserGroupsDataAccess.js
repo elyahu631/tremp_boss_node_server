@@ -14,28 +14,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
 class UserGroupsDataAccess {
-    constructor() {
-        this.db = new db_1.default();
-    }
     FindAllUserGroups(query = {}, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.FindAll(UserGroupsDataAccess.collection, query, projection);
+            return yield db_1.default.FindAll(UserGroupsDataAccess.collection, query, projection);
         });
     }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.FindByID(UserGroupsDataAccess.collection, id);
+            return yield db_1.default.FindByID(UserGroupsDataAccess.collection, id);
         });
     }
     InsertOne(userGroups) {
         return __awaiter(this, void 0, void 0, function* () {
             userGroups.validateUserGroupReq();
-            return yield new db_1.default().Insert(UserGroupsDataAccess.collection, userGroups);
+            return yield db_1.default.Insert(UserGroupsDataAccess.collection, userGroups);
         });
     }
     UpdateUserGroups(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.db.Update(UserGroupsDataAccess.collection, id, updateData);
+            return yield db_1.default.Update(UserGroupsDataAccess.collection, id, updateData);
         });
     }
 }

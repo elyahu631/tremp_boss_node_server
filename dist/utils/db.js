@@ -109,5 +109,6 @@ class DB {
         });
     }
 }
-exports.default = DB;
+const db = new DB();
+exports.default = db;
 //# sourceMappingURL=db.js.map

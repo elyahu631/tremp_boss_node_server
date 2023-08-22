@@ -1,7 +1,6 @@
 // src/resources/kpis/KpiDataAccess.ts
 
-import DB from "../../utils/db";
-const db = new DB();
+import db from "../../utils/db";
 class KpiDataAccess {
   static trempCollection = 'Tremps';
   static UserCollection = 'Users';

@@ -17,34 +17,34 @@ const db_1 = __importDefault(require("../../utils/db"));
 class UserDataAccess {
     FindAllUsers(query = {}, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().FindAll(UserDataAccess.collection, query, projection);
+            return yield db_1.default.FindAll(UserDataAccess.collection, query, projection);
         });
     }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().FindByID(UserDataAccess.collection, id);
+            return yield db_1.default.FindByID(UserDataAccess.collection, id);
         });
     }
     DeleteUserById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().DeleteById(UserDataAccess.collection, id);
+            return yield db_1.default.DeleteById(UserDataAccess.collection, id);
         });
     }
     InsertOne(user) {
         return __awaiter(this, void 0, void 0, function* () {
             user.validateUser();
-            return yield new db_1.default().Insert(UserDataAccess.collection, user);
+            return yield db_1.default.Insert(UserDataAccess.collection, user);
         });
     }
     Update(id, updatedUser) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().Update(UserDataAccess.collection, id, updatedUser);
+            return yield db_1.default.Update(UserDataAccess.collection, id, updatedUser);
         });
     }
     UpdateUserDeletionStatus(id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield new db_1.default().Update(UserDataAccess.collection, id, {
+                return yield db_1.default.Update(UserDataAccess.collection, id, {
                     deleted: true,
                     status: "inactive"
                 });
@@ -56,7 +56,7 @@ class UserDataAccess {
     }
     UpdateUserDetails(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield new db_1.default().Update(UserDataAccess.collection, id, updateData);
+            return yield db_1.default.Update(UserDataAccess.collection, id, updateData);
         });
     }
 }

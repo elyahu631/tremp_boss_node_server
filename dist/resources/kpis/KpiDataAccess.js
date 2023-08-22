@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
-const db = new db_1.default();
 class KpiDataAccess {
     getPeopleAndTrempCounts() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -81,7 +80,7 @@ class KpiDataAccess {
                     }
                 }
             ];
-            const result = yield db.aggregate(KpiDataAccess.trempCollection, pipeline);
+            const result = yield db_1.default.aggregate(KpiDataAccess.trempCollection, pipeline);
             return result;
         });
     }
@@ -101,7 +100,7 @@ class KpiDataAccess {
                     $limit: 5
                 }
             ];
-            const popularRoutes = yield db.aggregate(KpiDataAccess.trempCollection, pipeline);
+            const popularRoutes = yield db_1.default.aggregate(KpiDataAccess.trempCollection, pipeline);
             return popularRoutes;
         });
     }
@@ -141,7 +140,7 @@ class KpiDataAccess {
                     $limit: 5
                 },
             ];
-            const drivers = yield db.aggregate(KpiDataAccess.trempCollection, pipeline);
+            const drivers = yield db_1.default.aggregate(KpiDataAccess.trempCollection, pipeline);
             return drivers;
         });
     }
@@ -178,7 +177,7 @@ class KpiDataAccess {
                     $limit: 5
                 },
             ];
-            let hours = yield db.aggregate(KpiDataAccess.trempCollection, pipeline);
+            let hours = yield db_1.default.aggregate(KpiDataAccess.trempCollection, pipeline);
             hours = hours.map(hour => (Object.assign(Object.assign({}, hour), { _id: hour._id + ':00' })));
             return hours;
         });
@@ -231,7 +230,7 @@ class KpiDataAccess {
                     }
                 },
             ];
-            const result = yield db.aggregate(KpiDataAccess.trempCollection, pipeline);
+            const result = yield db_1.default.aggregate(KpiDataAccess.trempCollection, pipeline);
             return result;
         });
     }
@@ -304,8 +303,8 @@ class KpiDataAccess {
                 }
             ];
             const [creatorsResult, passengersResult] = yield Promise.all([
-                yield db.aggregate(KpiDataAccess.trempCollection, creatorsPipeline),
-                yield db.aggregate(KpiDataAccess.trempCollection, passengersPipeline)
+                yield db_1.default.aggregate(KpiDataAccess.trempCollection, creatorsPipeline),
+                yield db_1.default.aggregate(KpiDataAccess.trempCollection, passengersPipeline)
             ]);
             return {
                 creators_by_month_and_gender: creatorsResult,
