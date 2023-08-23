@@ -47,3 +47,16 @@ export async function getUsersByGroup(req: Request, res: Response, next: NextFun
     next();
   }
 }
+
+
+export async function deleteGroupRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id, group_id } = req.body;
+
+    await UserGroupsService.deleteRequestByUserAndGroup(user_id, group_id);
+
+    res.status(200).json({ status: true, message: "Request successfully deleted" });
+  } catch (error: any) {
+    next(error);
+  }
+}

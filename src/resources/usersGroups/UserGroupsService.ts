@@ -1,4 +1,4 @@
-import { NotFoundException, UnauthorizedException } from "../../middleware/HttpException";
+import { BadRequestException, NotFoundException, UnauthorizedException } from "../../middleware/HttpException";
 import GroupDataAccess from "../groups/GroupDataAccess";
 import UserDataAccess from "../users/UserDataAccess";
 import UserGroupsDataAccess from "./UserGroupsDataAccess";
@@ -59,4 +59,23 @@ export async function getUsersByGroupId(groupId: ObjectId) {
   const usersGroupReq = await userGroupsDataAccess.FindAllUserGroups({ group_id: groupId }, { user_id: 1 })
   const userIds = usersGroupReq.map((req: any) => req.user_id);
   return userDataAccess.FindAllUsers({ _id: { $in: userIds } }, { first_name: 1, last_name: 1 });
+}
+
+export async function deleteRequestByUserAndGroup(userId: string, groupId: string) {
+  const query = {
+    user_id: new ObjectId(userId),
+    group_id: new ObjectId(groupId),
+  };
+
+  const userGroupRequest = (await userGroupsDataAccess.FindAllUserGroups(query))[0];
+  
+  if (!userGroupRequest) {
+    throw new NotFoundException("Request not found.");
+  }
+
+  if (userGroupRequest.is_approve !== "pending") {
+    throw new BadRequestException("Request can't be deleted.");
+  }
+
+  await userGroupsDataAccess.DeleteById(userGroupRequest._id.toString());
 }

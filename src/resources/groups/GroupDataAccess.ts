@@ -6,7 +6,7 @@ class GroupDataAccess {
 
 
   async FindAllGroups(query = {}) {
-    return await db.FindAll(GroupDataAccess.collection, query);
+    return await db.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });
   }
 
   async FindById(id: string) {

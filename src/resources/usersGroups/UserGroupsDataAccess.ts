@@ -20,6 +20,10 @@ class UserGroupsDataAccess {
   async UpdateUserGroups(id: string, updateData: Partial<UserGroupsModel>) {
     return await db.Update(UserGroupsDataAccess.collection, id, updateData);
   }
+  
+  async DeleteById(id: string) {
+    return await db.DeleteById(UserGroupsDataAccess.collection, id);
+  }
 }
 
 export default UserGroupsDataAccess;

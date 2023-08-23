@@ -51,32 +51,7 @@ function getGroupsUserNotConnected(userId, type) {
     });
 }
 exports.getGroupsUserNotConnected = getGroupsUserNotConnected;
-function findUserGroups(userIdAsObj, status) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const groups = yield userGroupsDataAccess.FindAllUserGroups({ user_id: userIdAsObj, is_approved: status }, { group_id: 1 });
-        return groups.map(group => group.group_id.toString()); // Extract the group_id as a string
-    });
-}
-function getGroupDetailsWithUsersCount(groupId, connectedGroups) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const group = yield groupDataAccess.FindById(groupId);
-        group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
-        return group;
-    });
-}
-function getDetailedGroups(groupIds, connectedGroups) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return yield Promise.all(groupIds.map(groupId => getGroupDetailsWithUsersCount(groupId, connectedGroups)));
-    });
-}
-function getNotJoinGroups(allGroups, connectedGroups, pendingGroups) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return allGroups.filter(group => {
-            return !connectedGroups.some(cg => cg === group._id.toString()) &&
-                !pendingGroups.some(pg => pg === group._id.toString());
-        });
-    });
-}
+// all Groups With User Status
 function allGroupsWithUserStatus(userId) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = yield userDataAccess.FindById(userId);
@@ -99,6 +74,32 @@ function allGroupsWithUserStatus(userId) {
     });
 }
 exports.allGroupsWithUserStatus = allGroupsWithUserStatus;
+function findUserGroups(userIdAsObj, status) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const groups = yield userGroupsDataAccess.FindAllUserGroups({ user_id: userIdAsObj, is_approved: status }, { group_id: 1 });
+        return groups.map(group => group.group_id.toString());
+    });
+}
+function getGroupDetailsWithUsersCount(groupId, connectedGroups) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const group = yield groupDataAccess.FindById(groupId);
+        group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
+        return group;
+    });
+}
+function getDetailedGroups(groupIds, connectedGroups) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield Promise.all(groupIds.map(groupId => getGroupDetailsWithUsersCount(groupId, connectedGroups)));
+    });
+}
+function getNotJoinGroups(allGroups, connectedGroups, pendingGroups) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return allGroups.filter(group => {
+            return !connectedGroups.some(cg => cg === group._id.toString()) &&
+                !pendingGroups.some(pg => pg === group._id.toString());
+        });
+    });
+}
 function getConnectedGroups(userId) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = yield userDataAccess.FindById(userId);
@@ -157,6 +158,15 @@ function removeGroupFromUser(userId, groupId) {
         // Remove the group from the user's groups
         user.groups.splice(groupIndex, 1);
         yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
+        const query = {
+            user_id: new mongodb_1.ObjectId(userId),
+            group_id: new mongodb_1.ObjectId(groupId),
+        };
+        const userGroupRequest = (yield userGroupsDataAccess.FindAllUserGroups(query))[0];
+        if (!userGroupRequest) {
+            throw new HttpException_1.NotFoundException("Request not found.");
+        }
+        yield userGroupsDataAccess.DeleteById(userGroupRequest._id.toString());
         return `Successfully disconnected from the group ${groupToRemove.group_name}`;
     });
 }

@@ -16,7 +16,7 @@ const db_1 = __importDefault(require("../../utils/db"));
 class GroupDataAccess {
     FindAllGroups(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindAll(GroupDataAccess.collection, query);
+            return yield db_1.default.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });
         });
     }
     FindById(id) {

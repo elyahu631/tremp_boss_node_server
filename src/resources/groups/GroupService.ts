@@ -12,6 +12,7 @@ const groupDataAccess = new GroupDataAccess();
 const userDataAccess = new UserDataAccess();
 const userGroupsDataAccess = new UserGroupsDataAccess();
 
+
 export async function getGroupById(id: string) {
   return groupDataAccess.FindById(id);
 }
@@ -39,30 +40,7 @@ export async function getGroupsUserNotConnected(userId: string, type: string) {
   return groups;
 }
 
-type UserGroup = string;
-
-async function findUserGroups(userIdAsObj: ObjectId, status: string): Promise<UserGroup[]> {
-  const groups = await userGroupsDataAccess.FindAllUserGroups({ user_id: userIdAsObj, is_approved: status }, { group_id: 1 });
-  return groups.map(group => group.group_id.toString()); // Extract the group_id as a string
-}
-
-async function getGroupDetailsWithUsersCount(groupId: UserGroup, connectedGroups: UserGroup[]) {
-  const group = await groupDataAccess.FindById(groupId);
-  group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
-  return group;
-}
-
-async function getDetailedGroups(groupIds: UserGroup[], connectedGroups: UserGroup[]) {
-  return await Promise.all(groupIds.map(groupId => getGroupDetailsWithUsersCount(groupId, connectedGroups)));
-}
-
-async function getNotJoinGroups(allGroups: any[], connectedGroups: UserGroup[], pendingGroups: UserGroup[]) {
-  return allGroups.filter(group => {
-    return !connectedGroups.some(cg => cg === group._id.toString()) &&
-      !pendingGroups.some(pg => pg === group._id.toString());
-  });
-}
-
+// all Groups With User Status
 export async function allGroupsWithUserStatus(userId: string) {
   const user = await userDataAccess.FindById(userId);
   assertUserHasGroups(user);
@@ -86,7 +64,24 @@ export async function allGroupsWithUserStatus(userId: string) {
       not_join: notJoinGroups,
   };
 }
-
+async function findUserGroups(userIdAsObj: ObjectId, status: string): Promise<string[]> {
+  const groups = await userGroupsDataAccess.FindAllUserGroups({ user_id: userIdAsObj, is_approved: status }, { group_id: 1 });
+  return groups.map(group => group.group_id.toString());
+}
+async function getGroupDetailsWithUsersCount(groupId: string, connectedGroups: string[]) {
+  const group = await groupDataAccess.FindById(groupId);
+  group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
+  return group;
+}
+async function getDetailedGroups(groupIds: string[], connectedGroups: string[]) {
+  return await Promise.all(groupIds.map(groupId => getGroupDetailsWithUsersCount(groupId, connectedGroups)));
+}
+async function getNotJoinGroups(allGroups: any[], connectedGroups: string[], pendingGroups: string[]) {
+  return allGroups.filter(group => {
+    return !connectedGroups.some(cg => cg === group._id.toString()) &&
+      !pendingGroups.some(pg => pg === group._id.toString());
+  });
+}
 
 
 
@@ -154,6 +149,18 @@ export async function removeGroupFromUser(userId: string, groupId: string): Prom
   // Remove the group from the user's groups
   user.groups.splice(groupIndex, 1);
   await userDataAccess.UpdateUserDetails(user._id.toString(), user);
+
+  const query = {
+    user_id: new ObjectId(userId),
+    group_id: new ObjectId(groupId),
+  };
+
+  const userGroupRequest = (await userGroupsDataAccess.FindAllUserGroups(query))[0];
+
+  if (!userGroupRequest) {
+    throw new NotFoundException("Request not found.");
+  }
+  await userGroupsDataAccess.DeleteById(userGroupRequest._id.toString());
 
   return `Successfully disconnected from the group ${groupToRemove.group_name}`;
 }

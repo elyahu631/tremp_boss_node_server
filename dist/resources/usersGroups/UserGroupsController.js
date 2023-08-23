@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersByGroup = exports.getGroupRequests = exports.approveRequest = void 0;
+exports.deleteGroupRequest = exports.getUsersByGroup = exports.getGroupRequests = exports.approveRequest = void 0;
 const UserGroupsService = __importStar(require("./UserGroupsService"));
 // export async function requestJoinGroup(req: Request, res: Response, next: NextFunction): Promise<void> {
 //   try {
@@ -82,4 +82,17 @@ function getUsersByGroup(req, res, next) {
     });
 }
 exports.getUsersByGroup = getUsersByGroup;
+function deleteGroupRequest(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id, group_id } = req.body;
+            yield UserGroupsService.deleteRequestByUserAndGroup(user_id, group_id);
+            res.status(200).json({ status: true, message: "Request successfully deleted" });
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+}
+exports.deleteGroupRequest = deleteGroupRequest;
 //# sourceMappingURL=UserGroupsController.js.map
