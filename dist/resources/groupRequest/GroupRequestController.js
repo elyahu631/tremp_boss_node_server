@@ -31,59 +31,48 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteGroupRequest = exports.getUsersByGroup = exports.getGroupRequests = exports.approveRequest = void 0;
-const UserGroupsService = __importStar(require("./UserGroupsService"));
-function approveRequest(req, res, next) {
+exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
+const GroupRequestService = __importStar(require("./GroupRequestService"));
+const GroupRequestModel_1 = __importDefault(require("./GroupRequestModel"));
+const HttpException_1 = require("../../middleware/HttpException");
+function addGroupRequest(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { admin_id, req_id, is_approved } = req.body;
-            yield UserGroupsService.approveGroupRequest(admin_id, req_id, is_approved);
-            res.status(200).json({ status: true, message: "Request successfully approved" });
+            const newOpenGroup = new GroupRequestModel_1.default(req.body);
+            const savedOpenGroup = yield GroupRequestService.addGroupRequest(newOpenGroup);
+            res.status(201).json({ status: true, data: savedOpenGroup });
         }
-        catch (error) {
-            next();
+        catch (err) {
+            next(err);
         }
     });
 }
-exports.approveRequest = approveRequest;
-function getGroupRequests(req, res, next) {
+exports.addGroupRequest = addGroupRequest;
+function uploadGroupRequestImage(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const { group_id } = req.body;
-            const requests = yield UserGroupsService.getRequestsByGroupId(group_id);
-            res.status(200).json({ status: true, Data: requests });
+            let file;
+            if (Array.isArray(req.files)) {
+                file = req.files[0];
+            }
+            else {
+                file = req.files[Object.keys(req.files)[0]][0];
+            }
+            if (!file) {
+                throw new HttpException_1.BadRequestException('No image provided.');
+            }
+            const { id } = req.params;
+            const imageUrl = yield GroupRequestService.uploadGroupRequestImage(id, file);
+            res.status(200).json({ status: true, message: "Image uploaded successfully", data: { image_URL: imageUrl } });
         }
-        catch (error) {
-            next();
+        catch (err) {
+            next(err);
         }
     });
 }
-exports.getGroupRequests = getGroupRequests;
-function getUsersByGroup(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const groupId = req.body.group_id;
-            const users = yield UserGroupsService.getUsersByGroupId(groupId);
-            res.status(200).json({ status: true, users });
-        }
-        catch (error) {
-            next();
-        }
-    });
-}
-exports.getUsersByGroup = getUsersByGroup;
-function deleteGroupRequest(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const { user_id, group_id } = req.body;
-            yield UserGroupsService.deleteRequestByUserAndGroup(user_id, group_id);
-            res.status(200).json({ status: true, message: "Request successfully deleted" });
-        }
-        catch (error) {
-            next(error);
-        }
-    });
-}
-exports.deleteGroupRequest = deleteGroupRequest;
-//# sourceMappingURL=UserGroupsController.js.map
+exports.uploadGroupRequestImage = uploadGroupRequestImage;
+//# sourceMappingURL=GroupRequestController.js.map

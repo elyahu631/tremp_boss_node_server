@@ -2,15 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import * as UserGroupsService from './UserGroupsService';
 import UserGroupsModel from "./UserGroupsModel";
 
-// export async function requestJoinGroup(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const userGroupReq = new UserGroupsModel(req.body);
-//     const request = await UserGroupsService.requestToJoinGroup(userGroupReq);
-//     res.status(201).json({ status: true, data: request });
-//   } catch (error: any) {
-//     next();
-//   }
-// }
 
 export async function approveRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

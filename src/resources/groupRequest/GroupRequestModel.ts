@@ -1,35 +1,35 @@
 import Joi from "joi";
 import { ObjectId } from 'mongodb';
+import { getCurrentTimeInIsrael } from "../../services/TimeService";
 
-class GroupModel {
-  _id: ObjectId;
+class GroupRequestModel {
+  user_id: ObjectId;
   group_name: string;
   type: string;
   image_URL: string;
+  request_date: Date;
   locations: Array<{ name: string; coordinates: { latitude: number; longitude: number; } }>;
-  active: string;
-  admins_ids: ObjectId[];
-  deleted: boolean;
+  is_approved: String;
 
-  constructor(groupData: Partial<GroupModel>) {
-    this._id = groupData._id || new ObjectId();
-    this.group_name = groupData.group_name;
-    this.type = groupData.type;
-    this.image_URL = groupData.image_URL;
-    this.locations = groupData.locations;
-    this.active = groupData.active || 'active';
-    this.admins_ids = groupData.admins_ids || [];
-    this.deleted = groupData.deleted || false;
+  constructor(groupReqData: Partial<GroupRequestModel>) {
+    this.user_id = new ObjectId(groupReqData.user_id);
+    this.group_name = groupReqData.group_name;
+    this.type = groupReqData.type;
+    this.image_URL = groupReqData.image_URL;
+    this.request_date = groupReqData.request_date || getCurrentTimeInIsrael();
+    this.locations = groupReqData.locations;
+    this.is_approved = groupReqData.is_approved ||'pending'
   }
-  
-  validateGroup() {
+
+  validateGroupRequest() {
     const schema = Joi.object({
-      _id: Joi.any().optional(),
+      user_id:Joi.required(),
       group_name: Joi.string().required(),
       type: Joi.string()
         .required()
-        .valid('CITIES', 'PRIVATE'),
+        .valid('PRIVATE'),
       image_URL: Joi.string().optional(),
+      request_date: Joi.date().required(),
       locations: Joi.array().items(Joi.object({
         name: Joi.string().required(),
         coordinates: Joi.object({
@@ -43,19 +43,15 @@ class GroupModel {
             .max(180),
         }).required(),
       })).required(),
-      active: Joi.string()
-        .required()
-        .valid('active', 'inactive'),
-      admins_ids: Joi.array().items(Joi.string()).optional(),
-      deleted: Joi.boolean().required(),
+      is_approved: Joi.string().valid('approved', 'pending', 'denied').default('pending'),
     });
 
     const { error } = schema.validate(this);
-    
+
     if (error) {
       throw new Error(error.details[0].message);
     }
   }
 }
 
-export default GroupModel;
+export default GroupRequestModel;

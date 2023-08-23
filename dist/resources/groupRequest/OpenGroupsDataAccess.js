@@ -13,20 +13,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
-class GroupDataAccess {
+class OpenGroupDataAccess {
     FindAllGroups(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });
+            return yield db_1.default.FindAll(OpenGroupDataAccess.collection, query, {}, { group_name: 1 });
         });
     }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindByID(GroupDataAccess.collection, id);
+            return yield db_1.default.FindByID(OpenGroupDataAccess.collection, id);
         });
     }
     DeleteGroupById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.DeleteById(GroupDataAccess.collection, id);
+            return yield db_1.default.DeleteById(OpenGroupDataAccess.collection, id);
         });
     }
     InsertOne(group) {
@@ -40,16 +40,16 @@ class GroupDataAccess {
                     // Handle the error appropriately for your application.
                 }
             }
-            group.validateGroup();
-            return yield db_1.default.Insert(GroupDataAccess.collection, group);
+            group.validateOpenGroup();
+            return yield db_1.default.Insert(OpenGroupDataAccess.collection, group);
         });
     }
     UpdateGroup(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.Update(GroupDataAccess.collection, id, updateData);
+            return yield db_1.default.Update(OpenGroupDataAccess.collection, id, updateData);
         });
     }
 }
-GroupDataAccess.collection = 'Groups';
-exports.default = GroupDataAccess;
-//# sourceMappingURL=GroupDataAccess.js.map
+OpenGroupDataAccess.collection = 'Groups';
+exports.default = OpenGroupDataAccess;
+//# sourceMappingURL=OpenGroupsDataAccess.js.map

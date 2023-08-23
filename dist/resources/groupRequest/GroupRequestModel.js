@@ -5,25 +5,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
 const mongodb_1 = require("mongodb");
-class GroupModel {
-    constructor(groupData) {
-        this._id = groupData._id || new mongodb_1.ObjectId();
-        this.group_name = groupData.group_name;
-        this.type = groupData.type;
-        this.image_URL = groupData.image_URL;
-        this.locations = groupData.locations;
-        this.active = groupData.active || 'active';
-        this.admins_ids = groupData.admins_ids || [];
-        this.deleted = groupData.deleted || false;
+const TimeService_1 = require("../../services/TimeService");
+class GroupRequestModel {
+    constructor(groupReqData) {
+        this.user_id = new mongodb_1.ObjectId(groupReqData.user_id);
+        this.group_name = groupReqData.group_name;
+        this.type = groupReqData.type;
+        this.image_URL = groupReqData.image_URL;
+        this.request_date = groupReqData.request_date || (0, TimeService_1.getCurrentTimeInIsrael)();
+        this.locations = groupReqData.locations;
+        this.is_approved = groupReqData.is_approved || 'pending';
     }
-    validateGroup() {
+    validateGroupRequest() {
         const schema = joi_1.default.object({
-            _id: joi_1.default.any().optional(),
+            user_id: joi_1.default.required(),
             group_name: joi_1.default.string().required(),
             type: joi_1.default.string()
                 .required()
-                .valid('CITIES', 'PRIVATE'),
+                .valid('PRIVATE'),
             image_URL: joi_1.default.string().optional(),
+            request_date: joi_1.default.date().required(),
             locations: joi_1.default.array().items(joi_1.default.object({
                 name: joi_1.default.string().required(),
                 coordinates: joi_1.default.object({
@@ -37,11 +38,7 @@ class GroupModel {
                         .max(180),
                 }).required(),
             })).required(),
-            active: joi_1.default.string()
-                .required()
-                .valid('active', 'inactive'),
-            admins_ids: joi_1.default.array().items(joi_1.default.string()).optional(),
-            deleted: joi_1.default.boolean().required(),
+            is_approved: joi_1.default.string().valid('approved', 'pending', 'denied').default('pending'),
         });
         const { error } = schema.validate(this);
         if (error) {
@@ -49,5 +46,5 @@ class GroupModel {
         }
     }
 }
-exports.default = GroupModel;
-//# sourceMappingURL=GroupModel.js.map
+exports.default = GroupRequestModel;
+//# sourceMappingURL=GroupRequestModel.js.map

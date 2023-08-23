@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteRequestByUserAndGroup = exports.getUsersByGroupId = exports.getRequestsByGroupId = exports.approveGroupRequest = void 0;
+exports.getUsersByGroupId = exports.getRequestsByGroupId = exports.approveGroupRequest = exports.deleteRequestByUserAndGroup = void 0;
 const HttpException_1 = require("../../middleware/HttpException");
 const GroupDataAccess_1 = __importDefault(require("../groups/GroupDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
@@ -21,14 +21,28 @@ const mongodb_1 = require("mongodb");
 const userGroupsDataAccess = new UserGroupsDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
 const groupDataAccess = new GroupDataAccess_1.default();
-// export async function requestToJoinGroup(userGroupReq: UserGroupsModel) {
-//   return userGroupsDataAccess.InsertOne(userGroupReq);
-// }
 function assertUserHasGroups(user) {
     if (!user || !user.groups) {
         throw new HttpException_1.NotFoundException("User not found or user has no groups.");
     }
 }
+function deleteRequestByUserAndGroup(userId, groupId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const query = {
+            user_id: new mongodb_1.ObjectId(userId),
+            group_id: new mongodb_1.ObjectId(groupId),
+        };
+        const userGroupRequest = (yield userGroupsDataAccess.FindAllUserGroups(query))[0];
+        if (!userGroupRequest) {
+            throw new HttpException_1.NotFoundException("Request not found.");
+        }
+        if (userGroupRequest.is_approve !== "pending") {
+            throw new HttpException_1.BadRequestException("Request can't be deleted.");
+        }
+        yield userGroupsDataAccess.DeleteById(userGroupRequest._id.toString());
+    });
+}
+exports.deleteRequestByUserAndGroup = deleteRequestByUserAndGroup;
 function approveGroupRequest(adminId, reqId, isApproved) {
     return __awaiter(this, void 0, void 0, function* () {
         const join_group_request = yield userGroupsDataAccess.FindById(adminId);
@@ -61,9 +75,6 @@ function getRequestsByGroupId(groupId) {
     });
 }
 exports.getRequestsByGroupId = getRequestsByGroupId;
-// export async function getUsersByGroupId(groupId: ObjectId) {
-//   return userDataAccess.FindAllUsers({ groups: groupId }, { first_name: 1, last_name: 1 });
-// }
 function getUsersByGroupId(groupId) {
     return __awaiter(this, void 0, void 0, function* () {
         const usersGroupReq = yield userGroupsDataAccess.FindAllUserGroups({ group_id: groupId }, { user_id: 1 });
@@ -72,21 +83,4 @@ function getUsersByGroupId(groupId) {
     });
 }
 exports.getUsersByGroupId = getUsersByGroupId;
-function deleteRequestByUserAndGroup(userId, groupId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const query = {
-            user_id: new mongodb_1.ObjectId(userId),
-            group_id: new mongodb_1.ObjectId(groupId),
-        };
-        const userGroupRequest = (yield userGroupsDataAccess.FindAllUserGroups(query))[0];
-        if (!userGroupRequest) {
-            throw new HttpException_1.NotFoundException("Request not found.");
-        }
-        if (userGroupRequest.is_approve !== "pending") {
-            throw new HttpException_1.BadRequestException("Request can't be deleted.");
-        }
-        yield userGroupsDataAccess.DeleteById(userGroupRequest._id.toString());
-    });
-}
-exports.deleteRequestByUserAndGroup = deleteRequestByUserAndGroup;
 //# sourceMappingURL=UserGroupsService.js.map

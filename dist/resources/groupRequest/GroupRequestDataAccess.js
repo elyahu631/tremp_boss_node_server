@@ -13,43 +13,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
-class GroupDataAccess {
-    FindAllGroups(query = {}) {
+class GroupRequesDataAccess {
+    FindAllGroupReq(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });
+            return yield db_1.default.FindAll(GroupRequesDataAccess.collection, query, {}, { group_name: 1 });
         });
     }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindByID(GroupDataAccess.collection, id);
+            return yield db_1.default.FindByID(GroupRequesDataAccess.collection, id);
         });
     }
-    DeleteGroupById(id) {
+    DeleteGroupReqById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.DeleteById(GroupDataAccess.collection, id);
+            return yield db_1.default.DeleteById(GroupRequesDataAccess.collection, id);
         });
     }
-    InsertOne(group) {
+    InsertOne(groupReq) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (typeof group.locations === 'string') {
-                try {
-                    group.locations = JSON.parse(group.locations);
-                }
-                catch (error) {
-                    console.error('Error parsing locations:', error);
-                    // Handle the error appropriately for your application.
-                }
-            }
-            group.validateGroup();
-            return yield db_1.default.Insert(GroupDataAccess.collection, group);
+            groupReq.validateGroupRequest();
+            return yield db_1.default.Insert(GroupRequesDataAccess.collection, groupReq);
         });
     }
     UpdateGroup(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.Update(GroupDataAccess.collection, id, updateData);
+            return yield db_1.default.Update(GroupRequesDataAccess.collection, id, updateData);
         });
     }
 }
-GroupDataAccess.collection = 'Groups';
-exports.default = GroupDataAccess;
-//# sourceMappingURL=GroupDataAccess.js.map
+GroupRequesDataAccess.collection = 'GroupRequests';
+exports.default = GroupRequesDataAccess;
+//# sourceMappingURL=GroupRequestDataAccess.js.map

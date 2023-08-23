@@ -9,14 +9,32 @@ const userGroupsDataAccess = new UserGroupsDataAccess();
 const userDataAccess = new UserDataAccess();
 const groupDataAccess = new GroupDataAccess();
 
-// export async function requestToJoinGroup(userGroupReq: UserGroupsModel) {
-//   return userGroupsDataAccess.InsertOne(userGroupReq);
-// }
+
 
 function assertUserHasGroups(user: any) {
   if (!user || !user.groups) {
     throw new NotFoundException("User not found or user has no groups.");
   }
+}
+
+
+export async function deleteRequestByUserAndGroup(userId: string, groupId: string) {
+  const query = {
+    user_id: new ObjectId(userId),
+    group_id: new ObjectId(groupId),
+  };
+
+  const userGroupRequest = (await userGroupsDataAccess.FindAllUserGroups(query))[0];
+  
+  if (!userGroupRequest) {
+    throw new NotFoundException("Request not found.");
+  }
+
+  if (userGroupRequest.is_approve !== "pending") {
+    throw new BadRequestException("Request can't be deleted.");
+  }
+
+  await userGroupsDataAccess.DeleteById(userGroupRequest._id.toString());
 }
 
 export async function approveGroupRequest(adminId: string, reqId: string, isApproved: string) {
@@ -44,6 +62,7 @@ export async function approveGroupRequest(adminId: string, reqId: string, isAppr
   return await userDataAccess.UpdateUserDetails((user._id).toString(), user);
 }
 
+
 export async function getRequestsByGroupId(groupId: string) {
   return await userGroupsDataAccess.FindAllUserGroups({
     group_id: new ObjectId(groupId),
@@ -51,9 +70,7 @@ export async function getRequestsByGroupId(groupId: string) {
   });
 }
 
-// export async function getUsersByGroupId(groupId: ObjectId) {
-//   return userDataAccess.FindAllUsers({ groups: groupId }, { first_name: 1, last_name: 1 });
-// }
+
 
 export async function getUsersByGroupId(groupId: ObjectId) {
   const usersGroupReq = await userGroupsDataAccess.FindAllUserGroups({ group_id: groupId }, { user_id: 1 })
@@ -61,21 +78,4 @@ export async function getUsersByGroupId(groupId: ObjectId) {
   return userDataAccess.FindAllUsers({ _id: { $in: userIds } }, { first_name: 1, last_name: 1 });
 }
 
-export async function deleteRequestByUserAndGroup(userId: string, groupId: string) {
-  const query = {
-    user_id: new ObjectId(userId),
-    group_id: new ObjectId(groupId),
-  };
 
-  const userGroupRequest = (await userGroupsDataAccess.FindAllUserGroups(query))[0];
-  
-  if (!userGroupRequest) {
-    throw new NotFoundException("Request not found.");
-  }
-
-  if (userGroupRequest.is_approve !== "pending") {
-    throw new BadRequestException("Request can't be deleted.");
-  }
-
-  await userGroupsDataAccess.DeleteById(userGroupRequest._id.toString());
-}
