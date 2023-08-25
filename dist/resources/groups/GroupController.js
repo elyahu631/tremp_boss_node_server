@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.addAdminToGroup = exports.allGroupsWithUserStatus = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.getGroupById = exports.getGroupsUserNotConnected = void 0;
+exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.uploadGroupImage = exports.updateGroup = exports.addAdminToGroup = exports.allGroupsWithUserStatus = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.getGroupById = exports.getGroupsUserNotConnected = void 0;
 const GroupService = __importStar(require("./GroupService"));
 const GroupModel_1 = __importDefault(require("./GroupModel"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -133,6 +133,43 @@ function addAdminToGroup(req, res, next) {
     });
 }
 exports.addAdminToGroup = addAdminToGroup;
+function updateGroup(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id, group_id, group_name, locations, active } = req.body;
+            const updateData = { group_name, locations, active };
+            const updatedGroup = yield GroupService.updateGroup(group_id, user_id, updateData);
+            res.status(200).json({ status: true, data: updatedGroup });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.updateGroup = updateGroup;
+function uploadGroupImage(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let file;
+            if (Array.isArray(req.files)) {
+                file = req.files[0];
+            }
+            else {
+                file = req.files[Object.keys(req.files)[0]][0];
+            }
+            if (!file) {
+                throw new HttpException_1.BadRequestException('No image provided.');
+            }
+            const { id } = req.params;
+            const imageUrl = yield GroupService.uploadGroupImage(id, file);
+            res.status(200).json({ status: true, message: "Image uploaded successfully", data: { image_URL: imageUrl } });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.uploadGroupImage = uploadGroupImage;
 //admin
 function getAllGroups(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {

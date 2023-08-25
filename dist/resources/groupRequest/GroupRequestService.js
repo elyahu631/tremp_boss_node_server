@@ -12,7 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
+exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
+const mongodb_1 = require("mongodb");
 const fileUpload_1 = require("../../firebase/fileUpload");
 const HttpException_1 = require("../../middleware/HttpException");
 const GroupRequestDataAccess_1 = __importDefault(require("./GroupRequestDataAccess"));
@@ -39,4 +40,10 @@ function uploadGroupRequestImage(id, file) {
     });
 }
 exports.uploadGroupRequestImage = uploadGroupRequestImage;
+function getUserRequests(userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return groupReqDataAccess.FindAllGroupReq({ user_id: new mongodb_1.ObjectId(userId) });
+    });
+}
+exports.getUserRequests = getUserRequests;
 //# sourceMappingURL=GroupRequestService.js.map

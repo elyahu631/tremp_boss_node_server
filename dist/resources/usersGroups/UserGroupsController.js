@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteGroupRequest = exports.getUsersByGroup = exports.getGroupRequests = exports.approveRequest = void 0;
+exports.getUsersRequest = exports.deleteGroupRequest = exports.approveRequest = void 0;
 const UserGroupsService = __importStar(require("./UserGroupsService"));
 function approveRequest(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -42,37 +42,11 @@ function approveRequest(req, res, next) {
             res.status(200).json({ status: true, message: "Request successfully approved" });
         }
         catch (error) {
-            next();
+            next(error);
         }
     });
 }
 exports.approveRequest = approveRequest;
-function getGroupRequests(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const { group_id } = req.body;
-            const requests = yield UserGroupsService.getRequestsByGroupId(group_id);
-            res.status(200).json({ status: true, Data: requests });
-        }
-        catch (error) {
-            next();
-        }
-    });
-}
-exports.getGroupRequests = getGroupRequests;
-function getUsersByGroup(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const groupId = req.body.group_id;
-            const users = yield UserGroupsService.getUsersByGroupId(groupId);
-            res.status(200).json({ status: true, users });
-        }
-        catch (error) {
-            next();
-        }
-    });
-}
-exports.getUsersByGroup = getUsersByGroup;
 function deleteGroupRequest(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -86,4 +60,18 @@ function deleteGroupRequest(req, res, next) {
     });
 }
 exports.deleteGroupRequest = deleteGroupRequest;
+function getUsersRequest(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id, group_id } = req.body;
+            const connected = yield UserGroupsService.getUsersRequest(user_id, group_id, 'approved');
+            const pending = yield UserGroupsService.getUsersRequest(user_id, group_id, 'pending');
+            res.status(200).json({ status: true, connected, pending });
+        }
+        catch (error) {
+            next(error);
+        }
+    });
+}
+exports.getUsersRequest = getUsersRequest;
 //# sourceMappingURL=UserGroupsController.js.map

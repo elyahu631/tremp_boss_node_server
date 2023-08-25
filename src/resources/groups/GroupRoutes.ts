@@ -12,7 +12,9 @@ import {
   addGroupToUser,
   removeGroupFromUser,
   addAdminToGroup,
-  allGroupsWithUserStatus
+  allGroupsWithUserStatus,
+  updateGroup,
+  uploadGroupImage
 } from "./GroupController";
 import multer from "multer";
 import multerConfig from "../../config/multerConfig";
@@ -29,6 +31,8 @@ groupRoutes.put("/join-group-request", authenticateToken, addGroupToUser);
 groupRoutes.put("/disconnect-from-group", authenticateToken, removeGroupFromUser);
 groupRoutes.put("/add-admin-to-group", authenticateToken, addAdminToGroup);
 groupRoutes.post("/all-groups-with-user-status", authenticateToken, allGroupsWithUserStatus);
+groupRoutes.put("/update", authenticateToken, updateGroup);
+groupRoutes.post("/upload-image/:id", authenticateToken, upload.any(), uploadGroupImage); 
 
 
 // admin

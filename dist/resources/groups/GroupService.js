@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImageToFirebaseAndUpdateGroup = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.addAdminToGroup = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.allGroupsWithUserStatus = exports.getGroupsUserNotConnected = exports.getGroupById = void 0;
+exports.uploadImageToFirebaseAndUpdateGroup = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.uploadGroupImage = exports.updateGroup = exports.addAdminToGroup = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.allGroupsWithUserStatus = exports.getGroupsUserNotConnected = exports.getGroupById = void 0;
 const GroupDataAccess_1 = __importDefault(require("./GroupDataAccess"));
 const mongodb_1 = require("mongodb");
 const fileUpload_1 = require("../../firebase/fileUpload");
@@ -124,20 +124,14 @@ function addGroupToUser(userId, groupId) {
         if (user.groups.some((group) => group.toString() === groupId)) {
             throw new HttpException_1.BadRequestException("Group already connected to the user.");
         }
-        if (groupToAdd.type === "PRIVATE") {
-            const query = { user_id: new mongodb_1.ObjectId(userId), group_id: new mongodb_1.ObjectId(groupId) };
-            const userGroupReq = new UserGroupsModel_1.default(query);
-            const request = yield userGroupsDataAccess.FindAllUserGroups(query);
-            if (request.length > 0) {
-                throw new HttpException_1.BadRequestException("You have already requested to join.");
-            }
-            yield userGroupsDataAccess.InsertOne(userGroupReq);
-            return `Your request to join ${groupToAdd.group_name} has been successfully sent.`;
+        const query = { user_id: new mongodb_1.ObjectId(userId), group_id: new mongodb_1.ObjectId(groupId) };
+        const userGroupReq = new UserGroupsModel_1.default(query);
+        const request = yield userGroupsDataAccess.FindAllUserGroups(query);
+        if (request.length > 0) {
+            throw new HttpException_1.BadRequestException("You have already requested to join.");
         }
-        // Add the group to the user's groups
-        user.groups.push(new mongodb_1.ObjectId(groupId));
-        yield userDataAccess.UpdateUserDetails((user._id).toString(), user);
-        return `Successfully signed up for the group ${groupToAdd.group_name}`;
+        yield userGroupsDataAccess.InsertOne(userGroupReq);
+        return `Your request to join ${groupToAdd.group_name} has been successfully sent.`;
     });
 }
 exports.addGroupToUser = addGroupToUser;
@@ -201,6 +195,38 @@ function addAdminToGroup(adminId, new_admin_email, groupId) {
     });
 }
 exports.addAdminToGroup = addAdminToGroup;
+function updateGroup(groupId, userId, updateData) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check if a group with the same name already exists
+        if (updateData.group_name) {
+            const existingGroup = yield groupDataAccess.FindAllGroups({ group_name: updateData.group_name });
+            if (existingGroup && existingGroup[0]._id.toString() !== groupId) {
+                throw new HttpException_1.BadRequestException('A group with this name already exists');
+            }
+        }
+        const group = yield groupDataAccess.FindById(groupId);
+        if (!group.admins_ids.includes(new mongodb_1.ObjectId(userId))) {
+            throw new HttpException_1.UnauthorizedException("User not authorized to update the group");
+        }
+        // Only update allowed fields
+        const dataToUpdate = {
+            group_name: updateData.group_name || group.group_name,
+            locations: updateData.locations || group.locations,
+            active: updateData.active || group.active
+        };
+        return groupDataAccess.UpdateGroup(groupId, dataToUpdate);
+    });
+}
+exports.updateGroup = updateGroup;
+function uploadGroupImage(id, file) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const filePath = `groupsimages/${id}`;
+        const image_URL = yield (0, fileUpload_1.uploadImageToFirebase)(file, filePath);
+        yield groupDataAccess.UpdateGroup(id, { image_URL });
+        return image_URL;
+    });
+}
+exports.uploadGroupImage = uploadGroupImage;
 function getAllGroups() {
     return __awaiter(this, void 0, void 0, function* () {
         return groupDataAccess.FindAllGroups({ deleted: false, type: { $ne: "GENERAL" } });

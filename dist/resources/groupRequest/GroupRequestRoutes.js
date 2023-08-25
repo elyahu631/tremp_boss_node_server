@@ -12,7 +12,8 @@ const GroupRequestController_1 = require("./GroupRequestController");
 const upload = (0, multer_1.default)(multerConfig_1.default);
 const groupRequestRoutes = express_1.default.Router();
 groupRequestRoutes.post("/add", auth_1.authenticateToken, GroupRequestController_1.addGroupRequest);
-groupRequestRoutes.post("/upload-image/:id", auth_1.authenticateToken, upload.any(), GroupRequestController_1.uploadGroupRequestImage); // New route for uploading image
+groupRequestRoutes.post("/upload-image/:id", auth_1.authenticateToken, upload.any(), GroupRequestController_1.uploadGroupRequestImage);
+groupRequestRoutes.post("/get-user-requests", auth_1.authenticateToken, GroupRequestController_1.getUserRequests);
 groupRequestRoutes.use(handleErrors_1.handleErrors);
 exports.default = groupRequestRoutes;
 //# sourceMappingURL=GroupRequestRoutes.js.map

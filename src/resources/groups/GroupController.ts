@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as GroupService from './GroupService';
 import GroupModel from "./GroupModel";
-import { NotFoundException } from '../../middleware/HttpException';
+import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 
 export async function getGroupsUserNotConnected(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -73,6 +73,47 @@ export async function addAdminToGroup(req: Request, res: Response, next: NextFun
     next(err);
   }
 }
+
+
+
+export async function updateGroup(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id, group_id, group_name, locations, active } = req.body;
+    const updateData = { group_name, locations, active };
+    const updatedGroup = await GroupService.updateGroup(group_id, user_id, updateData);
+    res.status(200).json({ status: true, data: updatedGroup });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function uploadGroupImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    let file: Express.Multer.File;
+
+    if (Array.isArray(req.files)) {
+      file = req.files[0];
+    } else {
+      file = req.files[Object.keys(req.files)[0]][0];
+    }
+
+    if (!file) {
+      throw new BadRequestException('No image provided.');
+    }
+
+    const { id } = req.params;
+    const imageUrl = await GroupService.uploadGroupImage(id, file);
+    res.status(200).json({ status: true, message: "Image uploaded successfully", data: {image_URL: imageUrl}});
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+
+
+
+
 
 //admin
 export async function getAllGroups(req: Request, res: Response, next: NextFunction): Promise<void> {

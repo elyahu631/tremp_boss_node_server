@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
+exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
 const GroupRequestService = __importStar(require("./GroupRequestService"));
 const GroupRequestModel_1 = __importDefault(require("./GroupRequestModel"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -75,4 +75,17 @@ function uploadGroupRequestImage(req, res, next) {
     });
 }
 exports.uploadGroupRequestImage = uploadGroupRequestImage;
+function getUserRequests(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id } = req.body;
+            const userRequests = yield GroupRequestService.getUserRequests(user_id);
+            res.status(200).json({ status: true, data: userRequests });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getUserRequests = getUserRequests;
 //# sourceMappingURL=GroupRequestController.js.map

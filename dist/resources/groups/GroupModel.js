@@ -12,8 +12,8 @@ class GroupModel {
         this.type = groupData.type;
         this.image_URL = groupData.image_URL;
         this.locations = groupData.locations;
-        this.active = groupData.active || 'active';
         this.admins_ids = groupData.admins_ids || [];
+        this.active = groupData.active || 'active';
         this.deleted = groupData.deleted || false;
     }
     validateGroup() {
@@ -37,10 +37,10 @@ class GroupModel {
                         .max(180),
                 }).required(),
             })).required(),
+            admins_ids: joi_1.default.array().items(joi_1.default.string()).optional(),
             active: joi_1.default.string()
                 .required()
                 .valid('active', 'inactive'),
-            admins_ids: joi_1.default.array().items(joi_1.default.string()).optional(),
             deleted: joi_1.default.boolean().required(),
         });
         const { error } = schema.validate(this);

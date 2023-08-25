@@ -18,6 +18,8 @@ groupRoutes.put("/join-group-request", auth_1.authenticateToken, GroupController
 groupRoutes.put("/disconnect-from-group", auth_1.authenticateToken, GroupController_1.removeGroupFromUser);
 groupRoutes.put("/add-admin-to-group", auth_1.authenticateToken, GroupController_1.addAdminToGroup);
 groupRoutes.post("/all-groups-with-user-status", auth_1.authenticateToken, GroupController_1.allGroupsWithUserStatus);
+groupRoutes.put("/update", auth_1.authenticateToken, GroupController_1.updateGroup);
+groupRoutes.post("/upload-image/:id", auth_1.authenticateToken, upload.any(), GroupController_1.uploadGroupImage);
 // admin
 groupRoutes.get("/all", auth_1.authenticateToken, GroupController_1.getAllGroups);
 groupRoutes.delete("/delete/:id", auth_1.authenticateToken, GroupController_1.deleteGroupById);

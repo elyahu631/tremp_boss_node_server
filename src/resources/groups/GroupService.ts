@@ -59,9 +59,9 @@ export async function allGroupsWithUserStatus(userId: string) {
   });
 
   return {
-      approved: connectedGroupsDetails,
-      pending: pendingGroupsDetails,
-      not_join: notJoinGroups,
+    approved: connectedGroupsDetails,
+    pending: pendingGroupsDetails,
+    not_join: notJoinGroups,
   };
 }
 async function findUserGroups(userIdAsObj: ObjectId, status: string): Promise<string[]> {
@@ -111,22 +111,14 @@ export async function addGroupToUser(userId: string, groupId: string) {
     throw new BadRequestException("Group already connected to the user.");
   }
 
-  if (groupToAdd.type === "PRIVATE") {
-    const query = { user_id: new ObjectId(userId), group_id: new ObjectId(groupId) };
-    const userGroupReq = new UserGroupsModel(query)
-    const request = await userGroupsDataAccess.FindAllUserGroups(query)
-    if (request.length > 0) {
-      throw new BadRequestException("You have already requested to join.");
-    }
-    await userGroupsDataAccess.InsertOne(userGroupReq)
-    return `Your request to join ${groupToAdd.group_name} has been successfully sent.`;
+  const query = { user_id: new ObjectId(userId), group_id: new ObjectId(groupId) };
+  const userGroupReq = new UserGroupsModel(query)
+  const request = await userGroupsDataAccess.FindAllUserGroups(query)
+  if (request.length > 0) {
+    throw new BadRequestException("You have already requested to join.");
   }
-
-  // Add the group to the user's groups
-  user.groups.push(new ObjectId(groupId));
-  await userDataAccess.UpdateUserDetails((user._id).toString(), user);
-
-  return `Successfully signed up for the group ${groupToAdd.group_name}`;
+  await userGroupsDataAccess.InsertOne(userGroupReq)
+  return `Your request to join ${groupToAdd.group_name} has been successfully sent.`;
 }
 
 export async function removeGroupFromUser(userId: string, groupId: string): Promise<string> {
@@ -201,8 +193,36 @@ export async function addAdminToGroup(adminId: string, new_admin_email: string, 
 
   return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
 }
+export async function updateGroup(groupId: string, userId: string, updateData: Partial<GroupModel>) {
+  // Check if a group with the same name already exists
+  if (updateData.group_name) {
+    const existingGroup = await groupDataAccess.FindAllGroups({ group_name: updateData.group_name });
+    if (existingGroup && existingGroup[0]._id.toString() !== groupId) {
+      throw new BadRequestException('A group with this name already exists');
+    }
+  }
 
+  const group = await groupDataAccess.FindById(groupId);
+  if (!group.admins_ids.includes(new ObjectId(userId))) {
+    throw new UnauthorizedException("User not authorized to update the group");
+  }
 
+  // Only update allowed fields
+  const dataToUpdate = {
+    group_name: updateData.group_name || group.group_name,
+    locations: updateData.locations || group.locations,
+    active: updateData.active || group.active
+  };
+
+  return groupDataAccess.UpdateGroup(groupId, dataToUpdate);
+}
+
+export async function uploadGroupImage(id: string, file?: Express.Multer.File) {
+  const filePath = `groupsimages/${id}`; 
+  const image_URL = await uploadImageToFirebase(file, filePath);
+  await groupDataAccess.UpdateGroup(id, { image_URL }); 
+  return image_URL;
+}
 
 
 

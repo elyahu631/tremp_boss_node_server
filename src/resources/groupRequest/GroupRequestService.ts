@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import { uploadImageToFirebase } from "../../firebase/fileUpload";
 import { BadRequestException } from "../../middleware/HttpException";
 import GroupRequestDataAccess from "./GroupRequestDataAccess";
@@ -24,4 +25,8 @@ export async function uploadGroupRequestImage(id: string, file?: Express.Multer.
   const image_URL = await uploadImageToFirebase(file, filePath);
   await groupReqDataAccess.UpdateGroup(id, { image_URL }); 
   return image_URL;
+}
+
+export async function getUserRequests(userId: string) {
+  return groupReqDataAccess.FindAllGroupReq({ user_id: new ObjectId(userId) });
 }

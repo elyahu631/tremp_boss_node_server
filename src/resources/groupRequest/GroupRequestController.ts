@@ -13,7 +13,6 @@ export async function addGroupRequest(req: Request, res: Response, next: NextFun
   }
 }
 
-
 export async function uploadGroupRequestImage(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     let file: Express.Multer.File;
@@ -31,6 +30,16 @@ export async function uploadGroupRequestImage(req: Request, res: Response, next:
     const { id } = req.params;
     const imageUrl = await GroupRequestService.uploadGroupRequestImage(id, file);
     res.status(200).json({ status: true, message: "Image uploaded successfully", data: {image_URL: imageUrl}});
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getUserRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { user_id } = req.body;
+    const userRequests = await GroupRequestService.getUserRequests(user_id);
+    res.status(200).json({ status: true, data: userRequests });
   } catch (err) {
     next(err);
   }

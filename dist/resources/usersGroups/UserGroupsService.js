@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUsersByGroupId = exports.getRequestsByGroupId = exports.approveGroupRequest = exports.deleteRequestByUserAndGroup = void 0;
+exports.getUsersRequest = exports.approveGroupRequest = exports.deleteRequestByUserAndGroup = void 0;
 const HttpException_1 = require("../../middleware/HttpException");
 const GroupDataAccess_1 = __importDefault(require("../groups/GroupDataAccess"));
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
@@ -45,14 +45,18 @@ function deleteRequestByUserAndGroup(userId, groupId) {
 exports.deleteRequestByUserAndGroup = deleteRequestByUserAndGroup;
 function approveGroupRequest(adminId, reqId, isApproved) {
     return __awaiter(this, void 0, void 0, function* () {
-        const join_group_request = yield userGroupsDataAccess.FindById(adminId);
+        const join_group_request = yield userGroupsDataAccess.FindById(reqId);
         const group = yield groupDataAccess.FindById((join_group_request.group_id).toString());
         // Check if group ID is valid
         if (!group || group.deleted) {
-            throw new HttpException_1.NotFoundException("Group not found or deleted.");
+            throw new HttpException_1.NotFoundException("Group not found");
         }
-        if (!group.admin_ids.includes(new mongodb_1.ObjectId(adminId))) {
+        const stringAdminIds = group.admins_ids.map((id) => id.toString());
+        if (!stringAdminIds.includes(adminId)) {
             throw new HttpException_1.UnauthorizedException("User not Unauthorized to approve users in group");
+        }
+        if (isApproved !== 'approved' && isApproved !== 'denied') {
+            throw new HttpException_1.BadRequestException("Invalid status value");
         }
         // Update the request status to the provided status
         const updateData = {
@@ -66,21 +70,30 @@ function approveGroupRequest(adminId, reqId, isApproved) {
     });
 }
 exports.approveGroupRequest = approveGroupRequest;
-function getRequestsByGroupId(groupId) {
+function getUsersRequest(userId, groupId, status) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield userGroupsDataAccess.FindAllUserGroups({
+        const query = {
             group_id: new mongodb_1.ObjectId(groupId),
-            is_approved: 'pending',
-        });
+            is_approved: status,
+        };
+        const usersGroupReq = yield userGroupsDataAccess.FindAllUserGroups(query);
+        // Map the user group requests to the desired format
+        const usersWithRequests = usersGroupReq.map((req) => __awaiter(this, void 0, void 0, function* () {
+            const user = yield userDataAccess.FindById(req.user_id);
+            return {
+                request: Object.assign(Object.assign({}, req), { user: {
+                        first_name: user.first_name,
+                        last_name: user.last_name,
+                        email: user.email,
+                        phone_number: user.phone_number,
+                        image_URL: user.image_URL,
+                        gender: user.gender,
+                    } }),
+            };
+        }));
+        // Wait for all promises to complete and return the result
+        return yield Promise.all(usersWithRequests);
     });
 }
-exports.getRequestsByGroupId = getRequestsByGroupId;
-function getUsersByGroupId(groupId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const usersGroupReq = yield userGroupsDataAccess.FindAllUserGroups({ group_id: groupId }, { user_id: 1 });
-        const userIds = usersGroupReq.map((req) => req.user_id);
-        return userDataAccess.FindAllUsers({ _id: { $in: userIds } }, { first_name: 1, last_name: 1 });
-    });
-}
-exports.getUsersByGroupId = getUsersByGroupId;
+exports.getUsersRequest = getUsersRequest;
 //# sourceMappingURL=UserGroupsService.js.map

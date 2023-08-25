@@ -7,8 +7,8 @@ class GroupModel {
   type: string;
   image_URL: string;
   locations: Array<{ name: string; coordinates: { latitude: number; longitude: number; } }>;
-  active: string;
   admins_ids: ObjectId[];
+  active: string;
   deleted: boolean;
 
   constructor(groupData: Partial<GroupModel>) {
@@ -17,8 +17,8 @@ class GroupModel {
     this.type = groupData.type;
     this.image_URL = groupData.image_URL;
     this.locations = groupData.locations;
-    this.active = groupData.active || 'active';
     this.admins_ids = groupData.admins_ids || [];
+    this.active = groupData.active || 'active';
     this.deleted = groupData.deleted || false;
   }
   
@@ -43,10 +43,10 @@ class GroupModel {
             .max(180),
         }).required(),
       })).required(),
+      admins_ids: Joi.array().items(Joi.string()).optional(),
       active: Joi.string()
         .required()
         .valid('active', 'inactive'),
-      admins_ids: Joi.array().items(Joi.string()).optional(),
       deleted: Joi.boolean().required(),
     });
 
