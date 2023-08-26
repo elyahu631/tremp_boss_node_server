@@ -29,6 +29,7 @@ class TrempModel {
   users_in_tremp: UserInTremp[];
   is_full: boolean;
   chat_id: ObjectId;
+  is_completed: boolean;
   deleted: boolean;
 
   constructor(trempData: Partial<TrempModel>) {
@@ -44,6 +45,7 @@ class TrempModel {
     this.users_in_tremp = trempData.users_in_tremp || [];
     this.is_full = trempData.is_full || false;
     this.chat_id = trempData.chat_id ;
+    this.is_completed = trempData.is_completed || false; 
     this.deleted = trempData.deleted || false;
   }
 
@@ -79,6 +81,7 @@ class TrempModel {
       ).optional(),
       is_full: Joi.boolean().required(),
       chat_id: Joi.string().optional(),
+      is_completed: Joi.boolean().required(),
       deleted: Joi.boolean().required(),
     });
     const { error } = schema.validate(this);

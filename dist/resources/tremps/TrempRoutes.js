@@ -39,6 +39,7 @@ trempRoutes.put('/approve-user-in-tremp', auth_1.authenticateToken, TrempControl
 trempRoutes.get('/users-in-tremp/:tremp_id', auth_1.authenticateToken, TrempController.getUsersInTremp);
 trempRoutes.post('/approved-tremps', auth_1.authenticateToken, TrempController.getApprovedTremps);
 trempRoutes.put('/delete-tremp', auth_1.authenticateToken, TrempController.deleteTremp);
+trempRoutes.put('/tremp-completed', auth_1.authenticateToken, TrempController.trempCompleted);
 //for admin
 trempRoutes.get("/all", auth_1.authenticateToken, TrempController.getAllTremps);
 trempRoutes.use(handleErrors_1.handleErrors);

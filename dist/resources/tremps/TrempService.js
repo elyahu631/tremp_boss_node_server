@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempById = exports.getAllTremps = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempService.ts
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
@@ -348,7 +348,6 @@ function deleteTremp(tremp_id, user_id) {
         }
         // Check if the user requesting the delete is not the creator of the tremp
         if (!tremp.creator_id.equals(userId)) {
-            console.log("gdfg");
             return cancelTremp(tremp, user_id);
         }
         // Find users in the tremp who need to be notified
@@ -367,7 +366,14 @@ exports.deleteTremp = deleteTremp;
 function cancelTremp(tremp, user_id) {
     return __awaiter(this, void 0, void 0, function* () {
         const userIndex = tremp.users_in_tremp.findIndex((user) => user.user_id.toString() === user_id);
+        if (userIndex === -1) {
+            throw new HttpException_1.BadRequestException('User is not a participant in this tremp');
+        }
         tremp.users_in_tremp[userIndex].is_approved = 'canceled';
+        // Update is_full to false if the tremp is no longer full
+        if (tremp.is_full) {
+            tremp.is_full = false;
+        }
         yield trempDataAccess.Update(tremp._id, tremp);
         const creatorId = tremp.creator_id;
         const user_in_tremp = yield userDataAccess.FindById(creatorId);
@@ -496,6 +502,21 @@ function getUserDetailsById(userId) {
         }
     });
 }
+// trempCompleted
+function trempCompleted(trempId, userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tremp = yield trempDataAccess.FindByID(trempId);
+        if (!tremp) {
+            throw new HttpException_1.BadRequestException('Tremp does not exist');
+        }
+        if (!tremp.creator_id.equals(userId)) {
+            throw new HttpException_1.UnauthorizedException('Only the creator can update tremp to be completed');
+        }
+        tremp.is_completed = true;
+        return yield trempDataAccess.Update(trempId, tremp);
+    });
+}
+exports.trempCompleted = trempCompleted;
 // ##############################################
 function getAllTremps() {
     return __awaiter(this, void 0, void 0, function* () {

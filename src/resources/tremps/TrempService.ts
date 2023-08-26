@@ -338,8 +338,6 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
 
   // Check if the user requesting the delete is not the creator of the tremp
   if (!tremp.creator_id.equals(userId)) {
-    console.log("gdfg");
-
     return cancelTremp(tremp, user_id);
   }
 
@@ -359,7 +357,18 @@ export async function deleteTremp(tremp_id: string, user_id: string) {
 }
 async function cancelTremp(tremp: any, user_id: string) {
   const userIndex = tremp.users_in_tremp.findIndex((user: any) => user.user_id.toString() === user_id);
+
+  if (userIndex === -1) {
+    throw new BadRequestException('User is not a participant in this tremp');
+  }
+
   tremp.users_in_tremp[userIndex].is_approved = 'canceled';
+
+  // Update is_full to false if the tremp is no longer full
+  if (tremp.is_full) {
+    tremp.is_full = false;
+  }
+
   await trempDataAccess.Update(tremp._id, tremp)
   const creatorId = tremp.creator_id;
   const user_in_tremp = await userDataAccess.FindById(creatorId);
@@ -506,7 +515,22 @@ async function getUserDetailsById(userId: ObjectId) {
   }
 }
 
+// trempCompleted
+export async function trempCompleted(trempId: string, userId: string): Promise<any> {  // Return type changed to Promise<any>
+  const tremp = await trempDataAccess.FindByID(trempId);
+  
+  if (!tremp) {
+    throw new BadRequestException('Tremp does not exist');
+  }
 
+  if (!tremp.creator_id.equals(userId)) {
+    throw new UnauthorizedException('Only the creator can update tremp to be completed');
+  }
+
+  tremp.is_completed = true;
+  
+  return await trempDataAccess.Update(trempId, tremp);
+}
 
 // ##############################################
 export async function getAllTremps() {

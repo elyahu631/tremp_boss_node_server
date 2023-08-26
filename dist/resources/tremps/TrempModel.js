@@ -20,6 +20,7 @@ class TrempModel {
         this.users_in_tremp = trempData.users_in_tremp || [];
         this.is_full = trempData.is_full || false;
         this.chat_id = trempData.chat_id;
+        this.is_completed = trempData.is_completed || false;
         this.deleted = trempData.deleted || false;
     }
     validateTremp() {
@@ -52,6 +53,7 @@ class TrempModel {
             })).optional(),
             is_full: joi_1.default.boolean().required(),
             chat_id: joi_1.default.string().optional(),
+            is_completed: joi_1.default.boolean().required(),
             deleted: joi_1.default.boolean().required(),
         });
         const { error } = schema.validate(this);

@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllTremps = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -170,6 +170,22 @@ function getApprovedTremps(req, res, next) {
     });
 }
 exports.getApprovedTremps = getApprovedTremps;
+function trempCompleted(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { tremp_id, user_id } = req.body;
+            if (!tremp_id || !user_id) {
+                throw new HttpException_1.BadRequestException('Tremp ID and User ID are required');
+            }
+            const result = yield TrempService.trempCompleted(tremp_id, user_id);
+            res.status(200).json({ status: true, result });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.trempCompleted = trempCompleted;
 function getAllTremps(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

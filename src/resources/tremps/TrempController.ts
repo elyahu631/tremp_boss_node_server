@@ -117,6 +117,19 @@ export async function getApprovedTremps(req: Request, res: Response, next: NextF
   }
 }
 
+export async function trempCompleted(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { tremp_id, user_id } = req.body;
+    if (!tremp_id || !user_id) {
+      throw new BadRequestException('Tremp ID and User ID are required');
+    }
+    const result = await TrempService.trempCompleted(tremp_id, user_id);
+    res.status(200).json({ status: true, result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getAllTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     let trepms = await TrempService.getAllTremps();

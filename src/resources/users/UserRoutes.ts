@@ -23,6 +23,13 @@ import multerConfig from "../../config/multerConfig";
 const upload = multer(multerConfig); 
 const usersRouter: Router = express.Router();
 
+
+// for admin
+usersRouter.get("/all", authenticateToken, getAllUsers);
+usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
+usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
+usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
+
 // for app users
 usersRouter.post("/register", registerUser);// V
 usersRouter.post("/login", loginUser);// V
@@ -31,11 +38,6 @@ usersRouter.put("/update/:id", authenticateToken, updateUser);// V
 usersRouter.post("/update-image/:id", authenticateToken, upload.any(), uploadUserImage);// V
 usersRouter.put("/mark-deleted/:id", authenticateToken, markUserAsDeleted);
 
-// for admin
-usersRouter.get("/all", authenticateToken, getAllUsers);
-usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
-usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
-usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
 
 usersRouter.post("/add-notification-token", addNotificationToken);
 
