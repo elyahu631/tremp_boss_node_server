@@ -10,6 +10,7 @@ class GroupRequestModel {
     constructor(groupReqData) {
         this.user_id = new mongodb_1.ObjectId(groupReqData.user_id);
         this.group_name = groupReqData.group_name;
+        this.description = groupReqData.description;
         this.type = groupReqData.type;
         this.image_URL = groupReqData.image_URL;
         this.request_date = groupReqData.request_date || (0, TimeService_1.getCurrentTimeInIsrael)();
@@ -20,6 +21,7 @@ class GroupRequestModel {
         const schema = joi_1.default.object({
             user_id: joi_1.default.required(),
             group_name: joi_1.default.string().required(),
+            description: joi_1.default.string().max(500).optional(),
             type: joi_1.default.string()
                 .required()
                 .valid('PRIVATE'),

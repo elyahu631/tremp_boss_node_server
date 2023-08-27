@@ -5,8 +5,9 @@ import { getCurrentTimeInIsrael } from "../../services/TimeService";
 class GroupRequestModel {
   user_id: ObjectId;
   group_name: string;
+  description?: string; 
   type: string;
-  image_URL: string;
+  image_URL?: string;
   request_date: Date;
   locations: Array<{ name: string; coordinates: { latitude: number; longitude: number; } }>;
   is_approved: String;
@@ -14,6 +15,7 @@ class GroupRequestModel {
   constructor(groupReqData: Partial<GroupRequestModel>) {
     this.user_id = new ObjectId(groupReqData.user_id);
     this.group_name = groupReqData.group_name;
+    this.description = groupReqData.description; 
     this.type = groupReqData.type;
     this.image_URL = groupReqData.image_URL;
     this.request_date = groupReqData.request_date || getCurrentTimeInIsrael();
@@ -25,6 +27,7 @@ class GroupRequestModel {
     const schema = Joi.object({
       user_id:Joi.required(),
       group_name: Joi.string().required(),
+      description: Joi.string().max(500).optional(),
       type: Joi.string()
         .required()
         .valid('PRIVATE'),

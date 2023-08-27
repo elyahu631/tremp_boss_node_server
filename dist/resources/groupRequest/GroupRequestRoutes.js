@@ -14,6 +14,9 @@ const groupRequestRoutes = express_1.default.Router();
 groupRequestRoutes.post("/add", auth_1.authenticateToken, GroupRequestController_1.addGroupRequest);
 groupRequestRoutes.post("/upload-image/:id", auth_1.authenticateToken, upload.any(), GroupRequestController_1.uploadGroupRequestImage);
 groupRequestRoutes.post("/get-user-requests", auth_1.authenticateToken, GroupRequestController_1.getUserRequests);
+// admin 
+groupRequestRoutes.get("/unapproved-requests", auth_1.authenticateToken, GroupRequestController_1.getUnapprovedRequests);
+groupRequestRoutes.put("/approve/:id", auth_1.authenticateToken, GroupRequestController_1.approveOpenGroupRequest);
 groupRequestRoutes.use(handleErrors_1.handleErrors);
 exports.default = groupRequestRoutes;
 //# sourceMappingURL=GroupRequestRoutes.js.map

@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
+exports.approveOpenGroupRequest = exports.getUnapprovedRequests = exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
 const GroupRequestService = __importStar(require("./GroupRequestService"));
 const GroupRequestModel_1 = __importDefault(require("./GroupRequestModel"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -88,4 +88,30 @@ function getUserRequests(req, res, next) {
     });
 }
 exports.getUserRequests = getUserRequests;
+function getUnapprovedRequests(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const unapprovedRequests = yield GroupRequestService.getUnapprovedRequests();
+            res.status(200).json({ status: true, data: unapprovedRequests });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getUnapprovedRequests = getUnapprovedRequests;
+// GroupRequestController.ts
+function approveOpenGroupRequest(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { id } = req.params;
+            yield GroupRequestService.approveOpenGroupRequest(id);
+            res.status(200).json({ status: true, message: 'Request approved successfully.' });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.approveOpenGroupRequest = approveOpenGroupRequest;
 //# sourceMappingURL=GroupRequestController.js.map

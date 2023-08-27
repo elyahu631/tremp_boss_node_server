@@ -44,3 +44,28 @@ export async function getUserRequests(req: Request, res: Response, next: NextFun
     next(err);
   }
 }
+
+
+
+
+export async function getUnapprovedRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const unapprovedRequests = await GroupRequestService.getUnapprovedRequests();
+    res.status(200).json({ status: true, data: unapprovedRequests });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+// GroupRequestController.ts
+
+export async function approveOpenGroupRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    await GroupRequestService.approveOpenGroupRequest(id);
+    res.status(200).json({ status: true, message: 'Request approved successfully.' });
+  } catch (err) {
+    next(err);
+  }
+}
