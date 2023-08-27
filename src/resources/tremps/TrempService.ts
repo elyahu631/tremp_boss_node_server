@@ -121,7 +121,7 @@ async function createSingleTremp(date: Date, creatorIdObj: ObjectId, groupIdObj:
 
 // getTrempsByFilters
 export async function getTrempsByFilters(filters: any): Promise<any> {
-  const query = constructQueryFromFilters(filters);
+  const query = await constructQueryFromFilters(filters);
   const tremps = await trempDataAccess.FindTrempsByFilters(query);
   const uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];
 
@@ -135,12 +135,19 @@ export async function getTrempsByFilters(filters: any): Promise<any> {
 
   return tremps;
 }
-function constructQueryFromFilters(filters: any): object {
-  const userId = new ObjectId(filters.creator_id);
+async function constructQueryFromFilters(filters: any): Promise<any> {
+  const user = await userDataAccess.FindById(filters.user_id);
+  if (!user) {
+    throw new NotFoundException("User not found");
+  }
+  const userId = user._id;
+  const connectedGroups = user.groups;
   const date = new Date(filters.tremp_time);
+  
   return {
     deleted: false,
     is_full: false,
+    group_id: { $in: connectedGroups }, 
     creator_id: { $ne: userId },
     tremp_time: { $gt: date },
     tremp_type: filters.tremp_type,
@@ -151,6 +158,8 @@ function constructQueryFromFilters(filters: any): object {
     },
   };
 }
+
+
 function createUserMapFromList(users: any[]): Map<string, any> {
   return new Map(users.map(user => [user._id.toString(), user]));
 }

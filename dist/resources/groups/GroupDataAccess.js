@@ -14,6 +14,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
 class GroupDataAccess {
+    getGeneralGroup() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (yield db_1.default.FindAll(GroupDataAccess.collection, { type: 'GENERAL' }))[0];
+        });
+    }
     FindAllGroups(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield db_1.default.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });

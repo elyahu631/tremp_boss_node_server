@@ -1,6 +1,7 @@
 // src/resources/users/UserDataAccess.ts
 
 import db from '../../utils/db';
+import GroupDataAccess from '../groups/GroupDataAccess';
 import { UserInterface } from './UserInterface';
 import UserModel  from './UserModel';
 
@@ -21,6 +22,15 @@ class UserDataAccess  {
 
   async InsertOne(user: UserModel) {
     user.validateUser();
+    
+    if (!user.groups || user.groups.length === 0) {
+      const groupDataAccess = new GroupDataAccess();
+      const generalGroup = await groupDataAccess.getGeneralGroup();
+      if (generalGroup) {
+        user.groups = [generalGroup._id];
+      }
+    }
+
     return await db.Insert(UserDataAccess .collection, user);
   }
 

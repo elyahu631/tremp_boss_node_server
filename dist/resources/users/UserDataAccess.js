@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
+const GroupDataAccess_1 = __importDefault(require("../groups/GroupDataAccess"));
 class UserDataAccess {
     FindAllUsers(query = {}, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -33,6 +34,13 @@ class UserDataAccess {
     InsertOne(user) {
         return __awaiter(this, void 0, void 0, function* () {
             user.validateUser();
+            if (!user.groups || user.groups.length === 0) {
+                const groupDataAccess = new GroupDataAccess_1.default();
+                const generalGroup = yield groupDataAccess.getGeneralGroup();
+                if (generalGroup) {
+                    user.groups = [generalGroup._id];
+                }
+            }
             return yield db_1.default.Insert(UserDataAccess.collection, user);
         });
     }

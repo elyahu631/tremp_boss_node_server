@@ -4,6 +4,9 @@ import GroupModel from './GroupModel';
 class GroupDataAccess {
   static collection = 'Groups';
 
+  async getGeneralGroup() {
+    return (await db.FindAll(GroupDataAccess.collection, { type: 'GENERAL' }))[0];
+  }
 
   async FindAllGroups(query = {}) {
     return await db.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });

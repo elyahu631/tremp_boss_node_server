@@ -31,7 +31,7 @@ class GroupModel {
       description: Joi.string().allow('').max(500).optional(),
       type: Joi.string()
         .required()
-        .valid('CITIES', 'PRIVATE'),
+        .valid('GENERAL', 'PRIVATE'),
       image_URL: Joi.string().allow('').optional(),
       locations: Joi.array().items(Joi.object({
         name: Joi.string().required(),

@@ -138,7 +138,7 @@ function createSingleTremp(date, creatorIdObj, groupIdObj, tremp_type, from_rout
 // getTrempsByFilters
 function getTrempsByFilters(filters) {
     return __awaiter(this, void 0, void 0, function* () {
-        const query = constructQueryFromFilters(filters);
+        const query = yield constructQueryFromFilters(filters);
         const tremps = yield trempDataAccess.FindTrempsByFilters(query);
         const uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))];
         const users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, image_URL: 1, gender: 1 });
@@ -149,20 +149,28 @@ function getTrempsByFilters(filters) {
 }
 exports.getTrempsByFilters = getTrempsByFilters;
 function constructQueryFromFilters(filters) {
-    const userId = new mongodb_1.ObjectId(filters.creator_id);
-    const date = new Date(filters.tremp_time);
-    return {
-        deleted: false,
-        is_full: false,
-        creator_id: { $ne: userId },
-        tremp_time: { $gt: date },
-        tremp_type: filters.tremp_type,
-        users_in_tremp: {
-            $not: {
-                $elemMatch: { user_id: userId },
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = yield userDataAccess.FindById(filters.user_id);
+        if (!user) {
+            throw new HttpException_1.NotFoundException("User not found");
+        }
+        const userId = user._id;
+        const connectedGroups = user.groups;
+        const date = new Date(filters.tremp_time);
+        return {
+            deleted: false,
+            is_full: false,
+            group_id: { $in: connectedGroups },
+            creator_id: { $ne: userId },
+            tremp_time: { $gt: date },
+            tremp_type: filters.tremp_type,
+            users_in_tremp: {
+                $not: {
+                    $elemMatch: { user_id: userId },
+                },
             },
-        },
-    };
+        };
+    });
 }
 function createUserMapFromList(users) {
     return new Map(users.map(user => [user._id.toString(), user]));

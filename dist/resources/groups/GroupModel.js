@@ -24,7 +24,7 @@ class GroupModel {
             description: joi_1.default.string().allow('').max(500).optional(),
             type: joi_1.default.string()
                 .required()
-                .valid('CITIES', 'PRIVATE'),
+                .valid('GENERAL', 'PRIVATE'),
             image_URL: joi_1.default.string().allow('').optional(),
             locations: joi_1.default.array().items(joi_1.default.object({
                 name: joi_1.default.string().required(),

@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi_1 = __importDefault(require("joi"));
-const mongodb_1 = require("mongodb");
 const TimeService_1 = require("../../services/TimeService");
 class UserModel {
     constructor(userData) {
@@ -20,7 +19,7 @@ class UserModel {
         this.createdAt = userData.createdAt || (0, TimeService_1.getCurrentTimeInIsrael)();
         this.updatedAt = userData.updatedAt || (0, TimeService_1.getCurrentTimeInIsrael)();
         this.last_login_date = userData.last_login_date;
-        this.groups = userData.groups || [new mongodb_1.ObjectId("64743b14b165e7102c90dd32")];
+        this.groups = userData.groups || [];
         this.status = userData.status || "active";
         this.deleted = userData.deleted || false;
         this.notification_token = userData.notification_token || "";

@@ -35,7 +35,7 @@ class UserModel {
     this.createdAt = userData.createdAt || getCurrentTimeInIsrael(); 
     this.updatedAt = userData.updatedAt || getCurrentTimeInIsrael(); 
     this.last_login_date = userData.last_login_date; 
-    this.groups = userData.groups || [new ObjectId("64743b14b165e7102c90dd32")];
+    this.groups = userData.groups || [];
     this.status = userData.status || "active"; 
     this.deleted = userData.deleted || false; 
     this.notification_token = userData.notification_token  || "";
