@@ -77,18 +77,17 @@ function getUsersRequest(userId, groupId, status) {
             is_approved: status,
         };
         const usersGroupReq = yield userGroupsDataAccess.FindAllUserGroups(query);
+        // Retrieve the group details to get the list of admin IDs
+        const groupDetails = yield groupDataAccess.FindById(groupId);
         // Map the user group requests to the desired format
         const usersWithRequests = usersGroupReq.map((req) => __awaiter(this, void 0, void 0, function* () {
             const user = yield userDataAccess.FindById(req.user_id);
+            let isAdmin = false;
+            if (status === 'approved') {
+                isAdmin = groupDetails.admins_ids.some((adminId) => adminId.toString() === req.user_id.toString());
+            }
             return {
-                request: Object.assign(Object.assign({}, req), { user: {
-                        first_name: user.first_name,
-                        last_name: user.last_name,
-                        email: user.email,
-                        phone_number: user.phone_number,
-                        image_URL: user.image_URL,
-                        gender: user.gender,
-                    } }),
+                request: Object.assign(Object.assign({}, req), { user: Object.assign({ first_name: user.first_name, last_name: user.last_name, email: user.email, phone_number: user.phone_number, image_URL: user.image_URL, gender: user.gender }, (status === 'approved' && { is_admin: isAdmin })) }),
             };
         }));
         // Wait for all promises to complete and return the result

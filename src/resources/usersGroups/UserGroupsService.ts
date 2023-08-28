@@ -2,7 +2,7 @@ import { BadRequestException, NotFoundException, UnauthorizedException } from ".
 import GroupDataAccess from "../groups/GroupDataAccess";
 import UserDataAccess from "../users/UserDataAccess";
 import UserGroupsDataAccess from "./UserGroupsDataAccess";
-import {ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 const userGroupsDataAccess = new UserGroupsDataAccess();
 const userDataAccess = new UserDataAccess();
@@ -44,8 +44,8 @@ export async function approveGroupRequest(adminId: string, reqId: string, isAppr
     throw new NotFoundException("Group not found");
   }
 
-  const stringAdminIds = group.admins_ids.map((id:ObjectId) => id.toString());
-  
+  const stringAdminIds = group.admins_ids.map((id: ObjectId) => id.toString());
+
   if (!stringAdminIds.includes(adminId)) {
     throw new UnauthorizedException("User not Unauthorized to approve users in group");
   }
@@ -66,7 +66,7 @@ export async function approveGroupRequest(adminId: string, reqId: string, isAppr
   return await userDataAccess.UpdateUserDetails((user._id).toString(), user);
 }
 
-export async function getUsersRequest(userId: string,groupId: string, status: string) {
+export async function getUsersRequest(userId: string, groupId: string, status: string) {
   const query = {
     group_id: new ObjectId(groupId),
     is_approved: status,
@@ -74,9 +74,19 @@ export async function getUsersRequest(userId: string,groupId: string, status: st
 
   const usersGroupReq = await userGroupsDataAccess.FindAllUserGroups(query);
 
+  // Retrieve the group details to get the list of admin IDs
+  const groupDetails = await groupDataAccess.FindById(groupId);
+
   // Map the user group requests to the desired format
   const usersWithRequests = usersGroupReq.map(async (req: any) => {
     const user = await userDataAccess.FindById(req.user_id);
+
+    let isAdmin = false;
+
+    if (status === 'approved') {
+      isAdmin = groupDetails.admins_ids.some((adminId: ObjectId) => adminId.toString() === req.user_id.toString());
+    }
+
     return {
       request: {
         ...req,
@@ -87,6 +97,7 @@ export async function getUsersRequest(userId: string,groupId: string, status: st
           phone_number: user.phone_number,
           image_URL: user.image_URL,
           gender: user.gender,
+          ...(status === 'approved' && { is_admin: isAdmin })
         },
       },
     };
@@ -95,4 +106,5 @@ export async function getUsersRequest(userId: string,groupId: string, status: st
   // Wait for all promises to complete and return the result
   return await Promise.all(usersWithRequests);
 }
+
 
