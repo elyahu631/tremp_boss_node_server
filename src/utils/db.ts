@@ -26,11 +26,11 @@ class DB {
   }
 
   async FindAll(collection: string, query = {}, projection = {}, sort = {}) {
-    try {      
+    try {
       return await this.client.db(this.dbName).collection(collection).find(query, { projection }).sort(sort).toArray();;
     } catch (error) {
       throw error
-    } 
+    }
   }
 
   async FindByID(collection: string, id: string) {
@@ -38,7 +38,7 @@ class DB {
       return await this.client.db(this.dbName).collection(collection).findOne({ _id: new ObjectId(id) });
     } catch (error) {
       throw error;
-    } 
+    }
   }
 
   async DeleteById(collection: string, id: string) {
@@ -46,7 +46,7 @@ class DB {
       return await this.client.db(this.dbName).collection(collection).deleteOne({ _id: new ObjectId(id) });
     } catch (error) {
       throw error;
-    } 
+    }
   }
 
   async Insert(collection: string, doc: Model) {
@@ -54,7 +54,7 @@ class DB {
       return await this.client.db(this.dbName).collection(collection).insertOne(doc);
     } catch (error) {
       return error;
-    } 
+    }
   }
 
   async Update(collection: string, id: string, updatedDocument: Partial<Model>) {
@@ -63,7 +63,7 @@ class DB {
       return result;
     } catch (error) {
       throw error;
-    } 
+    }
   }
 
   async UpdateWithOperation(collection: string, id: string, updateOperation: object) {
@@ -76,18 +76,25 @@ class DB {
       return result;
     } catch (error) {
       throw error;
-    } 
+    }
   }
 
   async aggregate(collection: string, pipeline = [{}]) {
     try {
-      await this.client.connect();
       return await this.client.db(this.dbName).collection(collection).aggregate(pipeline).toArray();
     } catch (error) {
       throw error;
-    } 
+    }
   }
 
+
+  async Count(collection: string, query = {}): Promise<number> {
+    try {
+      return await this.client.db(this.dbName).collection(collection).countDocuments(query);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 const db = new DB();

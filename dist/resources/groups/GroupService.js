@@ -63,9 +63,13 @@ function allGroupsWithUserStatus(userId) {
         const connectedGroupsDetails = yield getDetailedGroups(connectedGroups, connectedGroups);
         const pendingGroupsDetails = yield getDetailedGroups(pendingGroups, connectedGroups);
         const notJoinGroups = yield getNotJoinGroups(allGroups, connectedGroups, pendingGroups);
-        notJoinGroups.forEach(group => {
-            group.amount_of_users = connectedGroups.filter(cg => cg === group._id.toString()).length;
+        const addCountOfUsers = (group) => __awaiter(this, void 0, void 0, function* () {
+            group.amount_of_users = yield userGroupsDataAccess.CountUsersInGroup(new mongodb_1.ObjectId(group._id));
         });
+        // Add the user count to each group
+        yield Promise.all(connectedGroupsDetails.map(addCountOfUsers));
+        yield Promise.all(pendingGroupsDetails.map(addCountOfUsers));
+        yield Promise.all(notJoinGroups.map(addCountOfUsers));
         return {
             approved: connectedGroupsDetails,
             pending: pendingGroupsDetails,

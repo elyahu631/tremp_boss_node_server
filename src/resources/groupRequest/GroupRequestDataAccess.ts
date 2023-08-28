@@ -6,7 +6,7 @@ class GroupRequesDataAccess {
 
 
   async FindAllGroupReq(query = {}) {
-    return await db.FindAll(GroupRequesDataAccess.collection, query, {}, { group_name: 1 });
+    return await db.FindAll(GroupRequesDataAccess.collection, query, {}, { request_date: 1, group_name: 1 });
   }
 
   async FindById(id: string) {
@@ -25,7 +25,10 @@ class GroupRequesDataAccess {
 
   async UpdateGroup(id: string, updateData: Partial<GroupRequestModel>) {
     return await db.Update(GroupRequesDataAccess.collection, id, updateData);
-  } 
+  }
+
+  
+
 }
 
 export default GroupRequesDataAccess;

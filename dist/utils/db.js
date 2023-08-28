@@ -100,8 +100,17 @@ class DB {
     aggregate(collection, pipeline = [{}]) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.client.connect();
                 return yield this.client.db(this.dbName).collection(collection).aggregate(pipeline).toArray();
+            }
+            catch (error) {
+                throw error;
+            }
+        });
+    }
+    Count(collection, query = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return yield this.client.db(this.dbName).collection(collection).countDocuments(query);
             }
             catch (error) {
                 throw error;

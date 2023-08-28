@@ -27,7 +27,7 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
       throw new UnauthorizedException("Invalid user or password.");
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "8h" });
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30d' });
     res.status(200).json({ status: true, data: { user, token } });
   } catch (err) {
     next(err);

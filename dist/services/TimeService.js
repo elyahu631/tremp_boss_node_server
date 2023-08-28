@@ -1,5 +1,4 @@
 "use strict";
-// src/timeUtils/index.ts
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCurrentTimeInIsrael = void 0;
 const date_fns_tz_1 = require("date-fns-tz");

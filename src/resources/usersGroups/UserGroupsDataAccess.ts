@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import db from '../../utils/db';
 import UserGroupsModel from './UserGroupsModel';
 
@@ -23,6 +24,10 @@ class UserGroupsDataAccess {
   
   async DeleteById(id: string) {
     return await db.DeleteById(UserGroupsDataAccess.collection, id);
+  }
+
+  async CountUsersInGroup(groupId: ObjectId): Promise<number> {
+    return await db.Count(UserGroupsDataAccess.collection, { group_id: groupId, is_approved: 'approved' });
   }
 }
 

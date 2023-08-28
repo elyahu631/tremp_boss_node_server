@@ -62,7 +62,7 @@ exports.getUserRequests = getUserRequests;
 // admin
 function getUnapprovedRequests() {
     return __awaiter(this, void 0, void 0, function* () {
-        const unapprovedRequests = yield groupReqDataAccess.FindAllGroupReq({ is_approved: 'pending' });
+        const unapprovedRequests = yield groupReqDataAccess.FindAllGroupReq({ is_approved: { $in: ['pending', 'denied'] } });
         const populatedRequests = [];
         for (const request of unapprovedRequests) {
             const user = yield userDataAccess.FindById(request.user_id.toString());
@@ -146,7 +146,7 @@ function notifyUser(fcmToken, newGroupId, groupName) {
         if (fcmToken) {
             const notificationTitle = `Group Opened: ${groupName}`;
             const notificationBody = `The group "${groupName}" is now open and you have been added as an admin.`;
-            yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, notificationTitle, notificationBody, { newGroupId });
+            yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, notificationTitle, notificationBody, newGroupId.toString);
         }
         else {
             console.log('User does not have a valid FCM token');

@@ -54,9 +54,14 @@ export async function allGroupsWithUserStatus(userId: string) {
   const pendingGroupsDetails = await getDetailedGroups(pendingGroups, connectedGroups);
   const notJoinGroups = await getNotJoinGroups(allGroups, connectedGroups, pendingGroups);
 
-  notJoinGroups.forEach(group => {
-    group.amount_of_users = connectedGroups.filter(cg => cg === group._id.toString()).length;
-  });
+  const addCountOfUsers = async (group:any) => {
+    group.amount_of_users = await userGroupsDataAccess.CountUsersInGroup(new ObjectId(group._id));
+  };
+
+  // Add the user count to each group
+  await Promise.all(connectedGroupsDetails.map(addCountOfUsers));
+  await Promise.all(pendingGroupsDetails.map(addCountOfUsers));
+  await Promise.all(notJoinGroups.map(addCountOfUsers));
 
   return {
     approved: connectedGroupsDetails,

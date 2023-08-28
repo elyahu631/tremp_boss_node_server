@@ -40,6 +40,11 @@ class UserGroupsDataAccess {
             return yield db_1.default.DeleteById(UserGroupsDataAccess.collection, id);
         });
     }
+    CountUsersInGroup(groupId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield db_1.default.Count(UserGroupsDataAccess.collection, { group_id: groupId, is_approved: 'approved' });
+        });
+    }
 }
 UserGroupsDataAccess.collection = 'UserGroups';
 exports.default = UserGroupsDataAccess;
