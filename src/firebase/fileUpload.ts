@@ -1,12 +1,17 @@
 import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import { bucket } from "../firebase/storage";
 
 export async function uploadImageToFirebase(file: Express.Multer.File, filePath: string): Promise<string> {
+  
+  // Generate a unique identifier
+  const uniqueId = uuidv4();
+
   // Extract the original file extension
   const originalExtension = path.extname(file.originalname);
 
-  // Combine the filePath with the original file extension to create the new filename
-  const filename = `${filePath}${originalExtension}`;
+  // Combine the filePath with the unique identifier and original file extension to create the new filename
+  const filename = `${filePath}-${uniqueId}${originalExtension}`;
 
   // upload the file to Firebase Cloud Storage
   const blob = bucket.file(filename);
@@ -34,5 +39,3 @@ export async function uploadImageToFirebase(file: Express.Multer.File, filePath:
   blobStream.end(file.buffer);
   return await blobPromise;
 }
-
-

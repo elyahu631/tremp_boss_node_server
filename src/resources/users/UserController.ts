@@ -245,3 +245,17 @@ export async function addNotificationToken(req: Request, res: Response, next: Ne
   }
 }
 
+export async function getUserGroups(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const {user_id} = req.body;
+    if (!user_id) {
+      throw new BadRequestException("Email is required");
+    }
+
+    const groups = await UserService.getUserGroups(user_id);
+
+    res.status(200).json({ status: true, data: groups });
+  } catch (err) {
+    next(err);
+  }
+}

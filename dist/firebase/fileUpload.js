@@ -14,13 +14,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadImageToFirebase = void 0;
 const path_1 = __importDefault(require("path"));
+const uuid_1 = require("uuid");
 const storage_1 = require("../firebase/storage");
 function uploadImageToFirebase(file, filePath) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Generate a unique identifier
+        const uniqueId = (0, uuid_1.v4)();
         // Extract the original file extension
         const originalExtension = path_1.default.extname(file.originalname);
-        // Combine the filePath with the original file extension to create the new filename
-        const filename = `${filePath}${originalExtension}`;
+        // Combine the filePath with the unique identifier and original file extension to create the new filename
+        const filename = `${filePath}-${uniqueId}${originalExtension}`;
         // upload the file to Firebase Cloud Storage
         const blob = storage_1.bucket.file(filename);
         const blobStream = blob.createWriteStream({

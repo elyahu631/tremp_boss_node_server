@@ -139,3 +139,11 @@ async function notifyUser(fcmToken: string, newGroupId: string, groupName: strin
   }
 }
 
+
+export async function denyOpenGroupRequest(id: string) {
+  const groupRequest = await groupReqDataAccess.FindById(id);
+  if (!groupRequest) {
+    throw new BadRequestException('Group Request not found');
+  }
+  await groupReqDataAccess.UpdateGroup(id, { is_approved: 'denied' });
+}

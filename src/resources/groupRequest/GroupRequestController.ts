@@ -69,3 +69,17 @@ export async function approveOpenGroupRequest(req: Request, res: Response, next:
     next(err);
   }
 }
+
+
+
+// GroupRequestController.ts
+
+export async function denyOpenGroupRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    await GroupRequestService.denyOpenGroupRequest(id);
+    res.status(200).json({ status: true, message: 'Request denied successfully.' });
+  } catch (err) {
+    next(err);
+  }
+}

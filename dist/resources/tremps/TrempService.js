@@ -290,7 +290,7 @@ function getUserTremps(user_id, tremp_type) {
             creator_id: userId,
             tremp_type: primaryType,
             deleted: false,
-            tremp_time: { $gte: currentDate } // Only include tremps with a date greater than or equal to the current date
+            tremp_time: { $gte: currentDate }
         }));
         const hitchhikerTremps = (yield trempDataAccess.FindAll({
             $and: [
@@ -303,7 +303,10 @@ function getUserTremps(user_id, tremp_type) {
         }));
         const driverTrempsMapped = driverTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, primaryType));
         const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, secondaryType));
-        return [...driverTrempsMapped, ...hitchhikerTrempsMapped];
+        return {
+            created: driverTrempsMapped,
+            connected: hitchhikerTrempsMapped,
+        };
     });
 }
 exports.getUserTremps = getUserTremps;

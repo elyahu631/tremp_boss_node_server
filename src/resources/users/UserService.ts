@@ -2,14 +2,16 @@
 import bcrypt from 'bcrypt';
 import UserModel from "./UserModel";
 import UserDataAccess from "./UserDataAccess";
+import GroupDataAccess from '../groups/GroupDataAccess';
 import { uploadImageToFirebase } from '../../firebase/fileUpload';
 import { getCurrentTimeInIsrael } from '../../services/TimeService';
 import { BadRequestException, UnauthorizedException } from '../../middleware/HttpException';
-import { MongoError } from 'mongodb';
+import { MongoError, ObjectId } from 'mongodb';
 import crypto from 'crypto';
 import { EmailService } from '../../services/EmailService';
 
 const userDataAccess = new UserDataAccess();
+
 const saltRounds = 10;
 
 export async function hashPassword(password: string): Promise<string> {
@@ -157,4 +159,29 @@ export async function uploadImageToFirebaseAndUpdateUser(
 ) {
   const image_URL = await uploadImageToFirebase(file, filePath);
   return userDataAccess.UpdateUserDetails(userId, { image_URL });
+}
+
+export async function getUserGroups(userId: string) {
+  const user = await userDataAccess.FindById(userId);
+  if (!user) {
+    throw new BadRequestException("User not found");
+  }
+
+ 
+  const groupDataAccess = new GroupDataAccess();
+  const groupIds = user.groups || [];
+
+  // Use the query to filter out the groups directly in the database
+  const userGroups = await groupDataAccess.FindAllGroups({
+     _id: { $in: groupIds },
+     deleted:false,
+     active:"active"
+   },{
+    group_name:1,
+    type:1,
+    locations:1,
+
+  });
+
+  return userGroups;
 }

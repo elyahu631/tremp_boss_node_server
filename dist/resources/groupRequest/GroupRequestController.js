@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.approveOpenGroupRequest = exports.getUnapprovedRequests = exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
+exports.denyOpenGroupRequest = exports.approveOpenGroupRequest = exports.getUnapprovedRequests = exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
 const GroupRequestService = __importStar(require("./GroupRequestService"));
 const GroupRequestModel_1 = __importDefault(require("./GroupRequestModel"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -114,4 +114,18 @@ function approveOpenGroupRequest(req, res, next) {
     });
 }
 exports.approveOpenGroupRequest = approveOpenGroupRequest;
+// GroupRequestController.ts
+function denyOpenGroupRequest(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { id } = req.params;
+            yield GroupRequestService.denyOpenGroupRequest(id);
+            res.status(200).json({ status: true, message: 'Request denied successfully.' });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.denyOpenGroupRequest = denyOpenGroupRequest;
 //# sourceMappingURL=GroupRequestController.js.map

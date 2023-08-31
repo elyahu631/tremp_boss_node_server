@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.approveOpenGroupRequest = exports.getUnapprovedRequests = exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
+exports.denyOpenGroupRequest = exports.approveOpenGroupRequest = exports.getUnapprovedRequests = exports.getUserRequests = exports.uploadGroupRequestImage = exports.addGroupRequest = void 0;
 const mongodb_1 = require("mongodb");
 const fileUpload_1 = require("../../firebase/fileUpload");
 const HttpException_1 = require("../../middleware/HttpException");
@@ -153,4 +153,14 @@ function notifyUser(fcmToken, newGroupId, groupName) {
         }
     });
 }
+function denyOpenGroupRequest(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const groupRequest = yield groupReqDataAccess.FindById(id);
+        if (!groupRequest) {
+            throw new HttpException_1.BadRequestException('Group Request not found');
+        }
+        yield groupReqDataAccess.UpdateGroup(id, { is_approved: 'denied' });
+    });
+}
+exports.denyOpenGroupRequest = denyOpenGroupRequest;
 //# sourceMappingURL=GroupRequestService.js.map

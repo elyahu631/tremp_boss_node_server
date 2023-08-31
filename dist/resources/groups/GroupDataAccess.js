@@ -19,9 +19,9 @@ class GroupDataAccess {
             return (yield db_1.default.FindAll(GroupDataAccess.collection, { type: 'GENERAL' }))[0];
         });
     }
-    FindAllGroups(query = {}) {
+    FindAllGroups(query = {}, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });
+            return yield db_1.default.FindAll(GroupDataAccess.collection, query, projection, { group_name: 1 });
         });
     }
     FindById(id) {

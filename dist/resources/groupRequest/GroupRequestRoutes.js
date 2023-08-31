@@ -17,6 +17,7 @@ groupRequestRoutes.post("/get-user-requests", auth_1.authenticateToken, GroupReq
 // admin 
 groupRequestRoutes.get("/unapproved-requests", auth_1.authenticateToken, GroupRequestController_1.getUnapprovedRequests);
 groupRequestRoutes.put("/approve/:id", auth_1.authenticateToken, GroupRequestController_1.approveOpenGroupRequest);
+groupRequestRoutes.put("/deny/:id", auth_1.authenticateToken, GroupRequestController_1.denyOpenGroupRequest);
 groupRequestRoutes.use(handleErrors_1.handleErrors);
 exports.default = groupRequestRoutes;
 //# sourceMappingURL=GroupRequestRoutes.js.map

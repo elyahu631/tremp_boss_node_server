@@ -54,7 +54,7 @@ export async function allGroupsWithUserStatus(userId: string) {
   const pendingGroupsDetails = await getDetailedGroups(pendingGroups, connectedGroups);
   const notJoinGroups = await getNotJoinGroups(allGroups, connectedGroups, pendingGroups);
 
-  const addCountOfUsers = async (group:any) => {
+  const addCountOfUsers = async (group: any) => {
     group.amount_of_users = await userGroupsDataAccess.CountUsersInGroup(new ObjectId(group._id));
   };
 
@@ -186,14 +186,17 @@ export async function addAdminToGroup(adminId: string, new_admin_email: string, 
     throw new BadRequestException("User not connected to the Group.");
   }
 
-  if (!group.admin_ids.includes(new ObjectId(adminId))) {
+  if (!group.admins_ids.map((id:ObjectId) => id.toString()).includes(adminId)) {
+    console.log(new ObjectId(adminId));
+    console.log(group.admins_ids);
     throw new UnauthorizedException("User not Unauthorized to add admin to this group")
   }
 
-  if (!group.admin_ids.includes(userId)) {
-    group.admin_ids.push(userId);
+  if (group.admins_ids.map((id:ObjectId) => id.toString()).includes(userId.toString())) {    
+    throw new BadRequestException("User already admin.");
   }
-
+  group.admins_ids.push(userId);
+  
   await groupDataAccess.UpdateGroup(groupId.toString(), group);
 
   return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
@@ -208,7 +211,7 @@ export async function updateGroup(groupId: string, userId: string, updateData: P
   }
 
   const group = await groupDataAccess.FindById(groupId);
-  if (!group.admins_ids.includes(new ObjectId(userId))) {
+  if (!group.admins_ids.map((id:ObjectId) => id.toString()).includes(userId)) {
     throw new UnauthorizedException("User not authorized to update the group");
   }
 
@@ -223,9 +226,9 @@ export async function updateGroup(groupId: string, userId: string, updateData: P
 }
 
 export async function uploadGroupImage(id: string, file?: Express.Multer.File) {
-  const filePath = `groupsimages/${id}`; 
+  const filePath = `groupsimages/${id}`;
   const image_URL = await uploadImageToFirebase(file, filePath);
-  await groupDataAccess.UpdateGroup(id, { image_URL }); 
+  await groupDataAccess.UpdateGroup(id, { image_URL });
   return image_URL;
 }
 

@@ -15,7 +15,8 @@ import {
   AdminAddUser,
   updateUserDetails,
   addNotificationToken,
-  uploadUserImage
+  uploadUserImage,
+  getUserGroups
 } from "./UserController";
 import multerConfig from "../../config/multerConfig";
 
@@ -37,6 +38,7 @@ usersRouter.get("/:id", authenticateToken, getUserById);// V
 usersRouter.put("/update/:id", authenticateToken, updateUser);// V
 usersRouter.post("/update-image/:id", authenticateToken, upload.any(), uploadUserImage);// V
 usersRouter.put("/mark-deleted/:id", authenticateToken, markUserAsDeleted);
+usersRouter.post("/groups", authenticateToken, getUserGroups); 
 
 
 usersRouter.post("/add-notification-token", addNotificationToken);

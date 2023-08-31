@@ -12,11 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
+exports.getUserGroups = exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
 // src/resources/users/UserService.ts
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserModel_1 = __importDefault(require("./UserModel"));
 const UserDataAccess_1 = __importDefault(require("./UserDataAccess"));
+const GroupDataAccess_1 = __importDefault(require("../groups/GroupDataAccess"));
 const fileUpload_1 = require("../../firebase/fileUpload");
 const TimeService_1 = require("../../services/TimeService");
 const HttpException_1 = require("../../middleware/HttpException");
@@ -172,4 +173,26 @@ function uploadImageToFirebaseAndUpdateUser(file, filePath, userId) {
     });
 }
 exports.uploadImageToFirebaseAndUpdateUser = uploadImageToFirebaseAndUpdateUser;
+function getUserGroups(userId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = yield userDataAccess.FindById(userId);
+        if (!user) {
+            throw new HttpException_1.BadRequestException("User not found");
+        }
+        const groupDataAccess = new GroupDataAccess_1.default();
+        const groupIds = user.groups || [];
+        // Use the query to filter out the groups directly in the database
+        const userGroups = yield groupDataAccess.FindAllGroups({
+            _id: { $in: groupIds },
+            deleted: false,
+            active: "active"
+        }, {
+            group_name: 1,
+            type: 1,
+            locations: 1,
+        });
+        return userGroups;
+    });
+}
+exports.getUserGroups = getUserGroups;
 //# sourceMappingURL=UserService.js.map

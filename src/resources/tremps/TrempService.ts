@@ -279,7 +279,7 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
     creator_id: userId,
     tremp_type: primaryType,
     deleted: false,
-    tremp_time: { $gte: currentDate } // Only include tremps with a date greater than or equal to the current date
+    tremp_time: { $gte: currentDate }
   })) as unknown as Tremp[];
 
   const hitchhikerTremps = (await trempDataAccess.FindAll({
@@ -296,7 +296,10 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
   const driverTrempsMapped = driverTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, primaryType));
   const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, secondaryType));
 
-  return [...driverTrempsMapped, ...hitchhikerTrempsMapped];
+  return {
+    created: driverTrempsMapped,
+    connected: hitchhikerTrempsMapped,
+  };
 }
 function mapTrempWithApprovalStatus(tremp: Tremp, userId: ObjectId, type: string) {
   const { users_in_tremp, ...otherProps } = tremp;

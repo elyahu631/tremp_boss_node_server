@@ -188,12 +188,15 @@ function addAdminToGroup(adminId, new_admin_email, groupId) {
         if (groupIndex === -1) {
             throw new HttpException_1.BadRequestException("User not connected to the Group.");
         }
-        if (!group.admin_ids.includes(new mongodb_1.ObjectId(adminId))) {
+        if (!group.admins_ids.map((id) => id.toString()).includes(adminId)) {
+            console.log(new mongodb_1.ObjectId(adminId));
+            console.log(group.admins_ids);
             throw new HttpException_1.UnauthorizedException("User not Unauthorized to add admin to this group");
         }
-        if (!group.admin_ids.includes(userId)) {
-            group.admin_ids.push(userId);
+        if (group.admins_ids.map((id) => id.toString()).includes(userId.toString())) {
+            throw new HttpException_1.BadRequestException("User already admin.");
         }
+        group.admins_ids.push(userId);
         yield groupDataAccess.UpdateGroup(groupId.toString(), group);
         return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
     });
@@ -209,7 +212,7 @@ function updateGroup(groupId, userId, updateData) {
             }
         }
         const group = yield groupDataAccess.FindById(groupId);
-        if (!group.admins_ids.includes(new mongodb_1.ObjectId(userId))) {
+        if (!group.admins_ids.map((id) => id.toString()).includes(userId)) {
             throw new HttpException_1.UnauthorizedException("User not authorized to update the group");
         }
         // Only update allowed fields

@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.uploadUserImage = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
+exports.getUserGroups = exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.uploadUserImage = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
@@ -306,4 +306,20 @@ function addNotificationToken(req, res, next) {
     });
 }
 exports.addNotificationToken = addNotificationToken;
+function getUserGroups(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { user_id } = req.body;
+            if (!user_id) {
+                throw new HttpException_1.BadRequestException("Email is required");
+            }
+            const groups = yield UserService.getUserGroups(user_id);
+            res.status(200).json({ status: true, data: groups });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getUserGroups = getUserGroups;
 //# sourceMappingURL=UserController.js.map

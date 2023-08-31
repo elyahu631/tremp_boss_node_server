@@ -8,8 +8,8 @@ class GroupDataAccess {
     return (await db.FindAll(GroupDataAccess.collection, { type: 'GENERAL' }))[0];
   }
 
-  async FindAllGroups(query = {}) {
-    return await db.FindAll(GroupDataAccess.collection, query, {}, { group_name: 1 });
+  async FindAllGroups(query = {},projection = {}) {
+    return await db.FindAll(GroupDataAccess.collection, query, projection, { group_name: 1 });
   }
 
   async FindById(id: string) {

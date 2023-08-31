@@ -46,6 +46,9 @@ dependencies:
   typescript:
     specifier: ^5.1.6
     version: 5.1.6
+  uuid:
+    specifier: ^9.0.0
+    version: 9.0.0
 
 devDependencies:
   '@types/bcrypt':
@@ -75,6 +78,9 @@ devDependencies:
   '@types/nodemailer':
     specifier: ^6.4.9
     version: 6.4.9
+  '@types/uuid':
+    specifier: ^9.0.2
+    version: 9.0.2
   nodemon:
     specifier: ^2.0.22
     version: 2.0.22
@@ -567,6 +573,10 @@ packages:
       '@types/http-errors': 2.0.1
       '@types/mime': 3.0.1
       '@types/node': 20.3.2
+
+  /@types/uuid@9.0.2:
+    resolution: {integrity: sha512-kNnC1GFBLuhImSnV7w4njQkUiJi0ZXUycu1rUaouPqiKlXkh77JKgdRnTAp1x5eBwcIwbtI+3otwzuIDEuDoxQ==}
+    dev: true
 
   /@types/webidl-conversions@7.0.0:
     resolution: {integrity: sha512-xTE1E+YF4aWPJJeUzaZI5DRntlkY3+BCVJi0axFptnjGmAoWxkyREIh/XMrfxVLejwQxMCfDXdICo0VLxThrog==}
