@@ -71,9 +71,15 @@ export async function loginUser(email: string, password: string) {
 
   const userGroups = await groupDataAccess.FindAllGroups({
     _id: { $in: groupIds },
-    deleted: false,
-    active: "active"
-  });
+    deleted:false,
+    active:"active"
+  },{
+   group_name:1,
+   type:1,
+   locations:1,
+
+ });
+
 
   return { user, isProfileComplete, userGroups };
 }
