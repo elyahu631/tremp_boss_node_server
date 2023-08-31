@@ -55,10 +55,10 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
  */
 export async function loginUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const {email, password } = req.body;
-    const { user, isProfileComplete } = await UserService.loginUser(email.toLowerCase(), password);
+    const { email, password } = req.body;
+    const { user, isProfileComplete, userGroups } = await UserService.loginUser(email.toLowerCase(), password);
     const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30d' });
-    res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete } });
+    res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete, user_groups: userGroups } });
   } catch (err) {
     next(err);
   }
@@ -87,7 +87,7 @@ export async function getUserById(req: Request, res: Response, next: NextFunctio
  calls the updateUser function from UserService to update the user details in the database,
  and returns the updated user in the response.
  */
- export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = req.params;
     const updatedUser = req.body;
@@ -122,7 +122,7 @@ export async function uploadUserImage(req: Request, res: Response, next: NextFun
 
     const { id } = req.params;
     const imageUrl = await UserService.uploadUserImage(id, file);
-    res.status(200).json({ status: true, message: "Image uploaded successfully", data: {image_URL:imageUrl}});
+    res.status(200).json({ status: true, message: "Image uploaded successfully", data: { image_URL: imageUrl } });
   } catch (err) {
     next(err);
   }
@@ -247,7 +247,7 @@ export async function addNotificationToken(req: Request, res: Response, next: Ne
 
 export async function getUserGroups(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const {user_id} = req.body;
+    const { user_id } = req.body;
     if (!user_id) {
       throw new BadRequestException("Email is required");
     }

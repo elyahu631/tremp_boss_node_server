@@ -69,7 +69,15 @@ function loginUser(email, password) {
         yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
         const userModel = UserModel_1.default.fromUserDocument(user);
         const isProfileComplete = userModel.isProfileComplete();
-        return { user, isProfileComplete };
+        // Fetch groups associated with the user
+        const groupDataAccess = new GroupDataAccess_1.default();
+        const groupIds = user.groups || [];
+        const userGroups = yield groupDataAccess.FindAllGroups({
+            _id: { $in: groupIds },
+            deleted: false,
+            active: "active"
+        });
+        return { user, isProfileComplete, userGroups };
     });
 }
 exports.loginUser = loginUser;

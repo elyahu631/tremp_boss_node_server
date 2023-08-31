@@ -90,9 +90,9 @@ function loginUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, password } = req.body;
-            const { user, isProfileComplete } = yield UserService.loginUser(email.toLowerCase(), password);
+            const { user, isProfileComplete, userGroups } = yield UserService.loginUser(email.toLowerCase(), password);
             const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '30d' });
-            res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete } });
+            res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete, user_groups: userGroups } });
         }
         catch (err) {
             next(err);

@@ -65,7 +65,17 @@ export async function loginUser(email: string, password: string) {
   const userModel = UserModel.fromUserDocument(user);
   const isProfileComplete = userModel.isProfileComplete();
 
-  return { user, isProfileComplete };
+  // Fetch groups associated with the user
+  const groupDataAccess = new GroupDataAccess();
+  const groupIds = user.groups || [];
+
+  const userGroups = await groupDataAccess.FindAllGroups({
+    _id: { $in: groupIds },
+    deleted: false,
+    active: "active"
+  });
+
+  return { user, isProfileComplete, userGroups };
 }
 
 export async function getUserById(id: string) {

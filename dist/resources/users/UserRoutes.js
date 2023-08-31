@@ -25,7 +25,7 @@ usersRouter.get("/:id", auth_1.authenticateToken, UserController_1.getUserById);
 usersRouter.put("/update/:id", auth_1.authenticateToken, UserController_1.updateUser); // V
 usersRouter.post("/update-image/:id", auth_1.authenticateToken, upload.any(), UserController_1.uploadUserImage); // V
 usersRouter.put("/mark-deleted/:id", auth_1.authenticateToken, UserController_1.markUserAsDeleted);
-usersRouter.post("/groups", auth_1.authenticateToken, UserController_1.getUserGroups);
+usersRouter.post("/my-groups", auth_1.authenticateToken, UserController_1.getUserGroups);
 usersRouter.post("/add-notification-token", UserController_1.addNotificationToken);
 usersRouter.use(handleErrors_1.handleErrors);
 exports.default = usersRouter;
