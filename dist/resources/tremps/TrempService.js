@@ -156,7 +156,9 @@ function constructQueryFromFilters(filters) {
         }
         const userId = user._id;
         const connectedGroups = user.groups;
-        const date = new Date(filters.tremp_time);
+        const date = (0, TimeService_1.getCurrentTimeInIsrael)();
+        const hours = date.getUTCHours();
+        date.setUTCHours(hours - 6);
         return {
             deleted: false,
             is_full: false,

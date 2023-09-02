@@ -142,12 +142,14 @@ async function constructQueryFromFilters(filters: any): Promise<any> {
   }
   const userId = user._id;
   const connectedGroups = user.groups;
-  const date = new Date(filters.tremp_time);
-  
+  const date = getCurrentTimeInIsrael();
+  const hours = date.getUTCHours();
+  date.setUTCHours(hours - 6);
+
   return {
     deleted: false,
     is_full: false,
-    group_id: { $in: connectedGroups }, 
+    group_id: { $in: connectedGroups },
     creator_id: { $ne: userId },
     tremp_time: { $gt: date },
     tremp_type: filters.tremp_type,
@@ -158,8 +160,6 @@ async function constructQueryFromFilters(filters: any): Promise<any> {
     },
   };
 }
-
-
 function createUserMapFromList(users: any[]): Map<string, any> {
   return new Map(users.map(user => [user._id.toString(), user]));
 }
@@ -530,7 +530,7 @@ async function getUserDetailsById(userId: ObjectId) {
 // trempCompleted
 export async function trempCompleted(trempId: string, userId: string): Promise<any> {  // Return type changed to Promise<any>
   const tremp = await trempDataAccess.FindByID(trempId);
-  
+
   if (!tremp) {
     throw new BadRequestException('Tremp does not exist');
   }
@@ -540,7 +540,7 @@ export async function trempCompleted(trempId: string, userId: string): Promise<a
   }
 
   tremp.is_completed = true;
-  
+
   return await trempDataAccess.Update(trempId, tremp);
 }
 

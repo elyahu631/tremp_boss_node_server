@@ -59,7 +59,7 @@ function allGroupsWithUserStatus(userId) {
         const userIdAsObj = new mongodb_1.ObjectId(userId);
         const connectedGroups = yield findUserGroups(userIdAsObj, 'approved');
         const pendingGroups = yield findUserGroups(userIdAsObj, 'pending');
-        const allGroups = yield groupDataAccess.FindAllGroups();
+        const allGroups = yield groupDataAccess.FindAllGroups({ type: 'PRIVATE' }, { group_name: 1, type: 1, image_URL: 1, locations: 1, admins_ids: 1, amount_of_users: 1 });
         const connectedGroupsDetails = yield getDetailedGroups(connectedGroups, connectedGroups);
         const pendingGroupsDetails = yield getDetailedGroups(pendingGroups, connectedGroups);
         const notJoinGroups = yield getNotJoinGroups(allGroups, connectedGroups, pendingGroups);
