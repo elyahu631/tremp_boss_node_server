@@ -48,7 +48,7 @@ export async function allGroupsWithUserStatus(userId: string) {
 
   const connectedGroups = await findUserGroups(userIdAsObj, 'approved');
   const pendingGroups = await findUserGroups(userIdAsObj, 'pending');
-  const allGroups = await groupDataAccess.FindAllGroups();
+  const allGroups = await groupDataAccess.FindAllGroups({type:'PRIVATE'});
 
   const connectedGroupsDetails = await getDetailedGroups(connectedGroups, connectedGroups);
   const pendingGroupsDetails = await getDetailedGroups(pendingGroups, connectedGroups);
