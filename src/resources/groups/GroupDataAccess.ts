@@ -12,8 +12,8 @@ class GroupDataAccess {
     return await db.FindAll(GroupDataAccess.collection, query, projection, { group_name: 1 });
   }
 
-  async FindById(id: string) {
-    return await db.FindByID(GroupDataAccess.collection, id);
+  async FindById(id: string,projection = {}) {
+    return await db.FindByID(GroupDataAccess.collection, id,projection);
   }
 
   async DeleteGroupById(id: string) {

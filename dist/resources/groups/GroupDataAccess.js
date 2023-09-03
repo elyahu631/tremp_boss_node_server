@@ -24,9 +24,9 @@ class GroupDataAccess {
             return yield db_1.default.FindAll(GroupDataAccess.collection, query, projection, { group_name: 1 });
         });
     }
-    FindById(id) {
+    FindById(id, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindByID(GroupDataAccess.collection, id);
+            return yield db_1.default.FindByID(GroupDataAccess.collection, id, projection);
         });
     }
     DeleteGroupById(id) {

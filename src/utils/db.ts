@@ -33,9 +33,9 @@ class DB {
     }
   }
 
-  async FindByID(collection: string, id: string) {
+  async FindByID(collection: string, id: string , projection = {}) {
     try {
-      return await this.client.db(this.dbName).collection(collection).findOne({ _id: new ObjectId(id) });
+      return await this.client.db(this.dbName).collection(collection).findOne({ _id: new ObjectId(id) },projection);
     } catch (error) {
       throw error;
     }

@@ -70,6 +70,10 @@ function allGroupsWithUserStatus(userId) {
         yield Promise.all(connectedGroupsDetails.map(addCountOfUsers));
         yield Promise.all(pendingGroupsDetails.map(addCountOfUsers));
         yield Promise.all(notJoinGroups.map(addCountOfUsers));
+        // Add is_admin field and remove admins_ids
+        connectedGroupsDetails.map(group => addIsAdminField(group, userId));
+        pendingGroupsDetails.map(group => addIsAdminField(group, userId));
+        notJoinGroups.map(group => addIsAdminField(group, userId));
         return {
             approved: connectedGroupsDetails,
             pending: pendingGroupsDetails,
@@ -86,7 +90,7 @@ function findUserGroups(userIdAsObj, status) {
 }
 function getGroupDetailsWithUsersCount(groupId, connectedGroups) {
     return __awaiter(this, void 0, void 0, function* () {
-        const group = yield groupDataAccess.FindById(groupId);
+        const group = yield groupDataAccess.FindById(groupId, { group_name: 1, type: 1, image_URL: 1, locations: 1, admins_ids: 1, amount_of_users: 1 });
         group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
         return group;
     });
@@ -103,6 +107,14 @@ function getNotJoinGroups(allGroups, connectedGroups, pendingGroups) {
                 !pendingGroups.some(pg => pg === group._id.toString());
         });
     });
+}
+function addIsAdminField(group, userId) {
+    // Convert admins_ids ObjectIds to strings
+    const adminIds = group.admins_ids.map((id) => id.toString());
+    // Check for inclusion using the string representation
+    group.is_admin = adminIds.includes(userId.toString());
+    delete group.admins_ids;
+    return group;
 }
 function getConnectedGroups(userId) {
     return __awaiter(this, void 0, void 0, function* () {

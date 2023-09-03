@@ -44,10 +44,10 @@ class DB {
             }
         });
     }
-    FindByID(collection, id) {
+    FindByID(collection, id, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield this.client.db(this.dbName).collection(collection).findOne({ _id: new mongodb_1.ObjectId(id) });
+                return yield this.client.db(this.dbName).collection(collection).findOne({ _id: new mongodb_1.ObjectId(id) }, projection);
             }
             catch (error) {
                 throw error;

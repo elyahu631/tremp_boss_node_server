@@ -48,8 +48,8 @@ export async function allGroupsWithUserStatus(userId: string) {
 
   const connectedGroups = await findUserGroups(userIdAsObj, 'approved');
   const pendingGroups = await findUserGroups(userIdAsObj, 'pending');
-  const allGroups = await groupDataAccess.FindAllGroups({type:'PRIVATE'},
-  {group_name:1,type:1,image_URL:1,locations:1,admins_ids:1,amount_of_users:1});
+  const allGroups = await groupDataAccess.FindAllGroups({ type: 'PRIVATE' },
+    { group_name: 1, type: 1, image_URL: 1, locations: 1, admins_ids: 1, amount_of_users: 1 });
 
   const connectedGroupsDetails = await getDetailedGroups(connectedGroups, connectedGroups);
   const pendingGroupsDetails = await getDetailedGroups(pendingGroups, connectedGroups);
@@ -64,6 +64,11 @@ export async function allGroupsWithUserStatus(userId: string) {
   await Promise.all(pendingGroupsDetails.map(addCountOfUsers));
   await Promise.all(notJoinGroups.map(addCountOfUsers));
 
+  // Add is_admin field and remove admins_ids
+  connectedGroupsDetails.map(group => addIsAdminField(group, userId));
+  pendingGroupsDetails.map(group => addIsAdminField(group, userId));
+  notJoinGroups.map(group => addIsAdminField(group, userId));
+
   return {
     approved: connectedGroupsDetails,
     pending: pendingGroupsDetails,
@@ -75,7 +80,8 @@ async function findUserGroups(userIdAsObj: ObjectId, status: string): Promise<st
   return groups.map(group => group.group_id.toString());
 }
 async function getGroupDetailsWithUsersCount(groupId: string, connectedGroups: string[]) {
-  const group = await groupDataAccess.FindById(groupId);
+  const group = await groupDataAccess.FindById(groupId
+    ,{ group_name: 1, type: 1, image_URL: 1, locations: 1, admins_ids: 1, amount_of_users: 1 });
   group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
   return group;
 }
@@ -87,6 +93,16 @@ async function getNotJoinGroups(allGroups: any[], connectedGroups: string[], pen
     return !connectedGroups.some(cg => cg === group._id.toString()) &&
       !pendingGroups.some(pg => pg === group._id.toString());
   });
+}
+function addIsAdminField(group: any, userId: string) {
+  // Convert admins_ids ObjectIds to strings
+  const adminIds = group.admins_ids.map((id: any) => id.toString());
+
+  // Check for inclusion using the string representation
+  group.is_admin = adminIds.includes(userId.toString());
+
+  delete group.admins_ids; 
+  return group;
 }
 
 
@@ -187,17 +203,17 @@ export async function addAdminToGroup(adminId: string, new_admin_email: string, 
     throw new BadRequestException("User not connected to the Group.");
   }
 
-  if (!group.admins_ids.map((id:ObjectId) => id.toString()).includes(adminId)) {
+  if (!group.admins_ids.map((id: ObjectId) => id.toString()).includes(adminId)) {
     console.log(new ObjectId(adminId));
     console.log(group.admins_ids);
     throw new UnauthorizedException("User not Unauthorized to add admin to this group")
   }
 
-  if (group.admins_ids.map((id:ObjectId) => id.toString()).includes(userId.toString())) {    
+  if (group.admins_ids.map((id: ObjectId) => id.toString()).includes(userId.toString())) {
     throw new BadRequestException("User already admin.");
   }
   group.admins_ids.push(userId);
-  
+
   await groupDataAccess.UpdateGroup(groupId.toString(), group);
 
   return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
@@ -212,7 +228,7 @@ export async function updateGroup(groupId: string, userId: string, updateData: P
   }
 
   const group = await groupDataAccess.FindById(groupId);
-  if (!group.admins_ids.map((id:ObjectId) => id.toString()).includes(userId)) {
+  if (!group.admins_ids.map((id: ObjectId) => id.toString()).includes(userId)) {
     throw new UnauthorizedException("User not authorized to update the group");
   }
 
