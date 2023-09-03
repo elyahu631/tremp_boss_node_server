@@ -442,14 +442,18 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
   const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
 
-  const currentDate = getCurrentTimeInIsrael()
-  currentDate.setUTCHours(0, 0, 0, 0);
+  const currentDate  = getCurrentTimeInIsrael();
+  const hours = currentDate.getUTCHours();
+  currentDate.setUTCHours(hours - 6);
+  
+  console.log(currentDate);
+  
   // First, find the tramps where the user is the creator and has type 'first' and there is
   // at least one different user who is approved and type 'second'
   const createdByUserQuery = {
     creator_id: userId,
     tremp_type: first,
-    tremp_tyme: currentDate,
+    tremp_time: { "$gte": currentDate },
     "users_in_tremp": {
       "$elemMatch": {
         "user_id": { "$ne": userId },
@@ -457,13 +461,14 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
       }
     }
   };
+  
 
   const trampsCreatedByUser = await trempDataAccess.FindAll(createdByUserQuery);
 
   // Then, find the tramps where the user has joined as type 'second' and is approved
   const joinedByUserQuery = {
     tremp_type: second,
-    tremp_tyme: currentDate,
+    tremp_time: { "$gte": currentDate },
     "users_in_tremp": {
       "$elemMatch": {
         "user_id": userId,
