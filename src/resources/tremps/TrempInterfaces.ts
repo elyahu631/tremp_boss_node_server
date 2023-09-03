@@ -58,7 +58,7 @@ export interface TrempRequest {
     };
   };
   seats_amount: number;
-  note: string;
+  note?: string;
   is_permanent: boolean;
   return_drive?: {
     return_hour: string;
