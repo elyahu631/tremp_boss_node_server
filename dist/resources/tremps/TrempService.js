@@ -444,7 +444,6 @@ function getApprovedTremps(user_id, tremp_type) {
         const currentDate = (0, TimeService_1.getCurrentTimeInIsrael)();
         const hours = currentDate.getUTCHours();
         currentDate.setUTCHours(hours - 6);
-        console.log(currentDate);
         // First, find the tramps where the user is the creator and has type 'first' and there is
         // at least one different user who is approved and type 'second'
         const createdByUserQuery = {
