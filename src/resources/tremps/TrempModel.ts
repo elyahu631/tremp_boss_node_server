@@ -51,8 +51,8 @@ class TrempModel {
 
   validateTremp() {
     const schema = Joi.object({
-      creator_id: Joi.string().required(),
-      group_id: Joi.string().required(),
+      creator_id: Joi.any().required(),
+      group_id: Joi.any().required(),
       tremp_type: Joi.string().valid('driver', 'hitchhiker').required(),
       create_date: Joi.date().required(),
       tremp_time: Joi.date().required(),
@@ -76,7 +76,7 @@ class TrempModel {
         Joi.object({
           user_id: Joi.string().required(),
           participants_amount: Joi.number().default(1),
-          is_approved: Joi.string().valid('approved', 'pending', 'denied,','canceled' ).default('pending').required(),
+          is_approved: Joi.string().valid('approved', 'pending', 'denied','canceled' ).default('pending').required(),
         })
       ).optional(),
       is_full: Joi.boolean().required(),

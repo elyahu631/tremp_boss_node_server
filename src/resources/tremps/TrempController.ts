@@ -31,7 +31,7 @@ export async function addUserToTremp(req: Request, res: Response, next: NextFunc
     if (!tremp_id || !user_id) {
       throw new BadRequestException('Tremp ID and User ID are required');
     }
-    await TrempService.addUserToTremp(tremp_id, user_id,participants_amount);
+    await TrempService.joinToTremp(tremp_id, user_id,participants_amount);
     res.status(200).json({ status: true, message: 'User successfully added to the tremp' });
   } catch (err) {
     next(err);

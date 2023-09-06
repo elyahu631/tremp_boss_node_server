@@ -241,7 +241,6 @@ export async function updateGroup(groupId: string, userId: string, updateData: P
 
   return groupDataAccess.UpdateGroup(groupId, dataToUpdate);
 }
-
 export async function uploadGroupImage(id: string, file?: Express.Multer.File) {
   const filePath = `groupsimages/${id}`;
   const image_URL = await uploadImageToFirebase(file, filePath);

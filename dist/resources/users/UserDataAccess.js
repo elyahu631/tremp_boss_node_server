@@ -16,9 +16,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = __importDefault(require("../../utils/db"));
 const GroupDataAccess_1 = __importDefault(require("../groups/GroupDataAccess"));
 class UserDataAccess {
-    FindAllUsers(query = {}, projection = {}) {
+    FindAllUsers(query = {}, projection = {}, sort = {}) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.default.FindAll(UserDataAccess.collection, query, projection);
+            return yield db_1.default.FindAll(UserDataAccess.collection, query, projection, sort);
         });
     }
     FindById(id) {

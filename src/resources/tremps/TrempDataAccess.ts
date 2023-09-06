@@ -11,6 +11,10 @@ class TrempDataAccess {
     return await db.Insert(TrempDataAccess.collection, tremp);
   }
 
+  async insertTremps(tremps: TrempModel[]) {
+    return await db.InsertMany(TrempDataAccess.collection, tremps);
+  }
+
   async FindTrempsByFilters(query = {}) {
     const projection = {
       _id: 1,
@@ -31,7 +35,7 @@ class TrempDataAccess {
     return await db.FindAll(TrempDataAccess.collection, query, projection,sort);
   }
 
-  async addUserToTremp(tremp_id: string, query: UserInTrempUpdateQuery) {
+  async UpdateTremp(tremp_id: string, query: UserInTrempUpdateQuery) {
     return await db.UpdateWithOperation(TrempDataAccess.collection, tremp_id, query);
   }
 

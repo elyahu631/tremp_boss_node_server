@@ -32,9 +32,7 @@ exports.trempSchema = joi_1.default.object({
     seats_amount: joi_1.default.number().required(),
     note: joi_1.default.string().optional(),
     is_permanent: joi_1.default.boolean().required(),
-    return_drive: joi_1.default.object({
-        return_hour: timePattern,
-    }).optional(),
+    return_hour: timePattern.optional(),
 });
 function validateTrempRequest(data) {
     const { error } = exports.trempSchema.validate(data);

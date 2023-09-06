@@ -33,9 +33,9 @@ class DB {
     }
   }
 
-  async FindByID(collection: string, id: string , projection = {}) {
+  async FindByID(collection: string, id: string, projection = {}) {
     try {
-      return await this.client.db(this.dbName).collection(collection).findOne({ _id: new ObjectId(id) },projection);
+      return await this.client.db(this.dbName).collection(collection).findOne({ _id: new ObjectId(id) }, projection);
     } catch (error) {
       throw error;
     }
@@ -56,7 +56,15 @@ class DB {
       return error;
     }
   }
-
+  async InsertMany(collection: string, docs: Model[]) {
+    try {
+      return await this.client.db(this.dbName).collection(collection).insertMany(docs);
+    } catch (error) {
+      console.error("Error inserting multiple documents into database:", error);
+      throw error;
+    }
+  }
+  
   async Update(collection: string, id: string, updatedDocument: Partial<Model>) {
     try {
       const result = await this.client.db(this.dbName).collection(collection).updateOne({ _id: new ObjectId(id) }, { $set: updatedDocument });
@@ -86,6 +94,7 @@ class DB {
       throw error;
     }
   }
+
 
 
   async Count(collection: string, query = {}): Promise<number> {

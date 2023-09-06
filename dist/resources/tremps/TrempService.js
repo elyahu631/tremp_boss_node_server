@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempService.ts
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
@@ -35,42 +35,63 @@ const TrempRequestValidation_1 = require("./TrempRequestValidation");
 const TimeService_1 = require("../../services/TimeService");
 const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
-// createTremp
+/**
+ * Creates a new tremp (ride).
+ * 1. Validates the provided data for the tremp.
+ * 2. Extracts specific details from the client's data and formats them.
+ * 3. Prepares the dates for when the tremp should occur by ensuring they're in the future.
+ * 4. Checks if there are already existing 'tremps' for the given dates.
+ * 5. Prepares the data for the tremp and its return drive if available.
+ * 6. Inserts all prepared 'tremps' into the database.
+ *
+ * If there are any overlaps with existing tremps on the provided dates, an error is thrown.
+ * Helper functions are used for specific tasks like validation and data preparation.
+ *
+ * Helper functions:
+ * - `reformatHour(hour)`: Appends ":00" to the hour string.
+ * - `getTodayDate()`: Gets today's date at midnight UTC.
+ * - `findExistingTremps(creatorId, dates)`: Finds tremps by creator and dates.
+ * - `validateTrempHours(hour, return_hour, date, returnDate)`: Checks return time's difference from departure.
+ * - `buildTrempTime(dateValue, hour)`: Combines date and hour into a Date object.
+ * - `createSingleTrempDoc(date, creatorIdObj, groupIdObj, rest)`: Constructs a new tremp model.
+ */
 function createTremp(clientData) {
     return __awaiter(this, void 0, void 0, function* () {
         (0, TrempRequestValidation_1.validateTrempRequest)(clientData);
-        const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount, note } = clientData;
+        const { creator_id, group_id } = clientData, rest = __rest(clientData, ["creator_id", "group_id"]);
         const creatorIdObj = new mongodb_1.ObjectId(creator_id);
         const groupIdObj = new mongodb_1.ObjectId(group_id);
-        const fullHour = reformatHour(hour);
         const today = getTodayDate();
-        const createSingleRide = (rideDate, fromRoute, toRoute) => {
-            return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount, note);
-        };
-        const createAndHandleRides = (date) => __awaiter(this, void 0, void 0, function* () {
-            yield createSingleRide(date, from_route, to_route);
-            if (return_drive) {
-                const fullReturnHour = return_drive.return_hour + ':00';
-                yield handleReturnDrive(date, fullHour, fullReturnHour, to_route, from_route, createSingleRide);
-            }
-            date.setDate(date.getDate() + 7);
+        const allDates = Object.values(clientData.dates)
+            .filter(dateValue => dateValue)
+            .map(dateValue => {
+            const date = buildTrempTime(dateValue, reformatHour(clientData.hour));
+            if (date < today)
+                date.setDate(date.getDate() + 7);
+            return date;
         });
-        for (const dateValue of Object.values(dates)) {
-            if (dateValue) {
-                let date = buildTrempTime(dateValue, fullHour);
-                if (date < today) {
-                    date.setDate(date.getDate() + 7);
-                }
-                const existingTremps = yield findExistingTremps(creatorIdObj, date);
-                if (existingTremps.length > 0) {
-                    throw new HttpException_1.BadRequestException('You already have a tremp scheduled for this date and time.');
-                }
-                const repetitions = is_permanent ? 4 : 1;
-                for (let i = 0; i < repetitions; i++) {
-                    yield createAndHandleRides(date);
+        const existingTremps = yield findExistingTremps(creator_id, allDates);
+        if (existingTremps.length > 0) {
+            throw new HttpException_1.BadRequestException('You already have a tremp scheduled for one of these dates and times.');
+        }
+        const ridesToInsert = [];
+        for (const originalDate of allDates) {
+            const repetitions = clientData.is_permanent ? 4 : 1;
+            for (let i = 0; i < repetitions; i++) {
+                let date = new Date(originalDate);
+                date.setDate(date.getDate() + (7 * i));
+                ridesToInsert.push(createSingleTrempDoc(date, creatorIdObj, groupIdObj, rest));
+                const returnHour = rest.return_hour;
+                if (returnHour) {
+                    const returnDate = new Date(date);
+                    const [returnHourH, returnHourM] = reformatHour(returnHour).split(':').map(Number);
+                    returnDate.setUTCHours(returnHourH, returnHourM, 0, 0);
+                    validateTrempHours(rest.hour, reformatHour(returnHour), date, returnDate);
+                    ridesToInsert.push(createSingleTrempDoc(returnDate, creatorIdObj, groupIdObj, Object.assign(Object.assign({}, rest), { from_route: rest.to_route, to_route: rest.from_route })));
                 }
             }
         }
+        yield trempDataAccess.insertTremps(ridesToInsert);
     });
 }
 exports.createTremp = createTremp;
@@ -82,9 +103,9 @@ function getTodayDate() {
     today.setUTCHours(0, 0, 0, 0);
     return today;
 }
-function findExistingTremps(creatorIdObj, date) {
+function findExistingTremps(creatorId, dates) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existingTrempsQuery = { creator_id: creatorIdObj, tremp_time: date };
+        const existingTrempsQuery = { creator_id: creatorId, tremp_time: { $in: dates } };
         return yield trempDataAccess.FindTrempsByFilters(existingTrempsQuery);
     });
 }
@@ -111,29 +132,11 @@ function buildTrempTime(dateValue, hour) {
     date.setUTCHours(hours, minutes, seconds);
     return date;
 }
-function handleReturnDrive(date, hour, fullReturnHour, from_route, to_route, createSingleRide) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const returnDate = new Date(date);
-        const [returnHours, returnMinutes, returnSeconds] = fullReturnHour.split(':').map(Number);
-        returnDate.setUTCHours(returnHours, returnMinutes, returnSeconds);
-        validateTrempHours(hour, fullReturnHour, date, returnDate);
-        yield createSingleRide(returnDate, from_route, to_route);
-    });
-}
-function createSingleTremp(date, creatorIdObj, groupIdObj, tremp_type, from_route, to_route, seats_amount, note) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const newTremp = new TrempModel_1.default({
-            creator_id: creatorIdObj,
-            group_id: groupIdObj,
-            tremp_type,
-            tremp_time: date,
-            from_route,
-            to_route,
-            seats_amount,
-            note
-        });
-        yield trempDataAccess.insertTremp(newTremp);
-    });
+function createSingleTrempDoc(date, creatorIdObj, groupIdObj, rest) {
+    const trempData = Object.assign({ creator_id: creatorIdObj, group_id: groupIdObj, tremp_time: date }, rest);
+    const newTremp = new TrempModel_1.default(trempData);
+    newTremp.validateTremp();
+    return newTremp;
 }
 // getTrempsByFilters
 function getTrempsByFilters(filters) {
@@ -192,25 +195,44 @@ function appendCreatorInformationToTremps(tremps, usersMap) {
         }
     });
 }
-// addUserToTremp
-function addUserToTremp(tremp_id, user_id, participants_amount = 1) {
+/**
+ * Allows a user to join a specific 'tremp' (ride).
+ *
+ * 1. The function transforms the user's ID into ObjectId a format suitable for the database.
+ * 2. Then, it creates a user_in_tremp object with the user id and the status set to "pending".
+ * 3. Next, it checks if the user can join the specified 'tremp'.
+ * 4. It adds the user to the 'tremp'.
+ * 5. Finally, it notifies the creator of the 'tremp' that a new user has joined.
+ *
+ * Helper Functions:
+ * - `validateUserInTremp(tremp_id, userId)`: Validates the 'tremp' and checks the user isn't its creator.
+ * - `updateTrempWithUser(tremp_id, user)`: Adds the user to the 'tremp'; If unsuccessful, it throws an error.
+ * - `notifyCreatorOfNewParticipant(creatorId, tremp_id, user_id)`: Sends a notification to the 'tremp' creator about the new participant.
+ */
+function joinToTremp(tremp_id, user_id, participants_amount = 1) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
         const user = { user_id: userId, participants_amount, is_approved: "pending" };
-        const tremp = yield validateUserAndTremp(tremp_id, userId);
+        const tremp = yield validateUserInTremp(tremp_id, userId);
         yield updateTrempWithUser(tremp_id, user);
-        yield notifyCreatorOfNewJoin(tremp.creator_id, tremp_id, user_id);
+        yield notifyCreatorOfNewParticipant(tremp.creator_id, tremp_id, user_id);
     });
 }
-exports.addUserToTremp = addUserToTremp;
-function validateUserAndTremp(tremp_id, userId) {
+exports.joinToTremp = joinToTremp;
+function validateUserInTremp(tremp_id, userId) {
     return __awaiter(this, void 0, void 0, function* () {
         const tremp = yield trempDataAccess.FindByID(tremp_id);
         if (!tremp) {
             throw new HttpException_1.NotFoundException('Tremp not found');
         }
+        // Check if the user is the creator of the tremp.
         if (userId.equals(tremp.creator_id)) {
             throw new HttpException_1.BadRequestException('The creator cannot join the tremp');
+        }
+        // Check if the user is already a participant in the tremp.
+        const userInTremp = tremp.users_in_tremp.find((participant) => participant.user_id.equals(userId));
+        if (userInTremp) {
+            throw new HttpException_1.BadRequestException('User is already a participant in this tremp');
         }
         return tremp;
     });
@@ -218,21 +240,32 @@ function validateUserAndTremp(tremp_id, userId) {
 function updateTrempWithUser(tremp_id, user) {
     return __awaiter(this, void 0, void 0, function* () {
         const query = { $push: { users_in_tremp: user } };
-        const updatedTremp = yield trempDataAccess.addUserToTremp(tremp_id, query);
+        const updatedTremp = yield trempDataAccess.UpdateTremp(tremp_id, query);
         if (updatedTremp.matchedCount === 0 || updatedTremp.modifiedCount === 0) {
             throw new HttpException_1.BadRequestException('User not added to the tremp');
         }
     });
 }
-function notifyCreatorOfNewJoin(creatorId, tremp_id, user_id) {
+function notifyCreatorOfNewParticipant(creatorId, tremp_id, user_id) {
     return __awaiter(this, void 0, void 0, function* () {
-        const creator = yield userDataAccess.FindById(creatorId.toString());
-        const fcmToken = creator.notification_token;
-        if (fcmToken) {
-            yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, 'New User Joined Drive', 'A user has joined your drive.', { tremp_id, user_id });
+        // Fetch creator and Participant based on their IDs
+        const users = yield userDataAccess.FindAllUsers({ _id: { $in: [creatorId, new mongodb_1.ObjectId(user_id)] } });
+        // Logic to ensure the creator is the first user and the joiner is the second
+        let creator, joiner;
+        if (users[0]._id.toString() === creatorId.toString()) {
+            creator = users[0];
+            joiner = users[1];
         }
         else {
-            console.log('User does not have a valid FCM token');
+            creator = users[1];
+            joiner = users[0];
+        }
+        const fcmToken = creator.notification_token;
+        if (fcmToken) {
+            yield (0, sendNotification_1.sendNotificationToUser)(fcmToken, 'Participant Alert: New Joiner for Your Ride', `${joiner.first_name} ${joiner.last_name} has joined your scheduled ride!`, { tremp_id, user_id });
+        }
+        else {
+            console.log(`Creator (ID: ${creatorId}) does not have a valid FCM token for notifications.`);
         }
     });
 }
@@ -280,7 +313,7 @@ function validateTremp(tremp_id, creator_id) {
 function findUserIndex(users, user_id) {
     return users.findIndex((user) => user.user_id.toString() === user_id);
 }
-// getUserTremp
+// getUserTremps
 function getUserTremps(user_id, tremp_type) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
@@ -427,7 +460,8 @@ function getUsersInTremp(trempId) {
                 image_URL: user.image_URL,
                 gender: user.gender,
                 is_approved: userInTremp.is_approved,
-                participants_amount: userInTremp.participants_amount
+                participants_amount: userInTremp.participants_amount,
+                notification_token: user.notification_token
             };
         })));
         return usersDetails;
@@ -489,7 +523,9 @@ function getApprovedTremps(user_id, tremp_type) {
             return Object.assign(Object.assign({}, tramp), { driver: {
                     user_id: driver.user_id,
                     first_name: driver.first_name,
-                    last_name: driver.last_name
+                    last_name: driver.last_name,
+                    notification_token: driver.notification_token,
+                    image_URL: driver.image_URL,
                 }, hitchhikers, users_in_tremp: undefined // Removing users_in_tremp from the response
              });
         })));
@@ -507,7 +543,9 @@ function getUserDetailsById(userId) {
             return {
                 user_id: user._id,
                 first_name: user.first_name,
-                last_name: user.last_name
+                last_name: user.last_name,
+                notification_token: user.notification_token,
+                image_URL: user.image_URL,
             };
         }
         catch (error) {

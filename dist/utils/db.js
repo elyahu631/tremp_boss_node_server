@@ -74,6 +74,17 @@ class DB {
             }
         });
     }
+    InsertMany(collection, docs) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return yield this.client.db(this.dbName).collection(collection).insertMany(docs);
+            }
+            catch (error) {
+                console.error("Error inserting multiple documents into database:", error);
+                throw error;
+            }
+        });
+    }
     Update(collection, id, updatedDocument) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

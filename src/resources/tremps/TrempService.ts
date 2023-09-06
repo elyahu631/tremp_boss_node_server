@@ -12,48 +12,77 @@ import { getCurrentTimeInIsrael } from '../../services/TimeService';
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
 
-// createTremp
+/**
+ * Creates a new tremp (ride).
+ * 1. Validates the provided data for the tremp.
+ * 2. Extracts specific details from the client's data and formats them.
+ * 3. Prepares the dates for when the tremp should occur by ensuring they're in the future.
+ * 4. Checks if there are already existing 'tremps' for the given dates.
+ * 5. Prepares the data for the tremp and its return drive if available.
+ * 6. Inserts all prepared 'tremps' into the database.
+ * 
+ * If there are any overlaps with existing tremps on the provided dates, an error is thrown.
+ * Helper functions are used for specific tasks like validation and data preparation.
+ *
+ * Helper functions:
+ * - `reformatHour(hour)`: Appends ":00" to the hour string.
+ * - `getTodayDate()`: Gets today's date at midnight UTC.
+ * - `findExistingTremps(creatorId, dates)`: Finds tremps by creator and dates.
+ * - `validateTrempHours(hour, return_hour, date, returnDate)`: Checks return time's difference from departure.
+ * - `buildTrempTime(dateValue, hour)`: Combines date and hour into a Date object.
+ * - `createSingleTrempDoc(date, creatorIdObj, groupIdObj, rest)`: Constructs a new tremp model.
+ */
 export async function createTremp(clientData: TrempRequest) {
   validateTrempRequest(clientData);
 
-  const { creator_id, group_id, tremp_type, dates, hour, from_route, to_route, is_permanent, return_drive, seats_amount, note } = clientData;
+  const { creator_id, group_id, ...rest } = clientData;
   const creatorIdObj = new ObjectId(creator_id);
   const groupIdObj = new ObjectId(group_id);
-  const fullHour = reformatHour(hour)
-  const today = getTodayDate()
+  const today = getTodayDate();
 
-  const createSingleRide = (rideDate: Date, fromRoute: typeof from_route, toRoute: typeof to_route) => {
-    return createSingleTremp(rideDate, creatorIdObj, groupIdObj, tremp_type, fromRoute, toRoute, seats_amount, note);
-  };
+  const allDates = Object.values(clientData.dates)
+    .filter(dateValue => dateValue)
+    .map(dateValue => {
+      const date = buildTrempTime(dateValue, reformatHour(clientData.hour));
+      if (date < today) date.setDate(date.getDate() + 7);
+      return date;
+    });
 
-  const createAndHandleRides = async (date: Date) => {
-    await createSingleRide(date, from_route, to_route);
-    if (return_drive) {
-      const fullReturnHour = return_drive.return_hour + ':00'
-      await handleReturnDrive(date, fullHour, fullReturnHour, to_route, from_route, createSingleRide);
-    }
-    date.setDate(date.getDate() + 7);
+  const existingTremps = await findExistingTremps(creator_id, allDates);
+
+  if (existingTremps.length > 0) {
+    throw new BadRequestException('You already have a tremp scheduled for one of these dates and times.');
   }
 
-  for (const dateValue of Object.values(dates)) {
-    if (dateValue) {
-      let date = buildTrempTime(dateValue, fullHour);
+  const ridesToInsert = [];
 
-      if (date < today) {
-        date.setDate(date.getDate() + 7);
+  for (const originalDate of allDates) {
+    const repetitions = clientData.is_permanent ? 4 : 1;
+
+    for (let i = 0; i < repetitions; i++) {
+      let date = new Date(originalDate);
+      date.setDate(date.getDate() + (7 * i));
+
+      ridesToInsert.push(createSingleTrempDoc(date, creatorIdObj, groupIdObj, rest));
+      const returnHour = rest.return_hour;
+      if (returnHour) {
+        const returnDate = new Date(date);
+        const [returnHourH, returnHourM] = reformatHour(returnHour).split(':').map(Number);
+        returnDate.setUTCHours(returnHourH, returnHourM, 0, 0);
+
+        validateTrempHours(rest.hour, reformatHour(returnHour), date, returnDate);
+
+        ridesToInsert.push(createSingleTrempDoc(returnDate, creatorIdObj, groupIdObj, {
+          ...rest,
+          from_route: rest.to_route,
+          to_route: rest.from_route
+        }));
       }
 
-      const existingTremps = await findExistingTremps(creatorIdObj, date);
-      if (existingTremps.length > 0) {
-        throw new BadRequestException('You already have a tremp scheduled for this date and time.');
-      }
-
-      const repetitions = is_permanent ? 4 : 1;
-      for (let i = 0; i < repetitions; i++) {
-        await createAndHandleRides(date);
-      }
     }
   }
+
+  await trempDataAccess.insertTremps(ridesToInsert);
 }
 function reformatHour(hour: string): string {
   return hour + ':00';
@@ -63,8 +92,8 @@ function getTodayDate() {
   today.setUTCHours(0, 0, 0, 0);
   return today;
 }
-async function findExistingTremps(creatorIdObj: ObjectId, date: Date) {
-  const existingTrempsQuery = { creator_id: creatorIdObj, tremp_time: date };
+async function findExistingTremps(creatorId: string, dates: Date[]) {
+  const existingTrempsQuery = { creator_id: creatorId, tremp_time: { $in: dates } };
   return await trempDataAccess.FindTrempsByFilters(existingTrempsQuery);
 }
 function validateTrempHours(hour: string, return_hour: string, date: Date, returnDate: Date) {
@@ -95,28 +124,21 @@ function buildTrempTime(dateValue: string, hour: string) {
   date.setUTCHours(hours, minutes, seconds);
   return date;
 }
-async function handleReturnDrive(date: Date, hour: string, fullReturnHour: string, from_route: Route,
-  to_route: Route, createSingleRide: Function) {
-  const returnDate = new Date(date);
-  const [returnHours, returnMinutes, returnSeconds] = fullReturnHour.split(':').map(Number);
-  returnDate.setUTCHours(returnHours, returnMinutes, returnSeconds);
-  validateTrempHours(hour, fullReturnHour, date, returnDate);
-  await createSingleRide(returnDate, from_route, to_route);
-}
-async function createSingleTremp(date: Date, creatorIdObj: ObjectId, groupIdObj: ObjectId, tremp_type:
-  string, from_route: Route, to_route: Route, seats_amount: number, note: string) {
-  const newTremp = new TrempModel({
+function createSingleTrempDoc(date: Date, creatorIdObj: ObjectId, groupIdObj: ObjectId, rest: Partial<TrempModel>): TrempModel {
+  const trempData = {
     creator_id: creatorIdObj,
     group_id: groupIdObj,
-    tremp_type,
     tremp_time: date,
-    from_route,
-    to_route,
-    seats_amount,
-    note
-  });
-  await trempDataAccess.insertTremp(newTremp);
+    ...rest
+  };
+
+  const newTremp = new TrempModel(trempData);
+  newTremp.validateTremp();
+  return newTremp;
 }
+
+
+
 
 
 // getTrempsByFilters
@@ -180,40 +202,80 @@ function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, a
 }
 
 
-// addUserToTremp
-export async function addUserToTremp(tremp_id: string, user_id: string, participants_amount: number = 1) {
+/**
+ * Allows a user to join a specific 'tremp' (ride).
+ * 
+ * 1. The function transforms the user's ID into ObjectId a format suitable for the database.
+ * 2. Then, it creates a user_in_tremp object with the user id and the status set to "pending".
+ * 3. Next, it checks if the user can join the specified 'tremp'.
+ * 4. It adds the user to the 'tremp'.
+ * 5. Finally, it notifies the creator of the 'tremp' that a new user has joined.
+ * 
+ * Helper Functions:
+ * - `validateUserInTremp(tremp_id, userId)`: Validates the 'tremp' and checks the user isn't its creator.
+ * - `updateTrempWithUser(tremp_id, user)`: Adds the user to the 'tremp'; If unsuccessful, it throws an error.
+ * - `notifyCreatorOfNewParticipant(creatorId, tremp_id, user_id)`: Sends a notification to the 'tremp' creator about the new participant.
+ */
+export async function joinToTremp(tremp_id: string, user_id: string, participants_amount: number = 1) {
   const userId = new ObjectId(user_id);
   const user = { user_id: userId, participants_amount, is_approved: "pending" };
 
-  const tremp = await validateUserAndTremp(tremp_id, userId);
+  const tremp = await validateUserInTremp(tremp_id, userId);
   await updateTrempWithUser(tremp_id, user);
-  await notifyCreatorOfNewJoin(tremp.creator_id, tremp_id, user_id);
+  await notifyCreatorOfNewParticipant(tremp.creator_id, tremp_id, user_id);
 }
-async function validateUserAndTremp(tremp_id: string, userId: ObjectId) {
+async function validateUserInTremp(tremp_id: string, userId: ObjectId) {
   const tremp = await trempDataAccess.FindByID(tremp_id);
+  
   if (!tremp) {
     throw new NotFoundException('Tremp not found');
   }
+  
+  // Check if the user is the creator of the tremp.
   if (userId.equals(tremp.creator_id)) {
     throw new BadRequestException('The creator cannot join the tremp');
   }
+
+  // Check if the user is already a participant in the tremp.
+  const userInTremp = tremp.users_in_tremp.find((participant:any) => participant.user_id.equals(userId));
+  if (userInTremp) {
+    throw new BadRequestException('User is already a participant in this tremp');
+  }
+
   return tremp;
 }
-async function updateTrempWithUser(tremp_id: string, user: any) {
+async function updateTrempWithUser(tremp_id: string, user: UserInTremp) {
   const query = { $push: { users_in_tremp: user } };
-  const updatedTremp = await trempDataAccess.addUserToTremp(tremp_id, query);
+  const updatedTremp = await trempDataAccess.UpdateTremp(tremp_id, query);
   if (updatedTremp.matchedCount === 0 || updatedTremp.modifiedCount === 0) {
     throw new BadRequestException('User not added to the tremp');
   }
 }
-async function notifyCreatorOfNewJoin(creatorId: ObjectId, tremp_id: string, user_id: string) {
-  const creator = await userDataAccess.FindById(creatorId.toString());
-  const fcmToken = creator.notification_token;
-  if (fcmToken) {
-    await sendNotificationToUser(fcmToken, 'New User Joined Drive',
-      'A user has joined your drive.', { tremp_id, user_id });
+async function notifyCreatorOfNewParticipant(creatorId: ObjectId, tremp_id: string, user_id: string) {
+
+  // Fetch creator and Participant based on their IDs
+  const users = await userDataAccess.FindAllUsers({ _id: { $in: [creatorId, new ObjectId(user_id)] } });
+
+  // Logic to ensure the creator is the first user and the joiner is the second
+  let creator, joiner;
+  if (users[0]._id.toString() === creatorId.toString()) {
+    creator = users[0];
+    joiner = users[1];
   } else {
-    console.log('User does not have a valid FCM token');
+    creator = users[1];
+    joiner = users[0];
+  }
+  const fcmToken = creator.notification_token;  
+
+  if (fcmToken) {
+    await sendNotificationToUser(
+      fcmToken,
+      'Participant Alert: New Joiner for Your Ride',
+      `${joiner.first_name} ${joiner.last_name} has joined your scheduled ride!`,
+      { tremp_id, user_id }
+    );
+  } else {
+    console.log(`Creator (ID: ${creatorId}) does not have a valid FCM token for notifications.`);
   }
 }
 
@@ -266,7 +328,7 @@ function findUserIndex(users: any[], user_id: string): number {
 }
 
 
-// getUserTremp
+// getUserTremps
 export async function getUserTremps(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
   const primaryType = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
@@ -427,7 +489,8 @@ export async function getUsersInTremp(trempId: string): Promise<any[]> {
         image_URL: user.image_URL,
         gender: user.gender,
         is_approved: userInTremp.is_approved,
-        participants_amount: userInTremp.participants_amount
+        participants_amount: userInTremp.participants_amount,
+        notification_token: user.notification_token
       };
     })
   );
@@ -442,10 +505,10 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
   const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
 
-  const currentDate  = getCurrentTimeInIsrael();
+  const currentDate = getCurrentTimeInIsrael();
   const hours = currentDate.getUTCHours();
   currentDate.setUTCHours(hours - 6);
-    
+
   // First, find the tramps where the user is the creator and has type 'first' and there is
   // at least one different user who is approved and type 'second'
   const createdByUserQuery = {
@@ -459,7 +522,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
       }
     }
   };
-  
+
 
   const trampsCreatedByUser = await trempDataAccess.FindAll(createdByUserQuery);
 
@@ -503,7 +566,9 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
         driver: {
           user_id: driver.user_id,
           first_name: driver.first_name,
-          last_name: driver.last_name
+          last_name: driver.last_name,
+          notification_token: driver.notification_token,
+          image_URL: driver.image_URL,
         },
         hitchhikers,
         users_in_tremp: undefined // Removing users_in_tremp from the response
@@ -522,7 +587,9 @@ async function getUserDetailsById(userId: ObjectId) {
     return {
       user_id: user._id,
       first_name: user.first_name,
-      last_name: user.last_name
+      last_name: user.last_name,
+      notification_token: user.notification_token,
+      image_URL: user.image_URL,
     };
   } catch (error) {
     console.error('Error getting user details:', error);

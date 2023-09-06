@@ -20,6 +20,11 @@ class TrempDataAccess {
             return yield db_1.default.Insert(TrempDataAccess.collection, tremp);
         });
     }
+    insertTremps(tremps) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield db_1.default.InsertMany(TrempDataAccess.collection, tremps);
+        });
+    }
     FindTrempsByFilters(query = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             const projection = {
@@ -42,7 +47,7 @@ class TrempDataAccess {
             return yield db_1.default.FindAll(TrempDataAccess.collection, query, projection, sort);
         });
     }
-    addUserToTremp(tremp_id, query) {
+    UpdateTremp(tremp_id, query) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield db_1.default.UpdateWithOperation(TrempDataAccess.collection, tremp_id, query);
         });

@@ -31,9 +31,7 @@ export const trempSchema = Joi.object({
   seats_amount: Joi.number().required(),
   note: Joi.string().optional(),
   is_permanent: Joi.boolean().required(),
-  return_drive: Joi.object({
-    return_hour: timePattern,
-  }).optional(),
+  return_hour: timePattern.optional(),
 });
 
 export function validateTrempRequest(data: any) {
