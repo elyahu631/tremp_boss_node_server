@@ -40,7 +40,7 @@ class TrempModel {
     this.tremp_time = trempData.tremp_time;
     this.from_route = trempData.from_route;
     this.to_route = trempData.to_route;
-    this.note = trempData.note || '';
+    this.note = trempData.note;
     this.seats_amount = trempData.seats_amount || 1;
     this.users_in_tremp = trempData.users_in_tremp || [];
     this.is_full = trempData.is_full || false;
