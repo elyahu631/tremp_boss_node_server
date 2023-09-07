@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTrempsByFiltersH = exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempService.ts
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
@@ -582,4 +582,39 @@ function getTrempById(id) {
     });
 }
 exports.getTrempById = getTrempById;
+function getTrempsByFiltersH(filters) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const query = yield constructQueryFromFiltersH(filters);
+        const tremps = yield trempDataAccess.FindTrempsByFilters(query);
+        const uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))];
+        const users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, image_URL: 1, gender: 1 });
+        const usersMap = createUserMapFromList(users);
+        appendCreatorInformationToTremps(tremps, usersMap);
+        return tremps;
+    });
+}
+exports.getTrempsByFiltersH = getTrempsByFiltersH;
+function constructQueryFromFiltersH(filters) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = yield userDataAccess.FindById(filters.user_id);
+        if (!user) {
+            throw new HttpException_1.NotFoundException("User not found");
+        }
+        const userId = user._id;
+        const connectedGroups = user.groups;
+        const date = (0, TimeService_1.getCurrentTimeInIsrael)();
+        const hours = date.getUTCHours();
+        date.setUTCHours(hours - 6);
+        return {
+            deleted: false,
+            group_id: { $in: connectedGroups },
+            tremp_time: { $lt: date },
+            tremp_type: filters.tremp_type,
+            $or: [
+                { creator_id: userId },
+                { users_in_tremp: { $elemMatch: { user_id: userId } } }
+            ]
+        };
+    });
+}
 //# sourceMappingURL=TrempService.js.map

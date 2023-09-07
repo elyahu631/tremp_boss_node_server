@@ -226,18 +226,18 @@ export async function joinToTremp(tremp_id: string, user_id: string, participant
 }
 async function validateUserInTremp(tremp_id: string, userId: ObjectId) {
   const tremp = await trempDataAccess.FindByID(tremp_id);
-  
+
   if (!tremp) {
     throw new NotFoundException('Tremp not found');
   }
-  
+
   // Check if the user is the creator of the tremp.
   if (userId.equals(tremp.creator_id)) {
     throw new BadRequestException('The creator cannot join the tremp');
   }
 
   // Check if the user is already a participant in the tremp.
-  const userInTremp = tremp.users_in_tremp.find((participant:any) => participant.user_id.equals(userId));
+  const userInTremp = tremp.users_in_tremp.find((participant: any) => participant.user_id.equals(userId));
   if (userInTremp) {
     throw new BadRequestException('User is already a participant in this tremp');
   }
@@ -265,7 +265,7 @@ async function notifyCreatorOfNewParticipant(creatorId: ObjectId, tremp_id: stri
     creator = users[1];
     joiner = users[0];
   }
-  const fcmToken = creator.notification_token;  
+  const fcmToken = creator.notification_token;
 
   if (fcmToken) {
     await sendNotificationToUser(
@@ -621,3 +621,44 @@ export async function getAllTremps() {
 export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
 }
+
+
+export async function getTrempsByFiltersH(filters: any): Promise<any> {
+  const query = await constructQueryFromFiltersH(filters);
+  const tremps = await trempDataAccess.FindTrempsByFilters(query);
+  const uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];
+
+  const users = await userDataAccess.FindAllUsers(
+    { _id: { $in: uniqueUserIds } },
+    { first_name: 1, last_name: 1, image_URL: 1, gender: 1 }
+  );
+
+  const usersMap = createUserMapFromList(users);
+  appendCreatorInformationToTremps(tremps, usersMap);
+
+  return tremps;
+}
+
+async function constructQueryFromFiltersH(filters: any): Promise<any> {
+  const user = await userDataAccess.FindById(filters.user_id);
+  if (!user) {
+    throw new NotFoundException("User not found");
+  }
+  const userId = user._id;
+  const connectedGroups = user.groups;
+  const date = getCurrentTimeInIsrael();
+  const hours = date.getUTCHours();
+  date.setUTCHours(hours - 6);
+
+  return {
+    deleted: false,
+    group_id: { $in: connectedGroups },
+    tremp_time: { $lt: date },
+    tremp_type: filters.tremp_type,
+    $or: [
+      { creator_id: userId },
+      { users_in_tremp: { $elemMatch: { user_id: userId } } }
+    ]
+  };
+}
+

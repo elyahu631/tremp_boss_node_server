@@ -14,6 +14,7 @@ trempRoutes.get('/users-in-tremp/:tremp_id',authenticateToken ,TrempController.g
 trempRoutes.post('/approved-tremps',authenticateToken ,TrempController.getApprovedTremps);
 trempRoutes.put('/delete-tremp',authenticateToken, TrempController.deleteTremp);
 trempRoutes.put('/tremp-completed',authenticateToken, TrempController.trempCompleted);
+trempRoutes.post('/tremp-history',authenticateToken, TrempController.getTrempHistory);
 
 
 

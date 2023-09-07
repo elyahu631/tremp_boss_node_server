@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTrempHistory = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -199,4 +199,17 @@ function getAllTremps(req, res, next) {
     });
 }
 exports.getAllTremps = getAllTremps;
+function getTrempHistory(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const filters = req.body;
+            const tremps = yield TrempService.getTrempsByFiltersH(filters);
+            res.status(200).json({ status: true, data: tremps });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getTrempHistory = getTrempHistory;
 //# sourceMappingURL=TrempController.js.map

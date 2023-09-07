@@ -139,3 +139,14 @@ export async function getAllTremps(req: Request, res: Response, next: NextFuncti
     next(err);
   }
 }
+
+
+export async function getTrempHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const filters = req.body;
+    const tremps = await TrempService.getTrempsByFiltersH(filters);
+    res.status(200).json({ status: true, data: tremps });
+  } catch (err) {
+    next(err);
+  }
+}
