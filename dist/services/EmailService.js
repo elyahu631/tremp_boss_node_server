@@ -37,6 +37,9 @@ class EmailService {
         });
     }
     sendResetCode(to, code) {
+        console.log("entering");
+        console.log(to);
+        console.log(code);
         const mailOptions = {
             from: EmailService.OUR_EMAIL,
             to: to,
