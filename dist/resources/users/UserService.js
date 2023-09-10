@@ -110,6 +110,7 @@ exports.loginUser = loginUser;
 function requestPasswordReset(email) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = yield userDataAccess.FindOneUser({ email });
+        console.log(user);
         if (!user) {
             throw new HttpException_1.BadRequestException("User not found");
         }

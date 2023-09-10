@@ -104,7 +104,8 @@ export async function loginUser(email: string, password: string) {
 
 export async function requestPasswordReset(email: string): Promise<boolean> {
   const user = await userDataAccess.FindOneUser({ email });
-
+  console.log(user);
+  
   if (!user) {
     throw new BadRequestException("User not found");
   }
