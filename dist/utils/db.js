@@ -44,6 +44,16 @@ class DB {
             }
         });
     }
+    FindOne(collection, query = {}, projection = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return yield this.client.db(this.dbName).collection(collection).findOne(query, { projection });
+            }
+            catch (error) {
+                throw error;
+            }
+        });
+    }
     FindByID(collection, id, projection = {}) {
         return __awaiter(this, void 0, void 0, function* () {
             try {

@@ -3,26 +3,30 @@
 import db from '../../utils/db';
 import GroupDataAccess from '../groups/GroupDataAccess';
 import { UserInterface } from './UserInterface';
-import UserModel  from './UserModel';
+import UserModel from './UserModel';
 
-class UserDataAccess  {
+class UserDataAccess {
   static collection = 'Users';
 
-  async FindAllUsers(query = {},projection = {}, sort = {}) {
-    return await db.FindAll(UserDataAccess .collection, query,projection,sort);
+  async FindAllUsers(query = {}, projection = {}, sort = {}) {
+    return await db.FindAll(UserDataAccess.collection, query, projection, sort);
+  }
+
+  async FindOneUser(query = {}) {
+    return await db.FindOne(UserDataAccess.collection, query);
   }
 
   async FindById(id: string) {
-    return await db.FindByID(UserDataAccess .collection, id);
+    return await db.FindByID(UserDataAccess.collection, id);
   }
 
   async DeleteUserById(id: string) {
-    return await db.DeleteById(UserDataAccess .collection, id);
+    return await db.DeleteById(UserDataAccess.collection, id);
   }
 
   async InsertOne(user: UserModel) {
     user.validateUser();
-    
+
     if (!user.groups || user.groups.length === 0) {
       const groupDataAccess = new GroupDataAccess();
       const generalGroup = await groupDataAccess.getGeneralGroup();
@@ -31,27 +35,27 @@ class UserDataAccess  {
       }
     }
 
-    return await db.Insert(UserDataAccess .collection, user);
+    return await db.Insert(UserDataAccess.collection, user);
   }
 
   async Update(id: string, updatedUser: Partial<UserModel>) {
-    return await db.Update(UserDataAccess .collection, id, updatedUser);
+    return await db.Update(UserDataAccess.collection, id, updatedUser);
   }
 
   async UpdateUserDeletionStatus(id: string) {
     try {
-      return await db.Update(UserDataAccess.collection, id, { 
+      return await db.Update(UserDataAccess.collection, id, {
         deleted: true,
         status: "inactive"
       });
-          } catch (error) {
+    } catch (error) {
       return error;
     }
   }
 
   async UpdateUserDetails(id: string, updateData: Partial<UserInterface>) {
     return await db.Update(UserDataAccess.collection, id, updateData);
-  }  
+  }
 }
 
-export default UserDataAccess ;
+export default UserDataAccess;

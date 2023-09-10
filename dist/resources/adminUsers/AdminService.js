@@ -49,7 +49,6 @@ function loginUser(username, password) {
         })) || [];
         const user = users[0];
         if (!user || !(yield bcrypt_1.default.compare(password, user.password))) {
-            // return null if user not found or password doesn't match
             return null;
         }
         yield adminDataAccess.UpdateUserDetails(user._id.toString(), { last_login_date: (0, TimeService_1.getCurrentTimeInIsrael)() });

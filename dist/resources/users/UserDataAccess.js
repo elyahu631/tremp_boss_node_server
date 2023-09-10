@@ -21,6 +21,11 @@ class UserDataAccess {
             return yield db_1.default.FindAll(UserDataAccess.collection, query, projection, sort);
         });
     }
+    FindOneUser(query = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield db_1.default.FindOne(UserDataAccess.collection, query);
+        });
+    }
     FindById(id) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield db_1.default.FindByID(UserDataAccess.collection, id);

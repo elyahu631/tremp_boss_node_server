@@ -11,6 +11,7 @@ import crypto from 'crypto';
 import { EmailService } from '../../services/EmailService';
 
 const userDataAccess = new UserDataAccess();
+const emailService = new EmailService();
 
 const saltRounds = 10;
 
@@ -27,20 +28,38 @@ export async function registerUser(email: string, password: string) {
   }
 
   const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+  // Generate a verification token
+  const verificationToken = crypto.randomBytes(20).toString('hex');
+
   const newUser = new UserModel({
     email,
     password: hashedPassword,
+    isVerified: false,  // Set to false initially
+    verificationToken: verificationToken
   });
 
-  // const verificationToken = crypto.randomBytes(20).toString('hex');
-
   const result = await userDataAccess.InsertOne(newUser);
-  // if (result) {
-  //   const emailService = new EmailService();
-  //   emailService.sendVerificationEmail(email, verificationToken); // Send a verification email
-  // }
+  if (result) {
+    emailService.sendVerificationEmail(email, verificationToken);
+  }
 
   return result;
+}
+
+export async function verifyUserEmail(token: string): Promise<string> {
+  console.log(token);
+  const user = await userDataAccess.FindOneUser({ verificationToken: token });
+  console.log(user.email);
+  console.log(user._id.toString());
+
+  if (user) {
+    user.isVerified = true;
+    await userDataAccess.UpdateUserDetails(user._id.toString(), user);
+    return "Email verified successfully";
+  } else {
+    throw new BadRequestException("Invalid or expired verification link");
+  }
 }
 
 export async function loginUser(email: string, password: string) {
@@ -71,18 +90,60 @@ export async function loginUser(email: string, password: string) {
 
   const userGroups = await groupDataAccess.FindAllGroups({
     _id: { $in: groupIds },
-    deleted:false,
-    active:"active"
-  },{
-   group_name:1,
-   type:1,
-   locations:1,
+    deleted: false,
+    active: "active"
+  }, {
+    group_name: 1,
+    type: 1,
+    locations: 1,
 
- });
-
+  });
 
   return { user, isProfileComplete, userGroups };
 }
+
+export async function requestPasswordReset(email: string): Promise<boolean> {
+  const user = await userDataAccess.FindOneUser({ email });
+
+  if (!user) {
+    throw new BadRequestException("User not found");
+  }
+
+  const code = generateResetCode();
+  await setResetCodeForUser(user, code);
+
+  emailService.sendResetCode(email, code);
+  return true;
+}
+function generateResetCode(): number {
+  return Math.floor(1000 + Math.random() * 9000);
+}
+async function setResetCodeForUser(user: any, code: number): Promise<void> {
+  user.resetCode = code;
+  user.resetCodeExpiration = Date.now() + 15 * 60 * 1000;
+
+  await userDataAccess.UpdateUserDetails(user._id.toString(), user);
+}
+
+
+export async function resetPassword(email: string, code: string, newPassword: string): Promise<string> {
+  const user = await userDataAccess.FindOneUser({ email });
+
+  if (!user || user.resetCode !== Number(code) || Date.now() > user.resetCodeExpiration) {
+    throw new BadRequestException("Invalid or expired reset code");
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+  user.password = hashedPassword;
+
+  delete user.resetCode;
+  delete user.resetCodeExpiration;
+
+  await userDataAccess.UpdateUserDetails(user._id.toString(), user);
+
+  return "Password reset successfully";
+}
+
 
 export async function getUserById(id: string) {
   return userDataAccess.FindById(id);
@@ -183,19 +244,19 @@ export async function getUserGroups(userId: string) {
     throw new BadRequestException("User not found");
   }
 
- 
+
   const groupDataAccess = new GroupDataAccess();
   const groupIds = user.groups || [];
 
   // Use the query to filter out the groups directly in the database
   const userGroups = await groupDataAccess.FindAllGroups({
-     _id: { $in: groupIds },
-     deleted:false,
-     active:"active"
-   },{
-    group_name:1,
-    type:1,
-    locations:1,
+    _id: { $in: groupIds },
+    deleted: false,
+    active: "active"
+  }, {
+    group_name: 1,
+    type: 1,
+    locations: 1,
 
   });
 

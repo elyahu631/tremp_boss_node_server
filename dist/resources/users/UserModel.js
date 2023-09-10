@@ -20,9 +20,11 @@ class UserModel {
         this.updatedAt = userData.updatedAt || (0, TimeService_1.getCurrentTimeInIsrael)();
         this.last_login_date = userData.last_login_date;
         this.groups = userData.groups || [];
+        this.notification_token = userData.notification_token || "";
         this.status = userData.status || "active";
         this.deleted = userData.deleted || false;
-        this.notification_token = userData.notification_token || "";
+        this.isVerified = userData.isVerified || false;
+        this.verificationToken = userData.verificationToken || "";
     }
     validateUser() {
         const schema = joi_1.default.object({

@@ -16,7 +16,10 @@ import {
   updateUserDetails,
   addNotificationToken,
   uploadUserImage,
-  getUserGroups
+  getUserGroups,
+  verifyEmail,
+  requestPasswordReset,
+  resetPassword
 } from "./UserController";
 import multerConfig from "../../config/multerConfig";
 
@@ -24,6 +27,7 @@ import multerConfig from "../../config/multerConfig";
 const upload = multer(multerConfig); 
 const usersRouter: Router = express.Router();
 
+usersRouter.get('/verify/:token', verifyEmail);
 
 // for admin
 usersRouter.get("/all", authenticateToken, getAllUsers);
@@ -32,14 +36,15 @@ usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),
 usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
 
 // for app users
-usersRouter.post("/register", registerUser);// V
-usersRouter.post("/login", loginUser);// V
-usersRouter.get("/:id", authenticateToken, getUserById);// V
-usersRouter.put("/update/:id", authenticateToken, updateUser);// V
-usersRouter.post("/update-image/:id", authenticateToken, upload.any(), uploadUserImage);// V
+usersRouter.post("/register", registerUser);
+usersRouter.post("/login", loginUser);
+usersRouter.post('/request-password-reset', requestPasswordReset);
+usersRouter.post('/reset-password', resetPassword);
+usersRouter.get("/:id", authenticateToken, getUserById);
+usersRouter.put("/update/:id", authenticateToken, updateUser);
+usersRouter.post("/update-image/:id", authenticateToken, upload.any(), uploadUserImage);
 usersRouter.put("/mark-deleted/:id", authenticateToken, markUserAsDeleted);
 usersRouter.post("/my-groups", authenticateToken, getUserGroups); 
-
 
 usersRouter.post("/add-notification-token", addNotificationToken);
 

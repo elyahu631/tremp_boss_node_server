@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { SentMessageInfo } from 'nodemailer';
 import { EMAIL_PASS } from '../config/environment';
+import { encrypt } from './Encryption';
 
 export class EmailService {
   private transporter;
@@ -9,14 +10,17 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'trempboss777@gmail.com', 
+        user: 'trempboss777@gmail.com',
         pass: EMAIL_PASS,
       },
     });
   }
 
   public sendVerificationEmail(to: string, token: string) {
-    const verificationLink = `http://your-app.com/verify?token=${token}`;
+    const encryptedToken = encrypt(token);
+
+    const verificationLink = `http://localhost:5500/api/users/verify/${encryptedToken}`;
+
     const mailOptions = {
       from: 'trempboss777@gmail.com',
       to: to,
@@ -32,4 +36,23 @@ export class EmailService {
       }
     });
   }
+
+
+  public sendResetCode(to: string, code: number) {
+    const mailOptions = {
+        from: 'your_email@gmail.com',
+        to: to,
+        subject: 'Your Password Reset Code',
+        text: `Your password reset code is: ${code}`,
+    };
+
+    this.transporter.sendMail(mailOptions, (error: Error | null, info: SentMessageInfo) => {
+        if (error) {
+            console.log('Error sending email:', error);
+        } else {
+            console.log('Email sent:', info);
+        }
+    });
+}
+
 }

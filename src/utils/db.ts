@@ -33,6 +33,14 @@ class DB {
     }
   }
 
+  async FindOne(collection: string, query = {}, projection = {}) {
+    try {
+      return await this.client.db(this.dbName).collection(collection).findOne(query, { projection });
+    } catch (error) {
+      throw error;
+    }
+  }
+  
   async FindByID(collection: string, id: string, projection = {}) {
     try {
       return await this.client.db(this.dbName).collection(collection).findOne({ _id: new ObjectId(id) }, projection);

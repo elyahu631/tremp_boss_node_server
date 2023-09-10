@@ -39,8 +39,6 @@ export async function loginUser(username: string, password: string) {
 
 
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    // return null if user not found or password doesn't match
-
     return null;
   }
   await adminDataAccess.UpdateUserDetails(user._id.toString(), { last_login_date:  getCurrentTimeInIsrael() });

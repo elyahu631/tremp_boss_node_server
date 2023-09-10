@@ -35,13 +35,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserGroups = exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.uploadUserImage = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = void 0;
+exports.getUserGroups = exports.addNotificationToken = exports.updateUserDetails = exports.AdminAddUser = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.uploadUserImage = exports.updateUser = exports.getUserById = exports.resetPassword = exports.requestPasswordReset = exports.loginUser = exports.verifyEmail = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const UserService = __importStar(require("./UserService"));
 const UserValidation_1 = require("./UserValidation");
 const UserModel_1 = __importDefault(require("./UserModel"));
 const HttpException_1 = require("../../middleware/HttpException");
+const Encryption_1 = require("../../services/Encryption");
 /**
   Registers a new user.
   It validates the email and password in the request body,
@@ -65,21 +66,20 @@ function registerUser(req, res, next) {
     });
 }
 exports.registerUser = registerUser;
-// export async function verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const token = req.query.token as string;
-//     const user = await UserModel.findOne({ verificationToken: token });
-//     if (!user) {
-//       throw new BadRequestException("Invalid verification link.");
-//     }
-//     user.isVerified = true;
-//     user.verificationToken = undefined; // remove the token
-//     await user.save();
-//     res.status(200).json({ status: true, message: "Email verified successfully" });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
+function verifyEmail(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const decryptedToken = (0, Encryption_1.decrypt)(req.params.token);
+            console.log(decryptedToken);
+            const message = yield UserService.verifyUserEmail(decryptedToken);
+            res.status(200).json({ status: true, message: message });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.verifyEmail = verifyEmail;
 /**
   Logs in a user.
   It validates the email and password in the request body,
@@ -91,7 +91,7 @@ function loginUser(req, res, next) {
         try {
             const { email, password } = req.body;
             const { user, isProfileComplete, userGroups } = yield UserService.loginUser(email.toLowerCase(), password);
-            const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '30d' });
+            const token = jsonwebtoken_1.default.sign({ id: user._id, rule: 'user' }, environment_1.JWT_SECRET, { expiresIn: '30d' });
             res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete, user_groups: userGroups } });
         }
         catch (err) {
@@ -100,6 +100,35 @@ function loginUser(req, res, next) {
     });
 }
 exports.loginUser = loginUser;
+function requestPasswordReset(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { email } = req.body;
+            const result = yield UserService.requestPasswordReset(email.toLowerCase());
+            if (!result) {
+                throw new HttpException_1.BadRequestException("Failed to send reset link");
+            }
+            res.status(200).json({ status: true, message: "Reset link sent successfully" });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.requestPasswordReset = requestPasswordReset;
+function resetPassword(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { email, code, newPassword } = req.body;
+            const result = yield UserService.resetPassword(email, code, newPassword);
+            res.status(200).json({ status: true, message: result });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.resetPassword = resetPassword;
 /**
  Retrieves a user by ID.
  It validates the user ID in the request params,

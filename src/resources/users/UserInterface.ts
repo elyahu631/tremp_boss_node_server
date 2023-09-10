@@ -17,4 +17,6 @@ export interface UserInterface  {
   status?: string;
   deleted ?: boolean;
   notification_token ?: string;
+  isVerified?: boolean;
+  verificationToken?: string; 
 }

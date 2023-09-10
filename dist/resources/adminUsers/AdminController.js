@@ -61,7 +61,7 @@ function loginAdmin(req, res, next) {
             if (!user) {
                 throw new HttpException_1.UnauthorizedException("Invalid user or password.");
             }
-            const token = jsonwebtoken_1.default.sign({ id: user._id }, environment_1.JWT_SECRET, { expiresIn: '30d' });
+            const token = jsonwebtoken_1.default.sign({ id: user._id, rule: 'admin' }, environment_1.JWT_SECRET, { expiresIn: '30d' });
             res.status(200).json({ status: true, data: { user, token } });
         }
         catch (err) {

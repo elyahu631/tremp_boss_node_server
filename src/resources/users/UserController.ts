@@ -6,6 +6,7 @@ import * as UserService from './UserService';
 import { validateUpdatedUser } from "./UserValidation";
 import UserModel from "./UserModel";
 import { BadRequestException } from "../../middleware/HttpException";
+import { decrypt } from "../../services/Encryption";
 
 
 /**
@@ -28,24 +29,21 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
   }
 }
 
-// export async function verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
-//   try {
-//     const token = req.query.token as string;
-//     const user = await UserModel.findOne({ verificationToken: token });
 
-//     if (!user) {
-//       throw new BadRequestException("Invalid verification link.");
-//     }
+export async function verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    
+    const decryptedToken = decrypt(req.params.token);
 
-//     user.isVerified = true;
-//     user.verificationToken = undefined; // remove the token
-//     await user.save();
+    console.log(decryptedToken);
 
-//     res.status(200).json({ status: true, message: "Email verified successfully" });
-//   } catch (err) {
-//     next(err);
-//   }
-// }
+    const message = await UserService.verifyUserEmail(decryptedToken);
+
+    res.status(200).json({ status: true, message: message });
+  } catch (err) {
+    next(err);
+  }
+}
 
 /**
   Logs in a user.
@@ -57,12 +55,38 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
   try {
     const { email, password } = req.body;
     const { user, isProfileComplete, userGroups } = await UserService.loginUser(email.toLowerCase(), password);
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user._id, rule: 'user' }, JWT_SECRET, { expiresIn: '30d' });
     res.status(200).json({ status: true, data: { user, token, is_profile_complete: isProfileComplete, user_groups: userGroups } });
   } catch (err) {
     next(err);
   }
 }
+
+export async function requestPasswordReset(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email } = req.body;
+    const result = await UserService.requestPasswordReset(email.toLowerCase());
+    if (!result) {
+      throw new BadRequestException("Failed to send reset link");
+    }
+    res.status(200).json({ status: true, message: "Reset link sent successfully" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, code, newPassword } = req.body;
+
+    const result = await UserService.resetPassword(email, code, newPassword);
+
+    res.status(200).json({ status: true, message: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 
 /**
  Retrieves a user by ID.

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserGroups = exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.loginUser = exports.registerUser = exports.hashPassword = void 0;
+exports.getUserGroups = exports.uploadImageToFirebaseAndUpdateUser = exports.deleteUserById = exports.updateUserDetails = exports.createUser = exports.getAllUsers = exports.uploadUserImage = exports.markUserAsDeleted = exports.updateUser = exports.getUserById = exports.resetPassword = exports.requestPasswordReset = exports.loginUser = exports.verifyUserEmail = exports.registerUser = exports.hashPassword = void 0;
 // src/resources/users/UserService.ts
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const UserModel_1 = __importDefault(require("./UserModel"));
@@ -22,7 +22,10 @@ const fileUpload_1 = require("../../firebase/fileUpload");
 const TimeService_1 = require("../../services/TimeService");
 const HttpException_1 = require("../../middleware/HttpException");
 const mongodb_1 = require("mongodb");
+const crypto_1 = __importDefault(require("crypto"));
+const EmailService_1 = require("../../services/EmailService");
 const userDataAccess = new UserDataAccess_1.default();
+const emailService = new EmailService_1.EmailService();
 const saltRounds = 10;
 function hashPassword(password) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -38,20 +41,39 @@ function registerUser(email, password) {
             return null;
         }
         const hashedPassword = yield bcrypt_1.default.hash(password, saltRounds);
+        // Generate a verification token
+        const verificationToken = crypto_1.default.randomBytes(20).toString('hex');
         const newUser = new UserModel_1.default({
             email,
             password: hashedPassword,
+            isVerified: false,
+            verificationToken: verificationToken
         });
-        // const verificationToken = crypto.randomBytes(20).toString('hex');
         const result = yield userDataAccess.InsertOne(newUser);
-        // if (result) {
-        //   const emailService = new EmailService();
-        //   emailService.sendVerificationEmail(email, verificationToken); // Send a verification email
-        // }
+        if (result) {
+            emailService.sendVerificationEmail(email, verificationToken);
+        }
         return result;
     });
 }
 exports.registerUser = registerUser;
+function verifyUserEmail(token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log(token);
+        const user = yield userDataAccess.FindOneUser({ verificationToken: token });
+        console.log(user.email);
+        console.log(user._id.toString());
+        if (user) {
+            user.isVerified = true;
+            yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
+            return "Email verified successfully";
+        }
+        else {
+            throw new HttpException_1.BadRequestException("Invalid or expired verification link");
+        }
+    });
+}
+exports.verifyUserEmail = verifyUserEmail;
 function loginUser(email, password) {
     return __awaiter(this, void 0, void 0, function* () {
         const users = (yield userDataAccess.FindAllUsers({
@@ -85,6 +107,44 @@ function loginUser(email, password) {
     });
 }
 exports.loginUser = loginUser;
+function requestPasswordReset(email) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = yield userDataAccess.FindOneUser({ email });
+        if (!user) {
+            throw new HttpException_1.BadRequestException("User not found");
+        }
+        const code = generateResetCode();
+        yield setResetCodeForUser(user, code);
+        emailService.sendResetCode(email, code);
+        return true;
+    });
+}
+exports.requestPasswordReset = requestPasswordReset;
+function generateResetCode() {
+    return Math.floor(1000 + Math.random() * 9000);
+}
+function setResetCodeForUser(user, code) {
+    return __awaiter(this, void 0, void 0, function* () {
+        user.resetCode = code;
+        user.resetCodeExpiration = Date.now() + 15 * 60 * 1000;
+        yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
+    });
+}
+function resetPassword(email, code, newPassword) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = yield userDataAccess.FindOneUser({ email });
+        if (!user || user.resetCode !== Number(code) || Date.now() > user.resetCodeExpiration) {
+            throw new HttpException_1.BadRequestException("Invalid or expired reset code");
+        }
+        const hashedPassword = yield hashPassword(newPassword);
+        user.password = hashedPassword;
+        delete user.resetCode;
+        delete user.resetCodeExpiration;
+        yield userDataAccess.UpdateUserDetails(user._id.toString(), user);
+        return "Password reset successfully";
+    });
+}
+exports.resetPassword = resetPassword;
 function getUserById(id) {
     return __awaiter(this, void 0, void 0, function* () {
         return userDataAccess.FindById(id);

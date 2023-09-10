@@ -18,10 +18,11 @@ class UserModel {
   gender?: string;
   groups?: ObjectId[];
   last_login_date?: Date;
+  notification_token?: string;
   status?: string;
-  deleted ?: boolean;
-  notification_token ?: string;
-
+  deleted?: boolean;
+  isVerified ?: boolean;   
+  verificationToken ?: string; 
 
   constructor(userData: Partial<UserModel>) {
     this.email = userData.email;
@@ -31,14 +32,16 @@ class UserModel {
     this.first_name = userData.first_name;
     this.last_name = userData.last_name;
     this.gender = userData.gender;
-    this.coins = userData.coins || 0; 
-    this.createdAt = userData.createdAt || getCurrentTimeInIsrael(); 
-    this.updatedAt = userData.updatedAt || getCurrentTimeInIsrael(); 
-    this.last_login_date = userData.last_login_date; 
+    this.coins = userData.coins || 0;
+    this.createdAt = userData.createdAt || getCurrentTimeInIsrael();
+    this.updatedAt = userData.updatedAt || getCurrentTimeInIsrael();
+    this.last_login_date = userData.last_login_date;
     this.groups = userData.groups || [];
-    this.status = userData.status || "active"; 
-    this.deleted = userData.deleted || false; 
-    this.notification_token = userData.notification_token  || "";
+    this.notification_token = userData.notification_token || "";
+    this.status = userData.status || "active";
+    this.deleted = userData.deleted || false;
+    this.isVerified = userData.isVerified || false;   
+    this.verificationToken = userData.verificationToken || ""; 
   }
 
   validateUser() {
@@ -46,13 +49,13 @@ class UserModel {
       email: Joi.string().email().max(50).required(),
       password: Joi.string().min(8).required(),
     });
-  
+
     // Only validate the email and password properties
     const { error } = schema.validate({
       email: this.email,
       password: this.password,
     });
-  
+
     if (error) {
       throw new Error(error.details[0].message);
     }
@@ -61,7 +64,7 @@ class UserModel {
   static fromUserDocument(userDocument: UserInterface): UserModel {
     return new UserModel(userDocument);
   }
-  
+
   isProfileComplete(): boolean {
     return (
       !!this.email &&
