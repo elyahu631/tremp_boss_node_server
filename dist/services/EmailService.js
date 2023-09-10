@@ -19,7 +19,7 @@ class EmailService {
     }
     sendVerificationEmail(to, token) {
         const encryptedToken = (0, Encryption_1.encrypt)(token);
-        const verificationLink = `http://localhost:5500/api/users/verify/${encryptedToken}`;
+        const verificationLink = `https://tremp-boss-api.cyclic.app/api/users/verify/${encryptedToken}`;
         const mailOptions = {
             from: 'trempboss777@gmail.com',
             to: to,

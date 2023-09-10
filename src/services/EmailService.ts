@@ -6,11 +6,13 @@ import { encrypt } from './Encryption';
 export class EmailService {
   private transporter;
 
+  static OUR_EMAIL = 'trempboss777@gmail.com'
+
   constructor() {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'trempboss777@gmail.com',
+        user: EmailService.OUR_EMAIL,
         pass: EMAIL_PASS,
       },
     });
@@ -19,10 +21,10 @@ export class EmailService {
   public sendVerificationEmail(to: string, token: string) {
     const encryptedToken = encrypt(token);
 
-    const verificationLink = `http://localhost:5500/api/users/verify/${encryptedToken}`;
+    const verificationLink = `https://tremp-boss-api.cyclic.app/api/users/verify/${encryptedToken}`;
 
     const mailOptions = {
-      from: 'trempboss777@gmail.com',
+      from: EmailService.OUR_EMAIL,
       to: to,
       subject: 'Verify Your Email',
       text: `Please click on the link to verify your email: ${verificationLink}`,
@@ -40,7 +42,7 @@ export class EmailService {
 
   public sendResetCode(to: string, code: number) {
     const mailOptions = {
-        from: 'trempboss777@gmail.com',
+        from: EmailService.OUR_EMAIL,
         to: to,
         subject: 'Your Password Reset Code',
         text: `Your password reset code is: ${code}`,
