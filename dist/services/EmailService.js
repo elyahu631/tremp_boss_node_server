@@ -12,7 +12,7 @@ class EmailService {
         this.transporter = nodemailer_1.default.createTransport({
             service: 'gmail',
             auth: {
-                user: 'trempboss777@gmail.com',
+                user: EmailService.OUR_EMAIL,
                 pass: environment_1.EMAIL_PASS,
             },
         });
@@ -21,7 +21,7 @@ class EmailService {
         const encryptedToken = (0, Encryption_1.encrypt)(token);
         const verificationLink = `https://tremp-boss-api.cyclic.app/api/users/verify/${encryptedToken}`;
         const mailOptions = {
-            from: 'trempboss777@gmail.com',
+            from: EmailService.OUR_EMAIL,
             to: to,
             subject: 'Verify Your Email',
             text: `Please click on the link to verify your email: ${verificationLink}`,
@@ -37,7 +37,7 @@ class EmailService {
     }
     sendResetCode(to, code) {
         const mailOptions = {
-            from: 'trempboss777@gmail.com',
+            from: EmailService.OUR_EMAIL,
             to: to,
             subject: 'Your Password Reset Code',
             text: `Your password reset code is: ${code}`,
@@ -53,4 +53,5 @@ class EmailService {
     }
 }
 exports.EmailService = EmailService;
+EmailService.OUR_EMAIL = 'trempboss777@gmail.com';
 //# sourceMappingURL=EmailService.js.map
