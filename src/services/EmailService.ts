@@ -40,7 +40,7 @@ export class EmailService {
 
   public sendResetCode(to: string, code: number) {
     const mailOptions = {
-        from: 'your_email@gmail.com',
+        from: 'trempboss777@gmail.com',
         to: to,
         subject: 'Your Password Reset Code',
         text: `Your password reset code is: ${code}`,
