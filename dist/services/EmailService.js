@@ -7,6 +7,7 @@ exports.EmailService = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const environment_1 = require("../config/environment");
 const Encryption_1 = require("./Encryption");
+const HttpException_1 = require("../middleware/HttpException");
 class EmailService {
     constructor() {
         this.transporter = nodemailer_1.default.createTransport({
@@ -44,7 +45,7 @@ class EmailService {
         };
         this.transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
-                console.log('Error sending email:', error);
+                throw new HttpException_1.BadRequestException("email dosnot sent ");
             }
             else {
                 console.log('Email sent:', info);
