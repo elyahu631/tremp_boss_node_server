@@ -79,7 +79,7 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
   try {
     const { email, code, newPassword } = req.body;
 
-    const result = await UserService.resetPassword(email, code, newPassword);
+    const result = await UserService.resetPassword(email.toLowerCase(), code, newPassword);
 
     res.status(200).json({ status: true, message: result });
   } catch (err) {

@@ -120,7 +120,7 @@ function resetPassword(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { email, code, newPassword } = req.body;
-            const result = yield UserService.resetPassword(email, code, newPassword);
+            const result = yield UserService.resetPassword(email.toLowerCase(), code, newPassword);
             res.status(200).json({ status: true, message: result });
         }
         catch (err) {
