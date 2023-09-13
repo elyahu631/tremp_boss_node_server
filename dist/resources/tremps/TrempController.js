@@ -202,8 +202,8 @@ exports.getAllTremps = getAllTremps;
 function getTrempHistory(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const filters = req.body;
-            const tremps = yield TrempService.getTrempsByFiltersH(filters);
+            const { user_id, tremp_type } = req.body;
+            const tremps = yield TrempService.getTrempsHistory(user_id, tremp_type);
             res.status(200).json({ status: true, data: tremps });
         }
         catch (err) {

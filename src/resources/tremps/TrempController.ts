@@ -145,8 +145,8 @@ export async function getAllTremps(req: Request, res: Response, next: NextFuncti
 
 export async function getTrempHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const filters = req.body;
-    const tremps = await TrempService.getTrempsByFiltersH(filters);
+    const {user_id,tremp_type} = req.body;
+    const tremps = await TrempService.getTrempsHistory(user_id,tremp_type);
     res.status(200).json({ status: true, data: tremps });
   } catch (err) {
     next(err);

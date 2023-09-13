@@ -630,42 +630,91 @@ export async function getTrempById(id: string) {
 }
 
 
-export async function getTrempsByFiltersH(filters: any): Promise<any> {
-  const query = await constructQueryFromFiltersH(filters);
-  const tremps = await trempDataAccess.FindTrempsByFilters(query);
-  const uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];
+export async function getTrempsHistory(user_id: string, tremp_type: string) {
+  const userId = new ObjectId(user_id);
+  const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
+  const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
 
-  const users = await userDataAccess.FindAllUsers(
-    { _id: { $in: uniqueUserIds } },
-    { first_name: 1, last_name: 1, image_URL: 1, gender: 1 }
-  );
+  const currentDate = getCurrentTimeInIsrael();
+  const hours = currentDate.getUTCHours();
+  currentDate.setUTCHours(hours - 6);
 
-  const usersMap = createUserMapFromList(users);
-  appendCreatorInformationToTremps(tremps, usersMap);
+  // First, find the tramps where the user is the creator and has type 'first' and there is
+  // at least one different user who is approved and type 'second'
 
-  return tremps;
-}
-
-async function constructQueryFromFiltersH(filters: any): Promise<any> {
-  const user = await userDataAccess.FindById(filters.user_id);
-  if (!user) {
-    throw new NotFoundException("User not found");
-  }
-  const userId = user._id;
-  const connectedGroups = user.groups;
-  const date = getCurrentTimeInIsrael();
-  const hours = date.getUTCHours();
-  date.setUTCHours(hours - 6);
-
-  return {
-    deleted: false,
-    group_id: { $in: connectedGroups },
-    tremp_time: { $lt: date },
-    tremp_type: filters.tremp_type,
-    $or: [
-      { creator_id: userId },
-      { users_in_tremp: { $elemMatch: { user_id: userId } } }
+  const createdByUserQuery = {
+    creator_id: userId,
+    tremp_type: first,
+    "users_in_tremp": {
+      "$elemMatch": {
+        "user_id": { "$ne": userId },
+        "is_approved": 'approved',
+      }
+    },
+    "$or": [
+      { tremp_time: { "$lt": currentDate } },
+      { is_completed: true }
     ]
   };
+  
+
+
+  const trampsCreatedByUser = await trempDataAccess.FindAll(createdByUserQuery);
+
+  // Then, find the tramps where the user has joined as type 'second' and is approved
+  const joinedByUserQuery = {
+    tremp_type: second,
+    "users_in_tremp": {
+      "$elemMatch": {
+        "user_id": userId,
+        "is_approved": 'approved',
+      }
+    }, "$or": [
+      { tremp_time: { "$lt": currentDate } },
+      { is_completed: true }
+    ]
+  };
+
+  const trampsJoinedByUser = await trempDataAccess.FindAll(joinedByUserQuery);
+
+  const trampsToShow = await Promise.all(
+    [...trampsCreatedByUser, ...trampsJoinedByUser].map(async tramp => {
+
+      // Identifying the driver based on tremp type and Identifying the hitchhikers
+      let driverId;
+      let hitchhikers;
+      if (tramp.tremp_type === 'driver') {
+        driverId = tramp.creator_id;
+
+        hitchhikers = await Promise.all(
+          tramp.users_in_tremp
+            .filter((user: UsersApprovedInTremp) => user.is_approved === 'approved')
+            .map((user: UsersApprovedInTremp) => getUserDetailsById(user.user_id))
+        );
+
+      } else {
+        driverId = tramp.users_in_tremp.find((user: UsersApprovedInTremp) => user.is_approved === 'approved')?.user_id;
+        hitchhikers = await getUserDetailsById(tramp.creator_id);
+      }
+      const driver = await getUserDetailsById(driverId);
+
+      return {
+        ...tramp,
+        driver: {
+          user_id: driver.user_id,
+          first_name: driver.first_name,
+          last_name: driver.last_name,
+          notification_token: driver.notification_token,
+          image_URL: driver.image_URL,
+        },
+        hitchhikers,
+        users_in_tremp: undefined // Removing users_in_tremp from the response
+      };
+    })
+  );
+
+  return trampsToShow;
 }
+
+
 

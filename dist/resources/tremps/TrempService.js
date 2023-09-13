@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempsByFiltersH = exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTrempsHistory = exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempService.ts
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
@@ -587,39 +587,72 @@ function getTrempById(id) {
     });
 }
 exports.getTrempById = getTrempById;
-function getTrempsByFiltersH(filters) {
+function getTrempsHistory(user_id, tremp_type) {
     return __awaiter(this, void 0, void 0, function* () {
-        const query = yield constructQueryFromFiltersH(filters);
-        const tremps = yield trempDataAccess.FindTrempsByFilters(query);
-        const uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))];
-        const users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, image_URL: 1, gender: 1 });
-        const usersMap = createUserMapFromList(users);
-        appendCreatorInformationToTremps(tremps, usersMap);
-        return tremps;
-    });
-}
-exports.getTrempsByFiltersH = getTrempsByFiltersH;
-function constructQueryFromFiltersH(filters) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const user = yield userDataAccess.FindById(filters.user_id);
-        if (!user) {
-            throw new HttpException_1.NotFoundException("User not found");
-        }
-        const userId = user._id;
-        const connectedGroups = user.groups;
-        const date = (0, TimeService_1.getCurrentTimeInIsrael)();
-        const hours = date.getUTCHours();
-        date.setUTCHours(hours - 6);
-        return {
-            deleted: false,
-            group_id: { $in: connectedGroups },
-            tremp_time: { $lt: date },
-            tremp_type: filters.tremp_type,
-            $or: [
-                { creator_id: userId },
-                { users_in_tremp: { $elemMatch: { user_id: userId } } }
+        const userId = new mongodb_1.ObjectId(user_id);
+        const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
+        const second = tremp_type === 'hitchhiker' ? 'driver' : 'hitchhiker';
+        const currentDate = (0, TimeService_1.getCurrentTimeInIsrael)();
+        const hours = currentDate.getUTCHours();
+        currentDate.setUTCHours(hours - 6);
+        // First, find the tramps where the user is the creator and has type 'first' and there is
+        // at least one different user who is approved and type 'second'
+        const createdByUserQuery = {
+            creator_id: userId,
+            tremp_type: first,
+            "users_in_tremp": {
+                "$elemMatch": {
+                    "user_id": { "$ne": userId },
+                    "is_approved": 'approved',
+                }
+            },
+            "$or": [
+                { tremp_time: { "$lt": currentDate } },
+                { is_completed: true }
             ]
         };
+        const trampsCreatedByUser = yield trempDataAccess.FindAll(createdByUserQuery);
+        // Then, find the tramps where the user has joined as type 'second' and is approved
+        const joinedByUserQuery = {
+            tremp_type: second,
+            "users_in_tremp": {
+                "$elemMatch": {
+                    "user_id": userId,
+                    "is_approved": 'approved',
+                }
+            }, "$or": [
+                { tremp_time: { "$lt": currentDate } },
+                { is_completed: true }
+            ]
+        };
+        const trampsJoinedByUser = yield trempDataAccess.FindAll(joinedByUserQuery);
+        const trampsToShow = yield Promise.all([...trampsCreatedByUser, ...trampsJoinedByUser].map((tramp) => __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            // Identifying the driver based on tremp type and Identifying the hitchhikers
+            let driverId;
+            let hitchhikers;
+            if (tramp.tremp_type === 'driver') {
+                driverId = tramp.creator_id;
+                hitchhikers = yield Promise.all(tramp.users_in_tremp
+                    .filter((user) => user.is_approved === 'approved')
+                    .map((user) => getUserDetailsById(user.user_id)));
+            }
+            else {
+                driverId = (_a = tramp.users_in_tremp.find((user) => user.is_approved === 'approved')) === null || _a === void 0 ? void 0 : _a.user_id;
+                hitchhikers = yield getUserDetailsById(tramp.creator_id);
+            }
+            const driver = yield getUserDetailsById(driverId);
+            return Object.assign(Object.assign({}, tramp), { driver: {
+                    user_id: driver.user_id,
+                    first_name: driver.first_name,
+                    last_name: driver.last_name,
+                    notification_token: driver.notification_token,
+                    image_URL: driver.image_URL,
+                }, hitchhikers, users_in_tremp: undefined // Removing users_in_tremp from the response
+             });
+        })));
+        return trampsToShow;
     });
 }
+exports.getTrempsHistory = getTrempsHistory;
 //# sourceMappingURL=TrempService.js.map
