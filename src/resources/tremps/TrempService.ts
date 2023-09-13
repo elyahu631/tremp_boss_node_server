@@ -171,6 +171,7 @@ async function constructQueryFromFilters(filters: any): Promise<any> {
   return {
     deleted: false,
     is_full: false,
+    is_completed: false,
     group_id: { $in: connectedGroups },
     creator_id: { $ne: userId },
     tremp_time: { $gt: date },
@@ -341,6 +342,7 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
     creator_id: userId,
     tremp_type: primaryType,
     deleted: false,
+    is_completed: false,
     tremp_time: { $gte: currentDate }
   })) as unknown as Tremp[];
 
@@ -513,6 +515,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   // at least one different user who is approved and type 'second'
   const createdByUserQuery = {
     creator_id: userId,
+    is_completed: false,
     tremp_type: first,
     tremp_time: { "$gte": currentDate },
     "users_in_tremp": {
@@ -529,6 +532,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   // Then, find the tramps where the user has joined as type 'second' and is approved
   const joinedByUserQuery = {
     tremp_type: second,
+    is_completed: false,
     tremp_time: { "$gte": currentDate },
     "users_in_tremp": {
       "$elemMatch": {
@@ -605,11 +609,11 @@ export async function trempCompleted(trempId: string, userId: string): Promise<a
     throw new BadRequestException('Tremp does not exist');
   }
 
-  if (tremp.tremp_type === 'driver' && (!tremp.creator_id.equals(userId)) 
-  || tremp.tremp_type === 'hitchhiker' && tremp.creator_id.equals(userId)) {
-     throw new UnauthorizedException('Only the Driver can update tremp to be completed');
+  if (tremp.tremp_type === 'driver' && (!tremp.creator_id.equals(userId))
+    || tremp.tremp_type === 'hitchhiker' && tremp.creator_id.equals(userId)) {
+    throw new UnauthorizedException('Only the Driver can update tremp to be completed');
   }
-  
+
   tremp.is_completed = true;
 
   return await trempDataAccess.Update(trempId, tremp);

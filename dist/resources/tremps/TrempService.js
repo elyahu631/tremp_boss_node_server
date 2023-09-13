@@ -165,6 +165,7 @@ function constructQueryFromFilters(filters) {
         return {
             deleted: false,
             is_full: false,
+            is_completed: false,
             group_id: { $in: connectedGroups },
             creator_id: { $ne: userId },
             tremp_time: { $gt: date },
@@ -325,6 +326,7 @@ function getUserTremps(user_id, tremp_type) {
             creator_id: userId,
             tremp_type: primaryType,
             deleted: false,
+            is_completed: false,
             tremp_time: { $gte: currentDate }
         }));
         const hitchhikerTremps = (yield trempDataAccess.FindAll({
@@ -482,6 +484,7 @@ function getApprovedTremps(user_id, tremp_type) {
         // at least one different user who is approved and type 'second'
         const createdByUserQuery = {
             creator_id: userId,
+            is_completed: false,
             tremp_type: first,
             tremp_time: { "$gte": currentDate },
             "users_in_tremp": {
@@ -495,6 +498,7 @@ function getApprovedTremps(user_id, tremp_type) {
         // Then, find the tramps where the user has joined as type 'second' and is approved
         const joinedByUserQuery = {
             tremp_type: second,
+            is_completed: false,
             tremp_time: { "$gte": currentDate },
             "users_in_tremp": {
                 "$elemMatch": {
