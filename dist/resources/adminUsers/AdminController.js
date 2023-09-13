@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAdminUserDetails = exports.addAdminUser = exports.getUserFromToken = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.deleteAdminUserById = exports.getAdminUserById = exports.loginAdmin = void 0;
+exports.updateAdminUserDetails = exports.addAdminUser = exports.getUserFromToken = exports.markAdminUserAsDeleted = exports.getAllAdminUsers = exports.deleteAdminUserById = exports.getAdminUserById = exports.validateUserByToken = exports.loginAdmin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const environment_1 = require("../../config/environment");
 const AdminValidation_1 = require("./AdminValidation");
@@ -70,6 +70,23 @@ function loginAdmin(req, res, next) {
     });
 }
 exports.loginAdmin = loginAdmin;
+function validateUserByToken(req, res, next) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(' ')[1];
+            if (!token) {
+                throw new HttpException_1.BadRequestException('Token is required');
+            }
+            const { user } = yield AdminService.validateUserByTokenService(token);
+            res.status(200).json({ status: true, data: { user, token } });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.validateUserByToken = validateUserByToken;
 /**
  Retrieves an admin user by ID.
  It validates the user ID in the request params,

@@ -2,17 +2,17 @@
 
 import { Router } from "express";
 import * as KpiController from "./KpiController";
-import { authenticateToken } from "../../middleware/auth";
+import { authenticateAdminToken } from "../../middleware/auth";
 import { handleErrors } from "../../middleware/handleErrors";
 
 const kpiRoutes = Router();
 
-kpiRoutes.get('/get-top-routes', authenticateToken, KpiController.getMostPopularRoutes);
-kpiRoutes.get('/get-top-drivers', authenticateToken, KpiController.getTopDrivers);
-kpiRoutes.get('/get-top-hours', authenticateToken, KpiController.getMostRequestedHours);
-kpiRoutes.get('/get-people-and-tremps-counts', authenticateToken, KpiController.getPeopleAndTrempCounts);
-kpiRoutes.get('/get-percentages-per-type', authenticateToken, KpiController.getRideAndTripCounts);
-kpiRoutes.get('/get-hitchhiker-monthly-counts-by-gender', authenticateToken, KpiController.getHitchhikerMonthlyCountsByGender);
+kpiRoutes.get('/get-top-routes', authenticateAdminToken, KpiController.getMostPopularRoutes);
+kpiRoutes.get('/get-top-drivers', authenticateAdminToken, KpiController.getTopDrivers);
+kpiRoutes.get('/get-top-hours', authenticateAdminToken, KpiController.getMostRequestedHours);
+kpiRoutes.get('/get-people-and-tremps-counts', authenticateAdminToken, KpiController.getPeopleAndTrempCounts);
+kpiRoutes.get('/get-percentages-per-type', authenticateAdminToken, KpiController.getRideAndTripCounts);
+kpiRoutes.get('/get-hitchhiker-monthly-counts-by-gender', authenticateAdminToken, KpiController.getHitchhikerMonthlyCountsByGender);
 
 
 kpiRoutes.use(handleErrors); 

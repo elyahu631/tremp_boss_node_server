@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // index.js
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const db_1 = __importDefault(require("./utils/db"));
 const environment_1 = require("./config/environment");
 const UserRoutes_1 = __importDefault(require("./resources/users/UserRoutes"));
 const AdminRoutes_1 = __importDefault(require("./resources/adminUsers/AdminRoutes"));
@@ -42,13 +41,7 @@ app.use('/api/groups', GroupRoutes_1.default);
 app.use('/api/user-groups', UserGroupsRoutes_1.default);
 app.use('/api/group-request', GroupRequestRoutes_1.default);
 app.use('/api/kpis', KpiRoutes_1.default);
-const server = app.listen(environment_1.PORT, () => {
+app.listen(environment_1.PORT, () => {
     console.log(`Server running on http://localhost:${environment_1.PORT}`);
 });
-process.on('SIGTERM', () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('Shutting down gracefully...');
-    server.close(); // close the HTTP server
-    yield db_1.default.client.close(); // close the MongoDB connection
-    process.exit(0);
-}));
 //# sourceMappingURL=index.js.map

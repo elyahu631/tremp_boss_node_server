@@ -1,5 +1,4 @@
 "use strict";
-// src/resources/adminUsers/AdminService.ts
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -13,7 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImageToFirebaseAndUpdateUser = exports.updateUserDetails = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.getUserById = exports.createUser = exports.loginUser = exports.hashPassword = void 0;
+exports.uploadImageToFirebaseAndUpdateUser = exports.updateUserDetails = exports.markUserAsDeleted = exports.getAllUsers = exports.deleteUserById = exports.getUserById = exports.createUser = exports.validateUserByTokenService = exports.loginUser = exports.hashPassword = void 0;
+// src/resources/adminUsers/AdminService.ts
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const environment_1 = require("../../config/environment");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const AdminDataAccess_1 = __importDefault(require("./AdminDataAccess"));
 const fileUpload_1 = require("../../firebase/fileUpload");
@@ -56,6 +58,20 @@ function loginUser(username, password) {
     });
 }
 exports.loginUser = loginUser;
+function validateUserByTokenService(token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const decoded = jsonwebtoken_1.default.verify(token, environment_1.JWT_SECRET);
+        if (!decoded || !decoded.id) {
+            throw new HttpException_1.UnauthorizedException("Invalid token.");
+        }
+        const user = yield adminDataAccess.FindById(decoded.id);
+        if (!user) {
+            throw new HttpException_1.NotFoundException("User not found.");
+        }
+        return { user };
+    });
+}
+exports.validateUserByTokenService = validateUserByTokenService;
 /**
  * Creates a new admin user.
  * @param user The user object representing the admin user.

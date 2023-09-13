@@ -605,16 +605,19 @@ export async function trempCompleted(trempId: string, userId: string): Promise<a
     throw new BadRequestException('Tremp does not exist');
   }
 
-  if (!tremp.creator_id.equals(userId)) {
-    throw new UnauthorizedException('Only the creator can update tremp to be completed');
+  if (tremp.tremp_type === 'driver' && (!tremp.creator_id.equals(userId)) 
+  || tremp.tremp_type === 'hitchhiker' && tremp.creator_id.equals(userId)) {
+     throw new UnauthorizedException('Only the Driver can update tremp to be completed');
   }
-
+  
   tremp.is_completed = true;
 
   return await trempDataAccess.Update(trempId, tremp);
 }
 
 // ##############################################
+
+
 export async function getAllTremps() {
   return trempDataAccess.FindAll({ deleted: false });
 }

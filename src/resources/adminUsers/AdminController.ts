@@ -34,6 +34,24 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
   }
 }
 
+
+export async function validateUserByToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+      throw new BadRequestException('Token is required');
+    }
+
+    const { user } = await AdminService.validateUserByTokenService(token);
+    res.status(200).json({ status: true, data: { user, token } });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+
 /**
  Retrieves an admin user by ID.
  It validates the user ID in the request params,

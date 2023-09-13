@@ -15,10 +15,10 @@ const upload = (0, multer_1.default)(multerConfig_1.default);
 const usersRouter = express_1.default.Router();
 usersRouter.get('/verify/:token', UserController_1.verifyEmail);
 // for admin
-usersRouter.get("/all", auth_1.authenticateToken, UserController_1.getAllUsers);
-usersRouter.delete("/delete/:id", auth_1.authenticateToken, UserController_1.deleteUserById);
-usersRouter.post("/admin-add-user", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.AdminAddUser);
-usersRouter.put("/update-user/:id", auth_1.authenticateToken, upload.single('image_URL'), UserController_1.updateUserDetails);
+usersRouter.get("/all", auth_1.authenticateAdminToken, UserController_1.getAllUsers);
+usersRouter.delete("/delete/:id", auth_1.authenticateAdminToken, UserController_1.deleteUserById);
+usersRouter.post("/admin-add-user", auth_1.authenticateAdminToken, upload.single('image_URL'), UserController_1.AdminAddUser);
+usersRouter.put("/update-user/:id", auth_1.authenticateAdminToken, upload.single('image_URL'), UserController_1.updateUserDetails);
 // for app users
 usersRouter.post("/register", UserController_1.registerUser);
 usersRouter.post("/login", UserController_1.loginUser);

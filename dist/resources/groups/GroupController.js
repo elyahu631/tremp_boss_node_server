@@ -31,13 +31,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addGroup = exports.updateGroupDetails = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.uploadGroupImage = exports.updateGroup = exports.addAdminToGroup = exports.allGroupsWithUserStatus = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.getGroupById = exports.getGroupsUserNotConnected = void 0;
 const GroupService = __importStar(require("./GroupService"));
-const GroupModel_1 = __importDefault(require("./GroupModel"));
 const HttpException_1 = require("../../middleware/HttpException");
 function getGroupsUserNotConnected(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -226,16 +222,7 @@ exports.updateGroupDetails = updateGroupDetails;
 function addGroup(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const newGroup = new GroupModel_1.default(req.body);
-            console.log(newGroup);
-            const groupInsertion = yield GroupService.addGroup(newGroup);
-            let savedGroup = groupInsertion.insertedId;
-            if (req.file) {
-                const filePath = `groupsimages/${groupInsertion.insertedId}`;
-                console.log(req.file);
-                yield GroupService.uploadImageToFirebaseAndUpdateGroup(req.file, filePath, savedGroup);
-                savedGroup = yield GroupService.getGroupById(savedGroup); // Get updated user
-            }
+            const savedGroup = yield GroupService.addGroup(req.body, req.file);
             res.status(201).json({ status: true, data: savedGroup });
         }
         catch (err) {

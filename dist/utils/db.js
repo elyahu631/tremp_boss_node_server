@@ -9,7 +9,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/utils/db.ts
 const mongodb_1 = require("mongodb");
 const environment_1 = require("../config/environment");
 class DB {
@@ -18,6 +17,12 @@ class DB {
         this.client = new mongodb_1.MongoClient(environment_1.DB_URI);
         this.dbName = environment_1.DB_NAME;
         this.connect();
+    }
+    static getInstance() {
+        if (!DB.instance) {
+            DB.instance = new DB();
+        }
+        return DB.instance;
     }
     connect() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -28,7 +33,7 @@ class DB {
                 }
                 catch (error) {
                     console.error(error);
-                    process.exit(1); // terminate the process if the connection fails
+                    process.exit(1); // Terminate the process if the connection fails
                 }
             }
         });
@@ -37,7 +42,6 @@ class DB {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 return yield this.client.db(this.dbName).collection(collection).find(query, { projection }).sort(sort).toArray();
-                ;
             }
             catch (error) {
                 throw error;
@@ -90,7 +94,7 @@ class DB {
                 return yield this.client.db(this.dbName).collection(collection).insertMany(docs);
             }
             catch (error) {
-                console.error("Error inserting multiple documents into database:", error);
+                console.error("Error inserting multiple documents into the database:", error);
                 throw error;
             }
         });
@@ -139,6 +143,6 @@ class DB {
         });
     }
 }
-const db = new DB();
+const db = DB.getInstance();
 exports.default = db;
 //# sourceMappingURL=db.js.map

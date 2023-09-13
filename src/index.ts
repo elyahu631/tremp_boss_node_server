@@ -1,8 +1,6 @@
 // index.js
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import db from './utils/db'; 
-
 import { PORT } from './config/environment';
 import userRoutes from './resources/users/UserRoutes';
 import adminRoutes from './resources/adminUsers/AdminRoutes';
@@ -34,13 +32,7 @@ app.use('/api/group-request', groupRequestRoutes);
 app.use('/api/kpis', kpiRoutes);
 
 
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-process.on('SIGTERM', async () => {
-  console.log('Shutting down gracefully...');
-  server.close(); // close the HTTP server
-  await db.client.close(); // close the MongoDB connection
-  process.exit(0);
-});

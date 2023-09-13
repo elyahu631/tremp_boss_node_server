@@ -130,6 +130,8 @@ export async function trempCompleted(req: Request, res: Response, next: NextFunc
   }
 }
 
+
+
 export async function getAllTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     let trepms = await TrempService.getAllTremps();

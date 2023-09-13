@@ -1,11 +1,12 @@
 // src/resources/adminUsers/AdminService.ts
-
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../../config/environment";
 import bcrypt from "bcrypt";
 import AdminModel from "./AdminModel";
 import AdminDataAccess from "./AdminDataAccess";
 import { uploadImageToFirebase } from "../../firebase/fileUpload";
 import { getCurrentTimeInIsrael } from "../../services/TimeService";
-import { BadRequestException, InternalServerException } from "../../middleware/HttpException";
+import { BadRequestException, InternalServerException, NotFoundException, UnauthorizedException } from "../../middleware/HttpException";
 import { MongoError } from "mongodb";
 
 
@@ -45,6 +46,27 @@ export async function loginUser(username: string, password: string) {
 
   return user;
 }
+
+
+
+export async function validateUserByTokenService(token: string) {
+  const decoded: any = jwt.verify(token, JWT_SECRET);
+  
+  if (!decoded || !decoded.id) {
+    throw new UnauthorizedException("Invalid token.");
+  }
+  
+  const user = await adminDataAccess.FindById(decoded.id);
+  if (!user) {
+    throw new NotFoundException("User not found.");
+  }
+  
+  return { user };
+}
+
+
+
+
 
 /**
  * Creates a new admin user.

@@ -1,7 +1,7 @@
 import express from "express";
 import * as TrempController from "./TrempController";
 import { handleErrors } from "../../middleware/handleErrors";
-import { authenticateToken } from "../../middleware/auth";
+import { authenticateAdminToken, authenticateToken } from "../../middleware/auth";
 
 const trempRoutes = express.Router();
 
@@ -19,7 +19,7 @@ trempRoutes.post('/tremp-history',authenticateToken, TrempController.getTrempHis
 
 
 //for admin
-trempRoutes.get("/all", authenticateToken, TrempController.getAllTremps);
+trempRoutes.get("/all", authenticateAdminToken, TrempController.getAllTremps);
 
 trempRoutes.use(handleErrors); 
 

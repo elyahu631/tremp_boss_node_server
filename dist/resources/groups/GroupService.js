@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadImageToFirebaseAndUpdateGroup = exports.updateGroupDetails = exports.addGroup = exports.markGroupAsDeleted = exports.deleteGroupById = exports.getAllGroups = exports.uploadGroupImage = exports.updateGroup = exports.addAdminToGroup = exports.removeGroupFromUser = exports.addGroupToUser = exports.getConnectedGroups = exports.allGroupsWithUserStatus = exports.getGroupsUserNotConnected = exports.getGroupById = void 0;
 const GroupDataAccess_1 = __importDefault(require("./GroupDataAccess"));
+const GroupModel_1 = __importDefault(require("./GroupModel"));
 const mongodb_1 = require("mongodb");
 const fileUpload_1 = require("../../firebase/fileUpload");
 const HttpException_1 = require("../../middleware/HttpException");
@@ -21,6 +22,7 @@ const mongodb_2 = require("mongodb");
 const UserDataAccess_1 = __importDefault(require("../users/UserDataAccess"));
 const UserGroupsDataAccess_1 = __importDefault(require("../usersGroups/UserGroupsDataAccess"));
 const UserGroupsModel_1 = __importDefault(require("../usersGroups/UserGroupsModel"));
+const TimeService_1 = require("../../services/TimeService");
 const groupDataAccess = new GroupDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
 const userGroupsDataAccess = new UserGroupsDataAccess_1.default();
@@ -30,6 +32,7 @@ function getGroupById(id) {
     });
 }
 exports.getGroupById = getGroupById;
+///////
 function assertUserHasGroups(user) {
     if (!user || !user.groups) {
         throw new HttpException_1.NotFoundException("User not found or user has no groups.");
@@ -260,22 +263,105 @@ function deleteGroupById(id) {
 exports.deleteGroupById = deleteGroupById;
 function markGroupAsDeleted(id) {
     return __awaiter(this, void 0, void 0, function* () {
-        return groupDataAccess.UpdateGroup(id, { deleted: true });
+        // 1. Remove the group ID from all users
+        const allUsersWithGroup = yield new UserDataAccess_1.default().FindAllUsers({ groups: new mongodb_1.ObjectId(id) });
+        for (const user of allUsersWithGroup) {
+            const updatedGroups = user.groups.filter((groupId) => groupId.toHexString() !== id);
+            yield new UserDataAccess_1.default().Update(user._id.toString(), { groups: updatedGroups });
+        }
+        // 2. Delete all group requests with the given group ID
+        const allGroupRequests = yield new UserGroupsDataAccess_1.default().FindAllUserGroups({ group_id: new mongodb_1.ObjectId(id) });
+        for (const groupRequest of allGroupRequests) {
+            yield new UserGroupsDataAccess_1.default().DeleteById(groupRequest._id.toString());
+        }
+        // 3. Mark the group as deleted and inactive
+        return groupDataAccess.UpdateGroup(id, {
+            deleted: true,
+            active: "inactive",
+        });
     });
 }
 exports.markGroupAsDeleted = markGroupAsDeleted;
-function addGroup(group) {
+// addGroup
+function addGroup(group, file) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existingGroups = yield groupDataAccess.FindAllGroups({
-            group_name: group.group_name
-        });
-        if (existingGroups.length > 0) {
-            throw new HttpException_1.BadRequestException("Group with this name already exists.");
+        yield checkIfGroupNameExists(group.group_name);
+        let admins_ids = [];
+        if (group.admin_email) {
+            const adminId = yield getAdminIdFromEmail(group.admin_email);
+            admins_ids = [adminId];
+            delete group.admin_email; // Remove admin_email from group after using it
         }
-        return groupDataAccess.InsertOne(group);
+        console.log("1");
+        const newGroup = new GroupModel_1.default(Object.assign(Object.assign({}, group), { admins_ids: admins_ids }));
+        console.log(newGroup);
+        const newGroupId = yield addGroupToDatabase(newGroup);
+        yield updateUserGroups(admins_ids[0], newGroupId);
+        console.log("3");
+        if (file) {
+            console.log(newGroupId);
+            yield handleFileUpload(file, newGroupId);
+        }
+        console.log("4");
+        yield createNewConnectionRequest(admins_ids[0], newGroupId);
+        console.log("5");
+        return newGroupId;
     });
 }
 exports.addGroup = addGroup;
+function checkIfGroupNameExists(groupName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const existingGroups = yield groupDataAccess.FindAllGroups({
+            group_name: groupName,
+            deleted: false
+        });
+        console.log(existingGroups);
+        if (existingGroups.length > 0) {
+            throw new HttpException_1.BadRequestException("Group with this name already exists.");
+        }
+    });
+}
+function getAdminIdFromEmail(email) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = (yield userDataAccess.FindAllUsers({ email }))[0];
+        if (!user) {
+            throw new HttpException_1.NotFoundException(`No admin found for email: ${email}`);
+        }
+        return user._id;
+    });
+}
+function addGroupToDatabase(group) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const groupInsertion = yield groupDataAccess.InsertOne(group);
+        return groupInsertion.insertedId;
+    });
+}
+function updateUserGroups(userId, newGroupId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = yield userDataAccess.FindById(userId.toString());
+        const updatedUserGroups = [...user.groups, newGroupId];
+        yield userDataAccess.Update(userId.toString(), { groups: updatedUserGroups });
+    });
+}
+function handleFileUpload(file, groupId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const filePath = `groupsimages/${groupId}`;
+        yield uploadImageToFirebaseAndUpdateGroup(file, filePath, groupId.toString());
+    });
+}
+function createNewConnectionRequest(userId, groupId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const newConnectionRequestData = {
+            user_id: userId,
+            group_id: groupId,
+            request_date: (0, TimeService_1.getCurrentTimeInIsrael)(),
+            is_approved: 'approved'
+        };
+        const newConnectionRequest = new UserGroupsModel_1.default(newConnectionRequestData);
+        newConnectionRequest.validateUserGroupReq();
+        yield userGroupsDataAccess.InsertOne(newConnectionRequest);
+    });
+}
 function updateGroupDetails(id, groupDetails, file) {
     return __awaiter(this, void 0, void 0, function* () {
         // If a file is provided, upload it and update photo_URL

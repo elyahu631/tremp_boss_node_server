@@ -102,6 +102,7 @@ async function createAndValidateNewGroup(groupRequest: any) {
   const res = await groupDataAccess.InsertOne(newGroup);
   return res.insertedId;
 }
+
 // Update the user's group membership
 async function updateUserGroupMembership(userId: string, newGroupId: string) {
   const user = await userDataAccess.FindById(userId);

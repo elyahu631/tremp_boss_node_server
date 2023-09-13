@@ -7,6 +7,9 @@ import { MongoError } from "mongodb";
 import UserDataAccess from "../users/UserDataAccess";
 import UserGroupsDataAccess from "../usersGroups/UserGroupsDataAccess";
 import UserGroupsModel from "../usersGroups/UserGroupsModel";
+import { GroupInterface } from "./GroupInterface";
+import UserModel from "../users/UserModel";
+import { getCurrentTimeInIsrael } from "../../services/TimeService";
 
 const groupDataAccess = new GroupDataAccess();
 const userDataAccess = new UserDataAccess();
@@ -16,7 +19,7 @@ const userGroupsDataAccess = new UserGroupsDataAccess();
 export async function getGroupById(id: string) {
   return groupDataAccess.FindById(id);
 }
-
+///////
 function assertUserHasGroups(user: any) {
   if (!user || !user.groups) {
     throw new NotFoundException("User not found or user has no groups.");
@@ -81,7 +84,7 @@ async function findUserGroups(userIdAsObj: ObjectId, status: string): Promise<st
 }
 async function getGroupDetailsWithUsersCount(groupId: string, connectedGroups: string[]) {
   const group = await groupDataAccess.FindById(groupId
-    ,{ group_name: 1, type: 1, image_URL: 1, locations: 1, admins_ids: 1, amount_of_users: 1 });
+    , { group_name: 1, type: 1, image_URL: 1, locations: 1, admins_ids: 1, amount_of_users: 1 });
   group.amount_of_users = connectedGroups.filter(cg => cg === groupId).length;
   return group;
 }
@@ -101,7 +104,7 @@ function addIsAdminField(group: any, userId: string) {
   // Check for inclusion using the string representation
   group.is_admin = adminIds.includes(userId.toString());
 
-  delete group.admins_ids; 
+  delete group.admins_ids;
   return group;
 }
 
@@ -179,6 +182,7 @@ export async function removeGroupFromUser(userId: string, groupId: string): Prom
   return `Successfully disconnected from the group ${groupToRemove.group_name}`;
 }
 
+
 export async function addAdminToGroup(adminId: string, new_admin_email: string, groupId: string): Promise<string> {
 
   const users = await userDataAccess.FindAllUsers({ email: new_admin_email }, { _id: 1, groups: 1 });
@@ -218,6 +222,7 @@ export async function addAdminToGroup(adminId: string, new_admin_email: string, 
 
   return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
 }
+
 export async function updateGroup(groupId: string, userId: string, updateData: Partial<GroupModel>) {
   // Check if a group with the same name already exists
   if (updateData.group_name) {
@@ -241,6 +246,7 @@ export async function updateGroup(groupId: string, userId: string, updateData: P
 
   return groupDataAccess.UpdateGroup(groupId, dataToUpdate);
 }
+
 export async function uploadGroupImage(id: string, file?: Express.Multer.File) {
   const filePath = `groupsimages/${id}`;
   const image_URL = await uploadImageToFirebase(file, filePath);
@@ -261,20 +267,104 @@ export async function deleteGroupById(id: string) {
 }
 
 export async function markGroupAsDeleted(id: string) {
-  return groupDataAccess.UpdateGroup(id, { deleted: true });
+  // 1. Remove the group ID from all users
+  const allUsersWithGroup = await new UserDataAccess().FindAllUsers({ groups: new ObjectId(id) });
+  for (const user of allUsersWithGroup) {
+    const updatedGroups = user.groups.filter((groupId: ObjectId) => groupId.toHexString() !== id);
+    await new UserDataAccess().Update(user._id.toString(), { groups: updatedGroups });
+  }
+
+  // 2. Delete all group requests with the given group ID
+  const allGroupRequests = await new UserGroupsDataAccess().FindAllUserGroups({ group_id: new ObjectId(id) });
+  for (const groupRequest of allGroupRequests) {
+    await new UserGroupsDataAccess().DeleteById(groupRequest._id.toString());
+  }
+
+  // 3. Mark the group as deleted and inactive
+  return groupDataAccess.UpdateGroup(id, {
+    deleted: true,
+    active: "inactive",
+  });
 }
 
-export async function addGroup(group: GroupModel) {
-  const existingGroups = await groupDataAccess.FindAllGroups({
-    group_name: group.group_name
-  });
 
+// addGroup
+export async function addGroup(group: GroupInterface, file?: Express.Multer.File): Promise<ObjectId> {
+  await checkIfGroupNameExists(group.group_name);
+
+  let admins_ids: ObjectId[] = [];
+  if (group.admin_email) {
+    const adminId = await getAdminIdFromEmail(group.admin_email);
+    admins_ids = [adminId];
+    delete group.admin_email;  // Remove admin_email from group after using it
+  }
+  console.log("1");
+
+  const newGroup = new GroupModel({
+    ...group,
+    admins_ids: admins_ids,
+  });
+  console.log(newGroup);
+
+  const newGroupId = await addGroupToDatabase(newGroup);
+  await updateUserGroups(admins_ids[0], newGroupId);
+  console.log("3");
+
+  if (file) {
+    console.log(newGroupId);
+    await handleFileUpload(file, newGroupId);
+  }
+  console.log("4");
+
+  await createNewConnectionRequest(admins_ids[0], newGroupId);
+  console.log("5");
+
+  return newGroupId;
+}
+async function checkIfGroupNameExists(groupName: string) {
+  const existingGroups = await groupDataAccess.FindAllGroups({
+    group_name: groupName,
+    deleted: false
+  });
+  console.log(existingGroups);
   if (existingGroups.length > 0) {
     throw new BadRequestException("Group with this name already exists.");
   }
-
-  return groupDataAccess.InsertOne(group);
 }
+async function getAdminIdFromEmail(email: string): Promise<ObjectId> {
+  const user = (await userDataAccess.FindAllUsers({ email }))[0];
+  if (!user) {
+    throw new NotFoundException(`No admin found for email: ${email}`);
+  }
+  return user._id;
+}
+async function addGroupToDatabase(group: GroupModel): Promise<ObjectId> {
+  const groupInsertion = await groupDataAccess.InsertOne(group);
+  return groupInsertion.insertedId;
+}
+async function updateUserGroups(userId: ObjectId, newGroupId: ObjectId) {
+  const user = await userDataAccess.FindById(userId.toString());
+  const updatedUserGroups = [...user.groups, newGroupId];
+  await userDataAccess.Update(userId.toString(), { groups: updatedUserGroups });
+}
+async function handleFileUpload(file: Express.Multer.File, groupId: ObjectId) {
+  const filePath = `groupsimages/${groupId}`;
+  await uploadImageToFirebaseAndUpdateGroup(file, filePath, groupId.toString());
+}
+async function createNewConnectionRequest(userId: ObjectId, groupId: ObjectId) {
+  const newConnectionRequestData: Partial<UserGroupsModel> = {
+    user_id: userId,
+    group_id: groupId,
+    request_date: getCurrentTimeInIsrael(),
+    is_approved: 'approved'
+  };
+
+  const newConnectionRequest = new UserGroupsModel(newConnectionRequestData);
+  newConnectionRequest.validateUserGroupReq();
+  await userGroupsDataAccess.InsertOne(newConnectionRequest);
+}
+
+
 
 
 export async function updateGroupDetails(id: string, groupDetails: GroupModel, file?: Express.Multer.File) {
@@ -300,7 +390,6 @@ export async function updateGroupDetails(id: string, groupDetails: GroupModel, f
     throw new BadRequestException("Error updating user details: " + error);
   }
 }
-
 
 export async function uploadImageToFirebaseAndUpdateGroup(file: Express.Multer.File, filePath: string, groupId: string) {
   const image_URL = await uploadImageToFirebase(file, filePath);

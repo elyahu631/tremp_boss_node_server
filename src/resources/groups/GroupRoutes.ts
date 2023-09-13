@@ -1,3 +1,4 @@
+import { authenticateAdminToken } from './../../middleware/auth';
 import express, { Router } from "express";
 import { authenticateToken } from "../../middleware/auth";
 import {
@@ -36,11 +37,11 @@ groupRoutes.post("/upload-image/:id", authenticateToken, upload.any(), uploadGro
 
 
 // admin
-groupRoutes.get("/all", authenticateToken, getAllGroups);
-groupRoutes.delete("/delete/:id", authenticateToken, deleteGroupById);
-groupRoutes.put("/markDeleted/:id", authenticateToken, markGroupAsDeleted);
-groupRoutes.post("/add-group", authenticateToken,upload.single('image_URL'), addGroup);
-groupRoutes.put("/update-group/:id", authenticateToken,upload.single('image_URL'), updateGroupDetails);
+groupRoutes.get("/all", authenticateAdminToken, getAllGroups);
+groupRoutes.delete("/delete/:id", authenticateAdminToken, deleteGroupById);
+groupRoutes.put("/markDeleted/:id", authenticateAdminToken, markGroupAsDeleted);
+groupRoutes.post("/add-group", authenticateAdminToken,upload.single('image_URL'), addGroup);
+groupRoutes.put("/update-group/:id", authenticateAdminToken,upload.single('image_URL'), updateGroupDetails);
 // groupRoutes.post("/add-loction/:id", authenticateToken, addGroup);
 // groupRoutes.post("/update-loction/:id", authenticateToken, addGroup);
 groupRoutes.use(handleErrors); 

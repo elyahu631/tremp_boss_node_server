@@ -561,8 +561,9 @@ function trempCompleted(trempId, userId) {
         if (!tremp) {
             throw new HttpException_1.BadRequestException('Tremp does not exist');
         }
-        if (!tremp.creator_id.equals(userId)) {
-            throw new HttpException_1.UnauthorizedException('Only the creator can update tremp to be completed');
+        if (tremp.tremp_type === 'driver' && (!tremp.creator_id.equals(userId))
+            || tremp.tremp_type === 'hitchhiker' && tremp.creator_id.equals(userId)) {
+            throw new HttpException_1.UnauthorizedException('Only the Driver can update tremp to be completed');
         }
         tremp.is_completed = true;
         return yield trempDataAccess.Update(trempId, tremp);

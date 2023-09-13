@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import * as GroupService from './GroupService';
-import GroupModel from "./GroupModel";
 import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 
 export async function getGroupsUserNotConnected(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -152,19 +151,10 @@ export async function updateGroupDetails(req: Request, res: Response, next: Next
     next(err);
   }
 }
+
 export async function addGroup(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const newGroup = new GroupModel(req.body);
-    console.log(newGroup);    
-
-    const groupInsertion = await GroupService.addGroup(newGroup);
-    let savedGroup = groupInsertion.insertedId;
-    if (req.file) {
-      const filePath = `groupsimages/${groupInsertion.insertedId}`;
-      console.log(req.file);
-      await GroupService.uploadImageToFirebaseAndUpdateGroup(req.file, filePath, savedGroup);
-      savedGroup = await GroupService.getGroupById(savedGroup); // Get updated user
-    }
+    const savedGroup = await GroupService.addGroup(req.body, req.file);
     res.status(201).json({ status: true, data: savedGroup });
   } catch (err) {
     next(err);

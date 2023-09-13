@@ -1,7 +1,7 @@
 // src/resources/users/UserRoutes.ts
 import multer from "multer";
 import express, { Router } from "express";
-import { authenticateToken } from "../../middleware/auth";
+import { authenticateAdminToken, authenticateToken } from "../../middleware/auth";
 import {handleErrors} from "../../middleware/handleErrors";
 
 import {
@@ -30,10 +30,10 @@ const usersRouter: Router = express.Router();
 usersRouter.get('/verify/:token', verifyEmail);
 
 // for admin
-usersRouter.get("/all", authenticateToken, getAllUsers);
-usersRouter.delete("/delete/:id", authenticateToken, deleteUserById);
-usersRouter.post("/admin-add-user",authenticateToken,upload.single('image_URL'),AdminAddUser);
-usersRouter.put("/update-user/:id", authenticateToken, upload.single('image_URL'), updateUserDetails);
+usersRouter.get("/all", authenticateAdminToken, getAllUsers);
+usersRouter.delete("/delete/:id", authenticateAdminToken, deleteUserById);
+usersRouter.post("/admin-add-user",authenticateAdminToken,upload.single('image_URL'),AdminAddUser);
+usersRouter.put("/update-user/:id", authenticateAdminToken, upload.single('image_URL'), updateUserDetails);
 
 // for app users
 usersRouter.post("/register", registerUser);

@@ -42,7 +42,7 @@ trempRoutes.put('/delete-tremp', auth_1.authenticateToken, TrempController.delet
 trempRoutes.put('/tremp-completed', auth_1.authenticateToken, TrempController.trempCompleted);
 trempRoutes.post('/tremp-history', auth_1.authenticateToken, TrempController.getTrempHistory);
 //for admin
-trempRoutes.get("/all", auth_1.authenticateToken, TrempController.getAllTremps);
+trempRoutes.get("/all", auth_1.authenticateAdminToken, TrempController.getAllTremps);
 trempRoutes.use(handleErrors_1.handleErrors);
 exports.default = trempRoutes;
 //# sourceMappingURL=TrempRoutes.js.map

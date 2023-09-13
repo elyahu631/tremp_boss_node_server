@@ -16,7 +16,7 @@ class GroupModel {
     this._id = groupData._id || new ObjectId();
     this.group_name = groupData.group_name;
     this.description = groupData.description;
-    this.type = groupData.type;
+    this.type = groupData.type || 'PRIVATE';
     this.image_URL = groupData.image_URL;
     this.locations = groupData.locations;
     this.admins_ids = groupData.admins_ids || [];
