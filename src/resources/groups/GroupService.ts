@@ -8,7 +8,6 @@ import UserDataAccess from "../users/UserDataAccess";
 import UserGroupsDataAccess from "../usersGroups/UserGroupsDataAccess";
 import UserGroupsModel from "../usersGroups/UserGroupsModel";
 import { GroupInterface } from "./GroupInterface";
-import UserModel from "../users/UserModel";
 import { getCurrentTimeInIsrael } from "../../services/TimeService";
 
 const groupDataAccess = new GroupDataAccess();
@@ -208,8 +207,7 @@ export async function addAdminToGroup(adminId: string, new_admin_email: string, 
   }
 
   if (!group.admins_ids.map((id: ObjectId) => id.toString()).includes(adminId)) {
-    console.log(new ObjectId(adminId));
-    console.log(group.admins_ids);
+
     throw new UnauthorizedException("User not Unauthorized to add admin to this group")
   }
 
@@ -256,11 +254,32 @@ export async function uploadGroupImage(id: string, file?: Express.Multer.File) {
 
 
 
-
+// admin
 
 export async function getAllGroups() {
-  return groupDataAccess.FindAllGroups({ deleted: false, type: { $ne: "GENERAL" } });
+
+  const allGroups = await groupDataAccess.FindAllGroups({ deleted: false, type: { $ne: "GENERAL" } });
+
+  // Fetch the email of the first admin for each group and add it to the group object.
+  const groupsWithAdminEmail = await Promise.all(allGroups.map(async (group) => {
+      let adminEmail = null;
+    
+      if (group.admins_ids && group.admins_ids.length > 0) {
+          const firstAdmin = await userDataAccess.FindById(group.admins_ids[0].toString());
+          if (firstAdmin) {
+            adminEmail = firstAdmin.email;
+          }
+      }
+    
+      return {
+          ...group,
+          admin_email: adminEmail
+      };
+  }));
+
+  return groupsWithAdminEmail;
 }
+
 
 export async function deleteGroupById(id: string) {
   return groupDataAccess.DeleteGroupById(id);
@@ -298,26 +317,20 @@ export async function addGroup(group: GroupInterface, file?: Express.Multer.File
     admins_ids = [adminId];
     delete group.admin_email;  // Remove admin_email from group after using it
   }
-  console.log("1");
 
   const newGroup = new GroupModel({
     ...group,
     admins_ids: admins_ids,
   });
-  console.log(newGroup);
 
   const newGroupId = await addGroupToDatabase(newGroup);
   await updateUserGroups(admins_ids[0], newGroupId);
-  console.log("3");
 
   if (file) {
-    console.log(newGroupId);
     await handleFileUpload(file, newGroupId);
   }
-  console.log("4");
 
   await createNewConnectionRequest(admins_ids[0], newGroupId);
-  console.log("5");
 
   return newGroupId;
 }
@@ -326,7 +339,6 @@ async function checkIfGroupNameExists(groupName: string) {
     group_name: groupName,
     deleted: false
   });
-  console.log(existingGroups);
   if (existingGroups.length > 0) {
     throw new BadRequestException("Group with this name already exists.");
   }
@@ -369,7 +381,6 @@ async function createNewConnectionRequest(userId: ObjectId, groupId: ObjectId) {
 
 export async function updateGroupDetails(id: string, groupDetails: GroupModel, file?: Express.Multer.File) {
   // If a file is provided, upload it and update photo_URL
-  console.log(file);
   if (file) {
     try {
       const filePath = `groupsimages/${id}`;

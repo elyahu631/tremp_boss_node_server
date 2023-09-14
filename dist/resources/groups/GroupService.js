@@ -204,8 +204,6 @@ function addAdminToGroup(adminId, new_admin_email, groupId) {
             throw new HttpException_1.BadRequestException("User not connected to the Group.");
         }
         if (!group.admins_ids.map((id) => id.toString()).includes(adminId)) {
-            console.log(new mongodb_1.ObjectId(adminId));
-            console.log(group.admins_ids);
             throw new HttpException_1.UnauthorizedException("User not Unauthorized to add admin to this group");
         }
         if (group.admins_ids.map((id) => id.toString()).includes(userId.toString())) {
@@ -249,9 +247,22 @@ function uploadGroupImage(id, file) {
     });
 }
 exports.uploadGroupImage = uploadGroupImage;
+// admin
 function getAllGroups() {
     return __awaiter(this, void 0, void 0, function* () {
-        return groupDataAccess.FindAllGroups({ deleted: false, type: { $ne: "GENERAL" } });
+        const allGroups = yield groupDataAccess.FindAllGroups({ deleted: false, type: { $ne: "GENERAL" } });
+        // Fetch the email of the first admin for each group and add it to the group object.
+        const groupsWithAdminEmail = yield Promise.all(allGroups.map((group) => __awaiter(this, void 0, void 0, function* () {
+            let adminEmail = null;
+            if (group.admins_ids && group.admins_ids.length > 0) {
+                const firstAdmin = yield userDataAccess.FindById(group.admins_ids[0].toString());
+                if (firstAdmin) {
+                    adminEmail = firstAdmin.email;
+                }
+            }
+            return Object.assign(Object.assign({}, group), { admin_email: adminEmail });
+        })));
+        return groupsWithAdminEmail;
     });
 }
 exports.getAllGroups = getAllGroups;
@@ -292,19 +303,13 @@ function addGroup(group, file) {
             admins_ids = [adminId];
             delete group.admin_email; // Remove admin_email from group after using it
         }
-        console.log("1");
         const newGroup = new GroupModel_1.default(Object.assign(Object.assign({}, group), { admins_ids: admins_ids }));
-        console.log(newGroup);
         const newGroupId = yield addGroupToDatabase(newGroup);
         yield updateUserGroups(admins_ids[0], newGroupId);
-        console.log("3");
         if (file) {
-            console.log(newGroupId);
             yield handleFileUpload(file, newGroupId);
         }
-        console.log("4");
         yield createNewConnectionRequest(admins_ids[0], newGroupId);
-        console.log("5");
         return newGroupId;
     });
 }
@@ -315,7 +320,6 @@ function checkIfGroupNameExists(groupName) {
             group_name: groupName,
             deleted: false
         });
-        console.log(existingGroups);
         if (existingGroups.length > 0) {
             throw new HttpException_1.BadRequestException("Group with this name already exists.");
         }
@@ -365,7 +369,6 @@ function createNewConnectionRequest(userId, groupId) {
 function updateGroupDetails(id, groupDetails, file) {
     return __awaiter(this, void 0, void 0, function* () {
         // If a file is provided, upload it and update photo_URL
-        console.log(file);
         if (file) {
             try {
                 const filePath = `groupsimages/${id}`;

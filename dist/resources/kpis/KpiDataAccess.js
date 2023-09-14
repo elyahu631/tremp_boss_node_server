@@ -89,7 +89,7 @@ class KpiDataAccess {
             const pipeline = [
                 {
                     $group: {
-                        _id: { from_root: "$from_root.name", to_root: "$to_root.name" },
+                        _id: { from_route: "$from_route.name", to_route: "$to_route.name" },
                         count: { $sum: 1 }
                     }
                 },
@@ -129,7 +129,7 @@ class KpiDataAccess {
                     $group: {
                         _id: "$creator_id",
                         driverName: { $first: { $concat: ['$driver_data.first_name', '-', '$driver_data.last_name'] } },
-                        driverEmail: { $first: "$driver_data.user_email" },
+                        driverEmail: { $first: "$driver_data.email" },
                         count: { $sum: 1 }
                     }
                 },
@@ -312,8 +312,95 @@ class KpiDataAccess {
             };
         });
     }
+    getInactiveGroups() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // 1. Groups with less than 3 users
+            const userGroupPipeline = [
+                { $group: { _id: "$group_id", count: { $sum: 1 } } },
+                { $match: { count: { $lt: 3 } } },
+                { $project: { group_id: "$_id", _id: 0 } }
+            ];
+            const smallGroups = yield db_1.default.aggregate(KpiDataAccess.usersGroupCollection, userGroupPipeline);
+            // 2. Groups with no tremps in the last month
+            const oneMonthAgo = new Date();
+            oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+            const trempPipeline = [
+                { $match: { create_date: { $gte: oneMonthAgo } } },
+                { $group: { _id: "$group_id" } },
+                { $project: { group_id: "$_id", _id: 0 } }
+            ];
+            const activeTrempGroups = yield db_1.default.aggregate(KpiDataAccess.trempCollection, trempPipeline);
+            // 3. Merge the lists
+            const allGroups = yield db_1.default.FindAll(KpiDataAccess.GroupCollection, {});
+            const inactiveGroupIds = [...smallGroups, ...activeTrempGroups].map(g => g.group_id.toString());
+            return allGroups.filter(group => !inactiveGroupIds.includes(group._id.toString()));
+        });
+    }
+    getMostActiveGroups() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const pipeline = [
+                {
+                    $match: {
+                        active: "active",
+                        deleted: false
+                    }
+                },
+                {
+                    $lookup: {
+                        from: KpiDataAccess.trempCollection,
+                        localField: "_id",
+                        foreignField: "group_id",
+                        as: "group_tremps"
+                    }
+                },
+                {
+                    $lookup: {
+                        from: KpiDataAccess.usersGroupCollection,
+                        localField: "_id",
+                        foreignField: "group_id",
+                        as: "group_users"
+                    }
+                },
+                {
+                    $addFields: {
+                        approved_users: {
+                            $filter: {
+                                input: "$group_users",
+                                as: "user",
+                                cond: { $eq: ["$$user.is_approved", "approved"] }
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        group_name: 1,
+                        tremp_count: { $size: "$group_tremps" },
+                        user_count: { $size: "$approved_users" }
+                    }
+                },
+                {
+                    $addFields: {
+                        total_activity: {
+                            $add: ["$tremp_count", "$user_count"]
+                        }
+                    }
+                },
+                {
+                    $sort: { total_activity: -1 }
+                },
+                {
+                    $limit: 5
+                }
+            ];
+            const activeGroups = yield db_1.default.aggregate(KpiDataAccess.GroupCollection, pipeline);
+            return activeGroups;
+        });
+    }
 }
 KpiDataAccess.trempCollection = 'Tremps';
 KpiDataAccess.UserCollection = 'Users';
+KpiDataAccess.GroupCollection = 'Groups';
+KpiDataAccess.usersGroupCollection = 'UserGroups';
 exports.default = KpiDataAccess;
 //# sourceMappingURL=KpiDataAccess.js.map

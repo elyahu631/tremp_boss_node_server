@@ -37,6 +37,15 @@ class GroupDataAccess {
 
 
   async UpdateGroup(id: string, updateData: Partial<GroupModel>) {
+    if (typeof updateData.locations === 'string') {
+      try {
+        updateData.locations = JSON.parse(updateData.locations);
+      } catch (error) {
+        console.error('Error parsing locations:', error);
+        // Handle the error appropriately for your application.
+      }
+    }
+   
     return await db.Update(GroupDataAccess.collection, id, updateData);
   } 
 }

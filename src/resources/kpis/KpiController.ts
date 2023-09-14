@@ -62,3 +62,22 @@ export async function getHitchhikerMonthlyCountsByGender(req: Request, res: Resp
     next(err);
   }
 }
+
+
+export async function getInactiveGroups(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const groups = await kpiDataAccess.getInactiveGroups();
+    res.status(200).json({ status: true, data: groups });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMostActiveGroups(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+      const activeGroups = await kpiDataAccess.getMostActiveGroups();
+      res.status(200).json({ status: true, data: activeGroups });
+  } catch (err) {
+      next(err);
+  }
+}

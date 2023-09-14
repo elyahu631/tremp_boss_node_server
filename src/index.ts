@@ -5,7 +5,6 @@ import { PORT } from './config/environment';
 import userRoutes from './resources/users/UserRoutes';
 import adminRoutes from './resources/adminUsers/AdminRoutes';
 import trempRoutes from './resources/tremps/TrempRoutes';
-import giftRoutes from './resources/gifts/GiftRoutes';
 import groupRoutes from './resources/groups/GroupRoutes';
 import { jsonErrorHandler } from './middleware/jsonErrorHandler';
 import kpiRoutes from './resources/kpis/KpiRoutes';
@@ -25,7 +24,6 @@ app.get('/', async (req: Request, res: Response) => {
 app.use('/api/users', userRoutes);
 app.use('/api/adminUsers', adminRoutes);
 app.use("/api/tremps", trempRoutes);
-app.use('/api/gifts', giftRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/user-groups', userGroupsRoutes);
 app.use('/api/group-request', groupRequestRoutes);

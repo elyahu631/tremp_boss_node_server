@@ -19,7 +19,6 @@ const environment_1 = require("./config/environment");
 const UserRoutes_1 = __importDefault(require("./resources/users/UserRoutes"));
 const AdminRoutes_1 = __importDefault(require("./resources/adminUsers/AdminRoutes"));
 const TrempRoutes_1 = __importDefault(require("./resources/tremps/TrempRoutes"));
-const GiftRoutes_1 = __importDefault(require("./resources/gifts/GiftRoutes"));
 const GroupRoutes_1 = __importDefault(require("./resources/groups/GroupRoutes"));
 const jsonErrorHandler_1 = require("./middleware/jsonErrorHandler");
 const KpiRoutes_1 = __importDefault(require("./resources/kpis/KpiRoutes"));
@@ -36,7 +35,6 @@ app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 app.use('/api/users', UserRoutes_1.default);
 app.use('/api/adminUsers', AdminRoutes_1.default);
 app.use("/api/tremps", TrempRoutes_1.default);
-app.use('/api/gifts', GiftRoutes_1.default);
 app.use('/api/groups', GroupRoutes_1.default);
 app.use('/api/user-groups', UserGroupsRoutes_1.default);
 app.use('/api/group-request', GroupRequestRoutes_1.default);

@@ -13,6 +13,9 @@ kpiRoutes.get('/get-top-hours', authenticateAdminToken, KpiController.getMostReq
 kpiRoutes.get('/get-people-and-tremps-counts', authenticateAdminToken, KpiController.getPeopleAndTrempCounts);
 kpiRoutes.get('/get-percentages-per-type', authenticateAdminToken, KpiController.getRideAndTripCounts);
 kpiRoutes.get('/get-hitchhiker-monthly-counts-by-gender', authenticateAdminToken, KpiController.getHitchhikerMonthlyCountsByGender);
+// Add the following line
+kpiRoutes.get('/get-inactive-groups', authenticateAdminToken, KpiController.getInactiveGroups);
+kpiRoutes.get('/get-most-active-groups', authenticateAdminToken, KpiController.getMostActiveGroups);
 
 
 kpiRoutes.use(handleErrors); 

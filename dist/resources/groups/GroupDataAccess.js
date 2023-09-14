@@ -52,6 +52,15 @@ class GroupDataAccess {
     }
     UpdateGroup(id, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (typeof updateData.locations === 'string') {
+                try {
+                    updateData.locations = JSON.parse(updateData.locations);
+                }
+                catch (error) {
+                    console.error('Error parsing locations:', error);
+                    // Handle the error appropriately for your application.
+                }
+            }
             return yield db_1.default.Update(GroupDataAccess.collection, id, updateData);
         });
     }
