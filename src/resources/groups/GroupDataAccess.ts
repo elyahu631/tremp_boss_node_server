@@ -28,10 +28,11 @@ class GroupDataAccess {
         group.locations = JSON.parse(group.locations);
       } catch (error) {
         console.error('Error parsing locations:', error);
-        // Handle the error appropriately for your application.
       }
     }
+
     group.validateGroup();
+
     return await db.Insert(GroupDataAccess.collection, group);
   }
 
@@ -42,12 +43,24 @@ class GroupDataAccess {
         updateData.locations = JSON.parse(updateData.locations);
       } catch (error) {
         console.error('Error parsing locations:', error);
-        // Handle the error appropriately for your application.
       }
     }
-   
+  
+    // Remove double quotes from group_name field
+    if (typeof updateData.group_name === 'string') {
+      updateData.group_name = updateData.group_name.replace(/"/g, '');
+    }
+  
+    // Remove double quotes from form_description field
+    if (typeof updateData.description === 'string') {
+      updateData.description = updateData.description.replace(/"/g, '');
+    }
+  
+    console.log(updateData);
+  
     return await db.Update(GroupDataAccess.collection, id, updateData);
-  } 
+  }
+  
 }
 
 export default GroupDataAccess;

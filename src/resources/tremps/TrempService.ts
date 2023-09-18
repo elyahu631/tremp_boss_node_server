@@ -514,6 +514,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   // First, find the tramps where the user is the creator and has type 'first' and there is
   // at least one different user who is approved and type 'second'
   const createdByUserQuery = {
+    deleted:false,
     creator_id: userId,
     is_completed: false,
     tremp_type: first,
@@ -531,6 +532,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
   // Then, find the tramps where the user has joined as type 'second' and is approved
   const joinedByUserQuery = {
+    deleted:false,
     tremp_type: second,
     is_completed: false,
     tremp_time: { "$gte": currentDate },
@@ -561,7 +563,8 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
       } else {
         driverId = tramp.users_in_tremp.find((user: UsersApprovedInTremp) => user.is_approved === 'approved')?.user_id;
-        hitchhikers = await getUserDetailsById(tramp.creator_id);
+        const hitchhiker = await getUserDetailsById(tramp.creator_id);
+        hitchhikers = [hitchhiker]; 
       }
       const driver = await getUserDetailsById(driverId);
 
@@ -575,7 +578,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
           image_URL: driver.image_URL,
         },
         hitchhikers,
-        users_in_tremp: undefined // Removing users_in_tremp from the response
+        users_in_tremp: undefined 
       };
     })
   );
@@ -623,7 +626,7 @@ export async function trempCompleted(trempId: string, userId: string): Promise<a
 
 
 export async function getAllTremps() {
-  return trempDataAccess.FindAll({ deleted: false });
+  return trempDataAccess.getAllTremps();
 }
 export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
@@ -694,8 +697,10 @@ export async function getTrempsHistory(user_id: string, tremp_type: string) {
 
       } else {
         driverId = tramp.users_in_tremp.find((user: UsersApprovedInTremp) => user.is_approved === 'approved')?.user_id;
-        hitchhikers = await getUserDetailsById(tramp.creator_id);
+        const hitchhiker = await getUserDetailsById(tramp.creator_id);
+        hitchhikers = [hitchhiker];
       }
+      
       const driver = await getUserDetailsById(driverId);
 
       return {

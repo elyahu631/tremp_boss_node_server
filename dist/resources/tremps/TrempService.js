@@ -483,6 +483,7 @@ function getApprovedTremps(user_id, tremp_type) {
         // First, find the tramps where the user is the creator and has type 'first' and there is
         // at least one different user who is approved and type 'second'
         const createdByUserQuery = {
+            deleted: false,
             creator_id: userId,
             is_completed: false,
             tremp_type: first,
@@ -497,6 +498,7 @@ function getApprovedTremps(user_id, tremp_type) {
         const trampsCreatedByUser = yield trempDataAccess.FindAll(createdByUserQuery);
         // Then, find the tramps where the user has joined as type 'second' and is approved
         const joinedByUserQuery = {
+            deleted: false,
             tremp_type: second,
             is_completed: false,
             tremp_time: { "$gte": currentDate },
@@ -521,7 +523,8 @@ function getApprovedTremps(user_id, tremp_type) {
             }
             else {
                 driverId = (_a = tramp.users_in_tremp.find((user) => user.is_approved === 'approved')) === null || _a === void 0 ? void 0 : _a.user_id;
-                hitchhikers = yield getUserDetailsById(tramp.creator_id);
+                const hitchhiker = yield getUserDetailsById(tramp.creator_id);
+                hitchhikers = [hitchhiker];
             }
             const driver = yield getUserDetailsById(driverId);
             return Object.assign(Object.assign({}, tramp), { driver: {
@@ -530,8 +533,7 @@ function getApprovedTremps(user_id, tremp_type) {
                     last_name: driver.last_name,
                     notification_token: driver.notification_token,
                     image_URL: driver.image_URL,
-                }, hitchhikers, users_in_tremp: undefined // Removing users_in_tremp from the response
-             });
+                }, hitchhikers, users_in_tremp: undefined });
         })));
         return trampsToShow;
     });
@@ -577,7 +579,7 @@ exports.trempCompleted = trempCompleted;
 // ##############################################
 function getAllTremps() {
     return __awaiter(this, void 0, void 0, function* () {
-        return trempDataAccess.FindAll({ deleted: false });
+        return trempDataAccess.getAllTremps();
     });
 }
 exports.getAllTremps = getAllTremps;
@@ -639,7 +641,8 @@ function getTrempsHistory(user_id, tremp_type) {
             }
             else {
                 driverId = (_a = tramp.users_in_tremp.find((user) => user.is_approved === 'approved')) === null || _a === void 0 ? void 0 : _a.user_id;
-                hitchhikers = yield getUserDetailsById(tramp.creator_id);
+                const hitchhiker = yield getUserDetailsById(tramp.creator_id);
+                hitchhikers = [hitchhiker];
             }
             const driver = yield getUserDetailsById(driverId);
             return Object.assign(Object.assign({}, tramp), { driver: {

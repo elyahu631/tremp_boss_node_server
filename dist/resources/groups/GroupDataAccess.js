@@ -43,7 +43,6 @@ class GroupDataAccess {
                 }
                 catch (error) {
                     console.error('Error parsing locations:', error);
-                    // Handle the error appropriately for your application.
                 }
             }
             group.validateGroup();
@@ -58,9 +57,17 @@ class GroupDataAccess {
                 }
                 catch (error) {
                     console.error('Error parsing locations:', error);
-                    // Handle the error appropriately for your application.
                 }
             }
+            // Remove double quotes from group_name field
+            if (typeof updateData.group_name === 'string') {
+                updateData.group_name = updateData.group_name.replace(/"/g, '');
+            }
+            // Remove double quotes from form_description field
+            if (typeof updateData.description === 'string') {
+                updateData.description = updateData.description.replace(/"/g, '');
+            }
+            console.log(updateData);
             return yield db_1.default.Update(GroupDataAccess.collection, id, updateData);
         });
     }

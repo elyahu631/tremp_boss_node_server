@@ -342,24 +342,24 @@ class KpiDataAccess {
                 {
                     $match: {
                         active: "active",
-                        deleted: false
-                    }
+                        deleted: false,
+                    },
                 },
                 {
                     $lookup: {
                         from: KpiDataAccess.trempCollection,
                         localField: "_id",
                         foreignField: "group_id",
-                        as: "group_tremps"
-                    }
+                        as: "group_tremps",
+                    },
                 },
                 {
                     $lookup: {
                         from: KpiDataAccess.usersGroupCollection,
                         localField: "_id",
                         foreignField: "group_id",
-                        as: "group_users"
-                    }
+                        as: "group_users",
+                    },
                 },
                 {
                     $addFields: {
@@ -367,33 +367,42 @@ class KpiDataAccess {
                             $filter: {
                                 input: "$group_users",
                                 as: "user",
-                                cond: { $eq: ["$$user.is_approved", "approved"] }
-                            }
-                        }
-                    }
+                                cond: { $eq: ["$$user.is_approved", "approved"] },
+                            },
+                        },
+                    },
                 },
                 {
                     $project: {
                         group_name: 1,
                         tremp_count: { $size: "$group_tremps" },
-                        user_count: { $size: "$approved_users" }
-                    }
+                        user_count: { $size: "$approved_users" },
+                    },
                 },
                 {
                     $addFields: {
                         total_activity: {
-                            $add: ["$tremp_count", "$user_count"]
-                        }
-                    }
+                            $add: ["$tremp_count", "$user_count"],
+                        },
+                    },
                 },
                 {
-                    $sort: { total_activity: -1 }
+                    $match: {
+                        $or: [
+                            { tremp_count: { $gte: 1 } },
+                            { user_count: { $gte: 2 } }, // Groups with at least two users
+                        ],
+                    },
                 },
                 {
-                    $limit: 5
-                }
+                    $sort: { total_activity: -1 },
+                },
+                {
+                    $limit: 5,
+                },
             ];
             const activeGroups = yield db_1.default.aggregate(KpiDataAccess.GroupCollection, pipeline);
+            activeGroups[0].user_count = (yield db_1.default.FindAll(KpiDataAccess.UserCollection, { deleted: false, status: "active" })).length;
             return activeGroups;
         });
     }
