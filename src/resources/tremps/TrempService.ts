@@ -50,6 +50,8 @@ export async function createTremp(clientData: TrempRequest) {
 
   const existingTremps = await findExistingTremps(creator_id, allDates);
 
+  console.log(existingTremps);
+  console.log(existingTremps.length);
   if (existingTremps.length > 0) {
     throw new BadRequestException('You already have a tremp scheduled for one of these dates and times.');
   }
@@ -93,7 +95,7 @@ function getTodayDate() {
   return today;
 }
 async function findExistingTremps(creatorId: string, dates: Date[]) {
-  const existingTrempsQuery = { creator_id: creatorId, tremp_time: { $in: dates } };
+  const existingTrempsQuery = { creator_id: new ObjectId(creatorId), tremp_time: { $in: dates } };
   return await trempDataAccess.FindTrempsByFilters(existingTrempsQuery);
 }
 function validateTrempHours(hour: string, return_hour: string, date: Date, returnDate: Date) {
@@ -514,7 +516,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
   // First, find the tramps where the user is the creator and has type 'first' and there is
   // at least one different user who is approved and type 'second'
   const createdByUserQuery = {
-    deleted:false,
+    deleted: false,
     creator_id: userId,
     is_completed: false,
     tremp_type: first,
@@ -532,7 +534,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
 
   // Then, find the tramps where the user has joined as type 'second' and is approved
   const joinedByUserQuery = {
-    deleted:false,
+    deleted: false,
     tremp_type: second,
     is_completed: false,
     tremp_time: { "$gte": currentDate },
@@ -564,7 +566,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
       } else {
         driverId = tramp.users_in_tremp.find((user: UsersApprovedInTremp) => user.is_approved === 'approved')?.user_id;
         const hitchhiker = await getUserDetailsById(tramp.creator_id);
-        hitchhikers = [hitchhiker]; 
+        hitchhikers = [hitchhiker];
       }
       const driver = await getUserDetailsById(driverId);
 
@@ -578,7 +580,7 @@ export async function getApprovedTremps(user_id: string, tremp_type: string) {
           image_URL: driver.image_URL,
         },
         hitchhikers,
-        users_in_tremp: undefined 
+        users_in_tremp: undefined
       };
     })
   );
@@ -659,7 +661,7 @@ export async function getTrempsHistory(user_id: string, tremp_type: string) {
       { is_completed: true }
     ]
   };
-  
+
 
 
   const trampsCreatedByUser = await trempDataAccess.FindAll(createdByUserQuery);
@@ -700,7 +702,7 @@ export async function getTrempsHistory(user_id: string, tremp_type: string) {
         const hitchhiker = await getUserDetailsById(tramp.creator_id);
         hitchhikers = [hitchhiker];
       }
-      
+
       const driver = await getUserDetailsById(driverId);
 
       return {

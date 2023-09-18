@@ -71,6 +71,8 @@ function createTremp(clientData) {
             return date;
         });
         const existingTremps = yield findExistingTremps(creator_id, allDates);
+        console.log(existingTremps);
+        console.log(existingTremps.length);
         if (existingTremps.length > 0) {
             throw new HttpException_1.BadRequestException('You already have a tremp scheduled for one of these dates and times.');
         }
@@ -105,7 +107,7 @@ function getTodayDate() {
 }
 function findExistingTremps(creatorId, dates) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existingTrempsQuery = { creator_id: creatorId, tremp_time: { $in: dates } };
+        const existingTrempsQuery = { creator_id: new mongodb_1.ObjectId(creatorId), tremp_time: { $in: dates } };
         return yield trempDataAccess.FindTrempsByFilters(existingTrempsQuery);
     });
 }

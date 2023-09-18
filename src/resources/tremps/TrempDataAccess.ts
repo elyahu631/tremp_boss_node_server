@@ -18,7 +18,7 @@ class TrempDataAccess {
   async FindTrempsByFilters(query = {}) {
     const projection = {
       _id: 1,
-      creator_id:1,
+      creator_id: 1,
       group_id: 1,
       tremp_type: 1,
       tremp_time: 1,
@@ -26,13 +26,13 @@ class TrempDataAccess {
       to_route: 1,
       note: 1,
       seats_amount: 1,
-      users_in_tremp:1,
+      users_in_tremp: 1,
     };
-    return await db.FindAll(TrempDataAccess.collection, query, projection,{ tremp_time: 1 });
+    return await db.FindAll(TrempDataAccess.collection, query, projection, { tremp_time: 1 });
   }
 
-  async FindAll(query = {}, projection = {},sort = { tremp_time: 1 }) {
-    return await db.FindAll(TrempDataAccess.collection, query, projection,sort);
+  async FindAll(query = {}, projection = {}, sort = { tremp_time: 1 }) {
+    return await db.FindAll(TrempDataAccess.collection, query, projection, sort);
   }
 
   async UpdateTremp(tremp_id: string, query: UserInTrempUpdateQuery) {
@@ -56,33 +56,35 @@ class TrempDataAccess {
       },
       {
         $lookup: {
-          from: 'Groups', 
+          from: 'Groups',
           localField: 'group_id',
           foreignField: '_id',
           as: 'group',
         },
       },
       {
-        $unwind: '$group', 
+        $unwind: '$group',
       },
       {
         $project: {
           _id: 1,
           tremp_type: 1,
-          create_date:1,
+          create_date: 1,
           tremp_time: 1,
           from_route: 1,
           to_route: 1,
           seats_amount: 1,
-          is_full:1,
-          is_completed:1,
+          is_full: 1,
+          is_completed: 1,
           tremp_group: '$group.group_name',
         },
       },
     ];
-  
+
     return await db.aggregate('Tremps', pipeline);
   }
+
+ 
 
 }
 

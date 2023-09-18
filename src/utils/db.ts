@@ -1,3 +1,4 @@
+// import { Agenda } from 'agenda';
 import { MongoClient, ObjectId } from 'mongodb';
 import { DB_URI, DB_NAME } from '../config/environment';
 import { Model } from '../config/models';
@@ -7,12 +8,17 @@ class DB {
   private client: MongoClient;
   private dbName: string;
   private isConnected: boolean = false;
+  // public agenda: Agenda; // <-- add this line
 
   private constructor() {
     this.client = new MongoClient(DB_URI);
     this.dbName = DB_NAME;
     this.connect();
+
+    // this.agenda = new Agenda({ mongo: this.client.db(this.dbName) as any });
   }
+
+
 
   public static getInstance(): DB {
     if (!DB.instance) {
@@ -119,6 +125,18 @@ class DB {
       throw error;
     }
   }
+
+  // public defineJobs(jobName: string, jobFunction: (jobData: any) => Promise<void>) {
+  //   this.agenda.define(jobName, async (job, done) => {
+  //     try {
+  //       await jobFunction(job.attrs.data);
+  //       done();
+  //     } catch (error) {
+  //       done();
+  //     }
+  //   });
+  // }
+
 }
 
 const db = DB.getInstance();
