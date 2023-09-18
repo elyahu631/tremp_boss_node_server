@@ -13,7 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongodb_1 = require("mongodb");
 const environment_1 = require("../config/environment");
 class DB {
-    // public agenda: Agenda; // <-- add this line
+    // public agenda: Agenda; 
     constructor() {
         this.isConnected = false;
         this.client = new mongodb_1.MongoClient(environment_1.DB_URI);

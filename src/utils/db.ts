@@ -8,7 +8,7 @@ class DB {
   private client: MongoClient;
   private dbName: string;
   private isConnected: boolean = false;
-  // public agenda: Agenda; // <-- add this line
+  // public agenda: Agenda; 
 
   private constructor() {
     this.client = new MongoClient(DB_URI);
