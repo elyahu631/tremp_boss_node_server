@@ -114,16 +114,17 @@ function findExistingTremps(creatorId, dates) {
 function validateTrempHours(hour, return_hour, date, returnDate) {
     const [hourH, hourM] = hour.split(':').map(Number);
     const [returnHourH, returnHourM] = return_hour.split(':').map(Number);
-    let hourInMinutes = hourH * 60 + hourM;
-    let returnHourInMinutes = returnHourH * 60 + returnHourM;
+    const minInHour = 60;
+    let hourInMinutes = hourH * minInHour + hourM;
+    let returnHourInMinutes = returnHourH * minInHour + returnHourM;
     // If return hour is less than departure hour, assume it's the next day
     if (returnHourInMinutes < hourInMinutes) {
-        returnHourInMinutes += 24 * 60; // Add 24 hours to the return hour
+        returnHourInMinutes += 24 * minInHour; // Add 24 hours to the return hour
         returnDate.setDate(returnDate.getDate() + 1); // Increment the return date by one day
     }
     const differenceInMinutes = returnHourInMinutes - hourInMinutes;
-    const threeHoursInMinutes = 3 * 60;
-    const fourteenHoursInMinutes = 14 * 60;
+    const threeHoursInMinutes = 3 * minInHour;
+    const fourteenHoursInMinutes = 14 * minInHour;
     if (differenceInMinutes < threeHoursInMinutes || differenceInMinutes > fourteenHoursInMinutes) {
         throw new HttpException_1.BadRequestException("Return time must be at least 3 hours and no more than 14 hours from departure time");
     }
@@ -578,7 +579,7 @@ function trempCompleted(trempId, userId) {
     });
 }
 exports.trempCompleted = trempCompleted;
-// ##############################################
+// admin
 function getAllTremps() {
     return __awaiter(this, void 0, void 0, function* () {
         return trempDataAccess.getAllTremps();
