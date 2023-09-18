@@ -35,6 +35,26 @@ export async function getMostRequestedHours(req: Request, res: Response, next: N
 }
 
 
+export async function getAllKPIs(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const drivers = await kpiDataAccess.getTopDrivers();
+    const hours = await kpiDataAccess.getMostRequestedHours();
+    const routes = await kpiDataAccess.getMostPopularRoutes();
+    
+    res.status(200).json({
+      status: true,
+      data: {
+        top_drivers: drivers,
+        top_hours: hours,
+        top_routes: routes
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
 export async function getPeopleAndTrempCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const peopleCounts = await kpiDataAccess.getPeopleAndTrempCounts();

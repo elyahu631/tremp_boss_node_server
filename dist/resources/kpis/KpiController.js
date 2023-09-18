@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMostActiveGroups = exports.getInactiveGroups = exports.getHitchhikerMonthlyCountsByGender = exports.getRideAndTripCounts = exports.getPeopleAndTrempCounts = exports.getMostRequestedHours = exports.getTopDrivers = exports.getMostPopularRoutes = void 0;
+exports.getMostActiveGroups = exports.getInactiveGroups = exports.getHitchhikerMonthlyCountsByGender = exports.getRideAndTripCounts = exports.getPeopleAndTrempCounts = exports.getAllKPIs = exports.getMostRequestedHours = exports.getTopDrivers = exports.getMostPopularRoutes = void 0;
 const KpiDataAccess_1 = __importDefault(require("./KpiDataAccess"));
 const kpiDataAccess = new KpiDataAccess_1.default();
 function getMostPopularRoutes(req, res, next) {
@@ -52,6 +52,27 @@ function getMostRequestedHours(req, res, next) {
     });
 }
 exports.getMostRequestedHours = getMostRequestedHours;
+function getAllKPIs(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const drivers = yield kpiDataAccess.getTopDrivers();
+            const hours = yield kpiDataAccess.getMostRequestedHours();
+            const routes = yield kpiDataAccess.getMostPopularRoutes();
+            res.status(200).json({
+                status: true,
+                data: {
+                    top_drivers: drivers,
+                    top_hours: hours,
+                    top_routes: routes
+                }
+            });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getAllKPIs = getAllKPIs;
 function getPeopleAndTrempCounts(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

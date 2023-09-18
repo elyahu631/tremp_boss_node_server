@@ -7,9 +7,10 @@ import { handleErrors } from "../../middleware/handleErrors";
 
 const kpiRoutes = Router();
 
-kpiRoutes.get('/get-top-routes', authenticateAdminToken, KpiController.getMostPopularRoutes);
-kpiRoutes.get('/get-top-drivers', authenticateAdminToken, KpiController.getTopDrivers);
-kpiRoutes.get('/get-top-hours', authenticateAdminToken, KpiController.getMostRequestedHours);
+// kpiRoutes.get('/get-top-routes', authenticateAdminToken, KpiController.getMostPopularRoutes);
+// kpiRoutes.get('/get-top-drivers', authenticateAdminToken, KpiController.getTopDrivers);
+// kpiRoutes.get('/get-top-hours', authenticateAdminToken, KpiController.getMostRequestedHours);
+kpiRoutes.get('/get-all-top-five', authenticateAdminToken, KpiController.getAllKPIs);
 kpiRoutes.get('/get-people-and-tremps-counts', authenticateAdminToken, KpiController.getPeopleAndTrempCounts);
 kpiRoutes.get('/get-percentages-per-type', authenticateAdminToken, KpiController.getRideAndTripCounts);
 kpiRoutes.get('/get-hitchhiker-monthly-counts-by-gender', authenticateAdminToken, KpiController.getHitchhikerMonthlyCountsByGender);
@@ -18,7 +19,7 @@ kpiRoutes.get('/get-inactive-groups', authenticateAdminToken, KpiController.getI
 kpiRoutes.get('/get-most-active-groups', authenticateAdminToken, KpiController.getMostActiveGroups);
 
 
-kpiRoutes.use(handleErrors); 
+kpiRoutes.use(handleErrors);
 
 export default kpiRoutes;
 
