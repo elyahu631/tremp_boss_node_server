@@ -71,8 +71,6 @@ function createTremp(clientData) {
             return date;
         });
         const existingTremps = yield findExistingTremps(creator_id, allDates);
-        console.log(existingTremps);
-        console.log(existingTremps.length);
         if (existingTremps.length > 0) {
             throw new HttpException_1.BadRequestException('You already have a tremp scheduled for one of these dates and times.');
         }
@@ -141,7 +139,7 @@ function createSingleTrempDoc(date, creatorIdObj, groupIdObj, rest) {
     newTremp.validateTremp();
     return newTremp;
 }
-// getTrempsByFilters
+// getTrempsToSearch
 function getTrempsByFilters(filters) {
     return __awaiter(this, void 0, void 0, function* () {
         const query = yield constructQueryFromFilters(filters);

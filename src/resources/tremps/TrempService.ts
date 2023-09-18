@@ -50,8 +50,7 @@ export async function createTremp(clientData: TrempRequest) {
 
   const existingTremps = await findExistingTremps(creator_id, allDates);
 
-  console.log(existingTremps);
-  console.log(existingTremps.length);
+
   if (existingTremps.length > 0) {
     throw new BadRequestException('You already have a tremp scheduled for one of these dates and times.');
   }
@@ -141,9 +140,7 @@ function createSingleTrempDoc(date: Date, creatorIdObj: ObjectId, groupIdObj: Ob
 
 
 
-
-
-// getTrempsByFilters
+// getTrempsToSearch
 export async function getTrempsByFilters(filters: any): Promise<any> {
   const query = await constructQueryFromFilters(filters);
   const tremps = await trempDataAccess.FindTrempsByFilters(query);
