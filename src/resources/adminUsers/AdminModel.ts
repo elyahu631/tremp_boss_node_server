@@ -53,7 +53,7 @@ class AdminModel {
       username: Joi.string().min(3).max(15).required(),
       email: Joi.string().email().required(),
       phone_number: Joi.string().length(10).required(),
-      password: Joi.string().min(8).max(18).required(),
+      password: Joi.string().required(),
       first_name: Joi.string().required(),
       last_name: Joi.string().required(),
       role: Joi.string().required(),

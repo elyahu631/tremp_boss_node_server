@@ -27,7 +27,7 @@ class AdminModel {
             username: joi_1.default.string().min(3).max(15).required(),
             email: joi_1.default.string().email().required(),
             phone_number: joi_1.default.string().length(10).required(),
-            password: joi_1.default.string().min(8).max(18).required(),
+            password: joi_1.default.string().required(),
             first_name: joi_1.default.string().required(),
             last_name: joi_1.default.string().required(),
             role: joi_1.default.string().required(),
