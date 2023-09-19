@@ -11,12 +11,12 @@ interface Coordinate {
 }
 
 class TrempModel {
-  creator_id: ObjectId; //from client 
-  group_id: ObjectId; // from client chack if group active and exsits 
+  creator_id: ObjectId;
+  group_id: ObjectId; 
   tremp_type: string; 
-  create_date: Date; // 
-  tremp_time: Date; // client 
-  from_route: {    // chack if form an to is no simmular
+  create_date: Date; 
+  tremp_time: Date; 
+  from_route: {    
     name: string;
     coordinates: Coordinate;
   };

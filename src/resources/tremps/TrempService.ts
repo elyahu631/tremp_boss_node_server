@@ -3,7 +3,7 @@ import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
-import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp, Route } from './TrempInterfaces';
+import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp,  } from './TrempInterfaces';
 import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../../middleware/HttpException';
 import { validateTrempRequest } from './TrempRequestValidation';
@@ -604,7 +604,7 @@ async function getUserDetailsById(userId: ObjectId) {
 }
 
 // trempCompleted
-export async function trempCompleted(trempId: string, userId: string): Promise<any> {  // Return type changed to Promise<any>
+export async function trempCompleted(trempId: string, userId: string): Promise<any> {  
   const tremp = await trempDataAccess.FindByID(trempId);
 
   if (!tremp) {
@@ -620,16 +620,6 @@ export async function trempCompleted(trempId: string, userId: string): Promise<a
 
   return await trempDataAccess.Update(trempId, tremp);
 }
-
-// admin
-export async function getAllTremps() {
-  return trempDataAccess.getAllTremps();
-}
-export async function getTrempById(id: string) {
-  return trempDataAccess.FindByID(id);
-}
-
-
 export async function getTrempsHistory(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
   const first = tremp_type === 'driver' ? 'driver' : 'hitchhiker';
@@ -638,9 +628,6 @@ export async function getTrempsHistory(user_id: string, tremp_type: string) {
   const currentDate = getCurrentTimeInIsrael();
   const hours = currentDate.getUTCHours();
   currentDate.setUTCHours(hours - 6);
-
-  // First, find the tramps where the user is the creator and has type 'first' and there is
-  // at least one different user who is approved and type 'second'
 
   const createdByUserQuery = {
     creator_id: userId,
@@ -656,8 +643,6 @@ export async function getTrempsHistory(user_id: string, tremp_type: string) {
       { is_completed: true }
     ]
   };
-
-
 
   const trampsCreatedByUser = await trempDataAccess.FindAll(createdByUserQuery);
 
@@ -717,6 +702,17 @@ export async function getTrempsHistory(user_id: string, tremp_type: string) {
 
   return trampsToShow;
 }
+
+// admin
+export async function getAllTremps() {
+  return trempDataAccess.getAllTremps();
+}
+export async function getTrempById(id: string) {
+  return trempDataAccess.FindByID(id);
+}
+
+
+
 
 
 

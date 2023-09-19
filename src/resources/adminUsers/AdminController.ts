@@ -18,6 +18,7 @@ import { BadRequestException, ForbiddenException, NotFoundException, Unauthorize
 export async function loginAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { username, password } = req.body;
+    console.log(username, password);    
     if (!username || !password) {
       throw new BadRequestException('Username and password are required');
     }

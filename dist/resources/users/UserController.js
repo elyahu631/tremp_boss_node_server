@@ -184,7 +184,6 @@ function uploadUserImage(req, res, next) {
                 file = req.files[0];
             }
             else {
-                // You can choose the field name or just get the first file
                 file = req.files[Object.keys(req.files)[0]][0];
             }
             if (!file) {

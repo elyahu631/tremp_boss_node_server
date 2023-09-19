@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempsHistory = exports.getTrempById = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTrempById = exports.getAllTremps = exports.getTrempsHistory = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempService.ts
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
@@ -577,19 +577,6 @@ function trempCompleted(trempId, userId) {
     });
 }
 exports.trempCompleted = trempCompleted;
-// admin
-function getAllTremps() {
-    return __awaiter(this, void 0, void 0, function* () {
-        return trempDataAccess.getAllTremps();
-    });
-}
-exports.getAllTremps = getAllTremps;
-function getTrempById(id) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return trempDataAccess.FindByID(id);
-    });
-}
-exports.getTrempById = getTrempById;
 function getTrempsHistory(user_id, tremp_type) {
     return __awaiter(this, void 0, void 0, function* () {
         const userId = new mongodb_1.ObjectId(user_id);
@@ -598,8 +585,6 @@ function getTrempsHistory(user_id, tremp_type) {
         const currentDate = (0, TimeService_1.getCurrentTimeInIsrael)();
         const hours = currentDate.getUTCHours();
         currentDate.setUTCHours(hours - 6);
-        // First, find the tramps where the user is the creator and has type 'first' and there is
-        // at least one different user who is approved and type 'second'
         const createdByUserQuery = {
             creator_id: userId,
             tremp_type: first,
@@ -659,4 +644,17 @@ function getTrempsHistory(user_id, tremp_type) {
     });
 }
 exports.getTrempsHistory = getTrempsHistory;
+// admin
+function getAllTremps() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return trempDataAccess.getAllTremps();
+    });
+}
+exports.getAllTremps = getAllTremps;
+function getTrempById(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return trempDataAccess.FindByID(id);
+    });
+}
+exports.getTrempById = getTrempById;
 //# sourceMappingURL=TrempService.js.map
