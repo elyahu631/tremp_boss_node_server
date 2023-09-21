@@ -7,6 +7,8 @@ let lastCheckedTime = new Date();
 export const startTrempCronJob = () => {
   cron.schedule('* * * * *', async () => {
     try {
+      console.log("Cron job triggered");
+
       const currentTime = new Date();
 
       const upcomingTremps = await db.FindAll('tremps', {
