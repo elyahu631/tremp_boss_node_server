@@ -12,8 +12,8 @@ export const startTrempCronJob = () => {
       const currentTime = new Date();
 
       const upcomingTremps = await db.FindAll('tremps', {
+        deleted:false,
         tremp_time: {
-          deleted:false,
           $gte: lastCheckedTime,
           $lte: new Date(currentTime.getTime() + 30 * 60 * 1000) // 30 minutes from now
         }
