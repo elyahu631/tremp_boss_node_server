@@ -1,21 +1,26 @@
-// import { Agenda } from 'agenda';
+import { UserInTremp } from './../resources/tremps/TrempInterfaces';
+import { Agenda } from 'agenda';
 import { MongoClient, ObjectId } from 'mongodb';
 import { DB_URI, DB_NAME } from '../config/environment';
 import { Model } from '../config/models';
+import { getCurrentTimeInIsrael } from '../services/TimeService';
 
 class DB {
   private static instance: DB;
   private client: MongoClient;
   private dbName: string;
   private isConnected: boolean = false;
-  // public agenda: Agenda; 
+  public agenda: Agenda;
 
   private constructor() {
     this.client = new MongoClient(DB_URI);
     this.dbName = DB_NAME;
     this.connect();
 
-    // this.agenda = new Agenda({ mongo: this.client.db(this.dbName) as any });
+    this.agenda = new Agenda({ mongo: this.client.db(this.dbName) as any });
+    this.defineJobs('logTrempDetails', this.logTrempDetails);
+    this.agenda.start();
+    this.agenda.every('5 minutes', 'logTrempDetails');
   }
 
 
@@ -126,18 +131,58 @@ class DB {
     }
   }
 
-  // public defineJobs(jobName: string, jobFunction: (jobData: any) => Promise<void>) {
-  //   this.agenda.define(jobName, async (job, done) => {
-  //     try {
-  //       await jobFunction(job.attrs.data);
-  //       done();
-  //     } catch (error) {
-  //       done();
-  //     }
-  //   });
-  // }
+  public defineJobs(jobName: string, jobFunction: (jobData: any) => Promise<void>) {
+    this.agenda.define(jobName, async (job, done) => {
+      try {
+        await jobFunction(job.attrs.data);
+        done();
+      } catch (error) {
+        done();
+      }
+    });
+  }
+
+  private async logTrempDetails(data: any): Promise<void> {
+    try {
+      // Fetch tremps which are going to happen in the next 30 mins.
+      const currentTime = new Date();
+      const thirtyMinsFromNow = new Date(currentTime.getTime() + 30 * 60000);
+
+      const tremps = await db.FindAll('Tremps', {
+        tremp_time: {
+          $lte: thirtyMinsFromNow,
+          $gt: currentTime
+        }
+      });
+
+      for (const tremp of tremps) {
+        let userIdToLog: string;
+        let nameToLog: string;
+
+        if (tremp.tremp_type === 'driver') {
+          userIdToLog = tremp.creator_id;
+          const user = await db.FindOne('Users', { _id: new ObjectId(userIdToLog) }); // assuming your user collection is called 'Users'
+          nameToLog = `${user.first_name} ${user.last_name}`;
+        } else if (tremp.tremp_type === 'hitchhiker') {
+          // Find the user who approved in `users_in_tremp`
+          const approvedUser = tremp.users_in_tremp.find((u:UserInTremp) => u.is_approved === 'approved');
+          if (approvedUser) {
+            userIdToLog = approvedUser.user_id;
+            const user = await db.FindOne('Users', { _id: new ObjectId(userIdToLog) });
+            nameToLog = `${user.first_name} ${user.last_name}`;
+          }
+        }
+
+        console.log(`Tremp ID: ${tremp._id}, User ID: ${userIdToLog}, User Name: ${nameToLog}`);
+      }
+
+    } catch (error) {
+      console.error("Error in logTrempDetails job: ", error);
+    }
+  }
 
 }
+
 
 const db = DB.getInstance();
 export default db;

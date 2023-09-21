@@ -2,6 +2,7 @@
 import db from '../../utils/db';
 import TrempModel from './TrempModel';
 import { UserInTrempUpdateQuery } from './TrempInterfaces';
+import UserDataAccess from '../users/UserDataAccess';
 
 class TrempDataAccess {
   static collection = 'Tremps';
@@ -84,7 +85,6 @@ class TrempDataAccess {
     return await db.aggregate('Tremps', pipeline);
   }
 
- 
 
 }
 

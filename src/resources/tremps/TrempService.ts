@@ -224,6 +224,7 @@ export async function joinToTremp(tremp_id: string, user_id: string, participant
   await updateTrempWithUser(tremp_id, user);
   await notifyCreatorOfNewParticipant(tremp.creator_id, tremp_id, user_id);
 }
+
 async function validateUserInTremp(tremp_id: string, userId: ObjectId) {
   const tremp = await trempDataAccess.FindByID(tremp_id);
 
@@ -244,6 +245,7 @@ async function validateUserInTremp(tremp_id: string, userId: ObjectId) {
 
   return tremp;
 }
+
 async function updateTrempWithUser(tremp_id: string, user: UserInTremp) {
   const query = { $push: { users_in_tremp: user } };
   const updatedTremp = await trempDataAccess.UpdateTremp(tremp_id, query);
@@ -251,6 +253,7 @@ async function updateTrempWithUser(tremp_id: string, user: UserInTremp) {
     throw new BadRequestException('User not added to the tremp');
   }
 }
+
 async function notifyCreatorOfNewParticipant(creatorId: ObjectId, tremp_id: string, user_id: string) {
 
   // Fetch creator and Participant based on their IDs
