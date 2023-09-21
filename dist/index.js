@@ -24,10 +24,12 @@ const jsonErrorHandler_1 = require("./middleware/jsonErrorHandler");
 const KpiRoutes_1 = __importDefault(require("./resources/kpis/KpiRoutes"));
 const UserGroupsRoutes_1 = __importDefault(require("./resources/usersGroups/UserGroupsRoutes"));
 const GroupRequestRoutes_1 = __importDefault(require("./resources/groupRequest/GroupRequestRoutes"));
+const TrempCronJob_1 = require("./resources/tremps/TrempCronJob");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)()); // enable CORS 
 app.use(express_1.default.json()); // parse incoming requests with JSON
 app.use(jsonErrorHandler_1.jsonErrorHandler);
+(0, TrempCronJob_1.startTrempCronJob)();
 app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.send('server runinig');
 }));

@@ -8,6 +8,7 @@ import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../../middleware/HttpException';
 import { validateTrempRequest } from './TrempRequestValidation';
 import { getCurrentTimeInIsrael } from '../../services/TimeService';
+import db from '../../utils/db';
 
 const trempDataAccess = new TrempDataAccess();
 const userDataAccess = new UserDataAccess();
@@ -143,18 +144,37 @@ function createSingleTrempDoc(date: Date, creatorIdObj: ObjectId, groupIdObj: Ob
 // getTrempsToSearch
 export async function getTrempsByFilters(filters: any): Promise<any> {
   const query = await constructQueryFromFilters(filters);
-  const tremps = await trempDataAccess.FindTrempsByFilters(query);
-  const uniqueUserIds = [...new Set(tremps.map(tremp => new ObjectId(tremp.creator_id)))];
+  
+  const pipeline = [
+    { $match: query },
+    {
+      $lookup: {
+        from: 'Users', 
+        localField: 'creator_id',
+        foreignField: '_id',
+        as: 'creatorInfo'
+      }
+    },
+    {
+      $unwind: '$creatorInfo'
+    },
+    {
+      $addFields: {
+        participants_amount: { $size: "$users_in_tremp" },
+        creator: {
+          first_name: "$creatorInfo.first_name",
+          last_name: "$creatorInfo.last_name",
+          image_URL: "$creatorInfo.image_URL",
+          gender: "$creatorInfo.gender"
+        }
+      }
+    },
+    {
+      $unset: ['users_in_tremp', 'creatorInfo']
+    }
+  ];
 
-  const users = await userDataAccess.FindAllUsers(
-    { _id: { $in: uniqueUserIds } },
-    { first_name: 1, last_name: 1, image_URL: 1, gender: 1 }
-  );
-
-  const usersMap = createUserMapFromList(users);
-  appendCreatorInformationToTremps(tremps, usersMap);
-
-  return tremps;
+  return await db.aggregate('Tremps', pipeline);
 }
 async function constructQueryFromFilters(filters: any): Promise<any> {
   const user = await userDataAccess.FindById(filters.user_id);
@@ -182,24 +202,24 @@ async function constructQueryFromFilters(filters: any): Promise<any> {
     },
   };
 }
-function createUserMapFromList(users: any[]): Map<string, any> {
-  return new Map(users.map(user => [user._id.toString(), user]));
-}
-function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, any>): void {
-  tremps.forEach(tremp => {
-    tremp.participants_amount = getNumberOfApprovedUsers(tremp)
-    tremp.users_in_tremp = undefined
-    let user = usersMap.get(tremp.creator_id.toString());
-    if (user) {
-      tremp.creator = {
-        first_name: user.first_name,
-        last_name: user.last_name,
-        image_URL: user.image_URL,
-        gender: user.gender,
-      };
-    }
-  });
-}
+// function createUserMapFromList(users: any[]): Map<string, any> {
+//   return new Map(users.map(user => [user._id.toString(), user]));
+// }
+// function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, any>): void {
+//   tremps.forEach(tremp => {
+//     tremp.participants_amount = getNumberOfApprovedUsers(tremp)
+//     tremp.users_in_tremp = undefined
+//     let user = usersMap.get(tremp.creator_id.toString());
+//     if (user) {
+//       tremp.creator = {
+//         first_name: user.first_name,
+//         last_name: user.last_name,
+//         image_URL: user.image_URL,
+//         gender: user.gender,
+//       };
+//     }
+//   });
+// }
 
 
 /**

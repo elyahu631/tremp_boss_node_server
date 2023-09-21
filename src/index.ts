@@ -10,11 +10,13 @@ import { jsonErrorHandler } from './middleware/jsonErrorHandler';
 import kpiRoutes from './resources/kpis/KpiRoutes';
 import userGroupsRoutes from './resources/usersGroups/UserGroupsRoutes';
 import groupRequestRoutes from './resources/groupRequest/GroupRequestRoutes';
+import { startTrempCronJob } from './resources/tremps/TrempCronJob';
 
 const app = express();
 app.use(cors());// enable CORS 
 app.use(express.json());// parse incoming requests with JSON
 app.use(jsonErrorHandler);
+startTrempCronJob();
 
 app.get('/', async (req: Request, res: Response) => {
   res.send('server runinig');

@@ -9,17 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// import { Agenda } from 'agenda';
+// utiles/db.ts
 const mongodb_1 = require("mongodb");
 const environment_1 = require("../config/environment");
 class DB {
-    // public agenda: Agenda; 
     constructor() {
         this.isConnected = false;
         this.client = new mongodb_1.MongoClient(environment_1.DB_URI);
         this.dbName = environment_1.DB_NAME;
         this.connect();
-        // this.agenda = new Agenda({ mongo: this.client.db(this.dbName) as any });
     }
     static getInstance() {
         if (!DB.instance) {

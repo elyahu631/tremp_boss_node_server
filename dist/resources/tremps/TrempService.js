@@ -33,6 +33,7 @@ const sendNotification_1 = require("../../services/sendNotification");
 const HttpException_1 = require("../../middleware/HttpException");
 const TrempRequestValidation_1 = require("./TrempRequestValidation");
 const TimeService_1 = require("../../services/TimeService");
+const db_1 = __importDefault(require("../../utils/db"));
 const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
 /**
@@ -143,12 +144,35 @@ function createSingleTrempDoc(date, creatorIdObj, groupIdObj, rest) {
 function getTrempsByFilters(filters) {
     return __awaiter(this, void 0, void 0, function* () {
         const query = yield constructQueryFromFilters(filters);
-        const tremps = yield trempDataAccess.FindTrempsByFilters(query);
-        const uniqueUserIds = [...new Set(tremps.map(tremp => new mongodb_1.ObjectId(tremp.creator_id)))];
-        const users = yield userDataAccess.FindAllUsers({ _id: { $in: uniqueUserIds } }, { first_name: 1, last_name: 1, image_URL: 1, gender: 1 });
-        const usersMap = createUserMapFromList(users);
-        appendCreatorInformationToTremps(tremps, usersMap);
-        return tremps;
+        const pipeline = [
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'Users',
+                    localField: 'creator_id',
+                    foreignField: '_id',
+                    as: 'creatorInfo'
+                }
+            },
+            {
+                $unwind: '$creatorInfo'
+            },
+            {
+                $addFields: {
+                    participants_amount: { $size: "$users_in_tremp" },
+                    creator: {
+                        first_name: "$creatorInfo.first_name",
+                        last_name: "$creatorInfo.last_name",
+                        image_URL: "$creatorInfo.image_URL",
+                        gender: "$creatorInfo.gender"
+                    }
+                }
+            },
+            {
+                $unset: ['users_in_tremp', 'creatorInfo']
+            }
+        ];
+        return yield db_1.default.aggregate('Tremps', pipeline);
     });
 }
 exports.getTrempsByFilters = getTrempsByFilters;
@@ -179,24 +203,24 @@ function constructQueryFromFilters(filters) {
         };
     });
 }
-function createUserMapFromList(users) {
-    return new Map(users.map(user => [user._id.toString(), user]));
-}
-function appendCreatorInformationToTremps(tremps, usersMap) {
-    tremps.forEach(tremp => {
-        tremp.participants_amount = getNumberOfApprovedUsers(tremp);
-        tremp.users_in_tremp = undefined;
-        let user = usersMap.get(tremp.creator_id.toString());
-        if (user) {
-            tremp.creator = {
-                first_name: user.first_name,
-                last_name: user.last_name,
-                image_URL: user.image_URL,
-                gender: user.gender,
-            };
-        }
-    });
-}
+// function createUserMapFromList(users: any[]): Map<string, any> {
+//   return new Map(users.map(user => [user._id.toString(), user]));
+// }
+// function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, any>): void {
+//   tremps.forEach(tremp => {
+//     tremp.participants_amount = getNumberOfApprovedUsers(tremp)
+//     tremp.users_in_tremp = undefined
+//     let user = usersMap.get(tremp.creator_id.toString());
+//     if (user) {
+//       tremp.creator = {
+//         first_name: user.first_name,
+//         last_name: user.last_name,
+//         image_URL: user.image_URL,
+//         gender: user.gender,
+//       };
+//     }
+//   });
+// }
 /**
  * Allows a user to join a specific 'tremp' (ride).
  *
