@@ -16,6 +16,7 @@ trempRoutes.put('/delete-tremp',authenticateToken, TrempController.deleteTremp);
 trempRoutes.put('/tremp-completed',authenticateToken, TrempController.trempCompleted);
 trempRoutes.post('/tremp-history',authenticateToken, TrempController.getTrempHistory);
 
+trempRoutes.get('/tremps', TrempController.getTremp);
 
 
 //for admin

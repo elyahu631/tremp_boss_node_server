@@ -1,18 +1,18 @@
 import cron from 'node-cron';
 import db from '../../utils/db';
+import { getCurrentTimeInIsrael } from '../../services/TimeService';
 
-let lastCheckedTime = new Date();
+let lastCheckedTime = getCurrentTimeInIsrael();
 
 
 export const startTrempCronJob = () => {
   cron.schedule('* * * * *', async () => {
     try {
-      console.log("Cron job triggered");
-
-      const currentTime = new Date();
-
-      const upcomingTremps = await db.FindAll('tremps', {
-        deleted:false,
+      const currentTime = getCurrentTimeInIsrael();
+      console.log(currentTime);
+      console.log(lastCheckedTime);
+      const upcomingTremps = await db.FindAll('Tremps', {
+        deleted: false,
         tremp_time: {
           $gte: lastCheckedTime,
           $lte: new Date(currentTime.getTime() + 30 * 60 * 1000) // 30 minutes from now
@@ -20,7 +20,7 @@ export const startTrempCronJob = () => {
       });
 
       for (const tremp of upcomingTremps) {
-        const driver = await db.FindByID('users', tremp.creator_id.toString());
+        const driver = await db.FindByID('Users', tremp.creator_id.toString());
 
         if (driver && driver.first_name) {
           console.log(`Driver: ${driver.first_name} has a tremp scheduled for ${tremp.tremp_time}`);

@@ -1,5 +1,5 @@
 // src/resources/tremps/trempControler.ts
-import { ObjectId } from 'mongodb';
+
 import { NextFunction, Request, Response } from "express";
 import * as TrempService from "./TrempService";
 import * as UserService from "../users/UserService";
@@ -152,3 +152,16 @@ export async function getTrempHistory(req: Request, res: Response, next: NextFun
     next(err);
   }
 }
+
+export async function getTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+
+    const tremps = await TrempService.getTremp();
+    res.status(200).json({ status: true, data: tremps });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+

@@ -1,4 +1,5 @@
 "use strict";
+// src/resources/tremps/trempControler.ts
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -32,7 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempHistory = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTremp = exports.getTrempHistory = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -212,4 +213,16 @@ function getTrempHistory(req, res, next) {
     });
 }
 exports.getTrempHistory = getTrempHistory;
+function getTremp(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const tremps = yield TrempService.getTremp();
+            res.status(200).json({ status: true, data: tremps });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.getTremp = getTremp;
 //# sourceMappingURL=TrempController.js.map

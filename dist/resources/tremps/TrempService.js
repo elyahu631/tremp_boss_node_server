@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrempById = exports.getAllTremps = exports.getTrempsHistory = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.getTremp = exports.getTrempById = exports.getAllTremps = exports.getTrempsHistory = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempService.ts
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
@@ -353,7 +353,7 @@ function getUserTremps(user_id, tremp_type) {
             deleted: false,
             is_completed: false,
             tremp_time: { $gte: currentDate }
-        }));
+        }, {}, { tremp_time: 1 }));
         const hitchhikerTremps = (yield trempDataAccess.FindAll({
             $and: [
                 { "users_in_tremp.user_id": userId },
@@ -362,7 +362,7 @@ function getUserTremps(user_id, tremp_type) {
             ],
             tremp_type: secondaryType,
             deleted: false
-        }));
+        }, {}, { tremp_time: 1 }));
         const driverTrempsMapped = driverTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, primaryType));
         const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, secondaryType));
         return {
@@ -681,4 +681,21 @@ function getTrempById(id) {
     });
 }
 exports.getTrempById = getTrempById;
+function getTremp() {
+    return __awaiter(this, void 0, void 0, function* () {
+        let lastCheckedTime = (0, TimeService_1.getCurrentTimeInIsrael)();
+        const currentTime = (0, TimeService_1.getCurrentTimeInIsrael)();
+        console.log(currentTime);
+        console.log(lastCheckedTime);
+        const upcomingTremps = yield db_1.default.FindAll('Tremps', {
+            deleted: false,
+            tremp_time: {
+                $gte: lastCheckedTime,
+                $lte: new Date(currentTime.getTime() + 30 * 60 * 1000) // 30 minutes from now
+            }
+        });
+        return upcomingTremps;
+    });
+}
+exports.getTremp = getTremp;
 //# sourceMappingURL=TrempService.js.map

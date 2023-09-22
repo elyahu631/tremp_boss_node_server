@@ -3,7 +3,7 @@ import TrempModel from './TrempModel';
 import TrempDataAccess from './TrempDataAccess';
 import UserDataAccess from '../users/UserDataAccess';
 import { ObjectId } from 'mongodb';
-import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp,  } from './TrempInterfaces';
+import { Tremp, TrempRequest, UserInTremp, UsersApprovedInTremp, } from './TrempInterfaces';
 import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../../middleware/HttpException';
 import { validateTrempRequest } from './TrempRequestValidation';
@@ -144,12 +144,12 @@ function createSingleTrempDoc(date: Date, creatorIdObj: ObjectId, groupIdObj: Ob
 // getTrempsToSearch
 export async function getTrempsByFilters(filters: any): Promise<any> {
   const query = await constructQueryFromFilters(filters);
-  
+
   const pipeline = [
     { $match: query },
     {
       $lookup: {
-        from: 'Users', 
+        from: 'Users',
         localField: 'creator_id',
         foreignField: '_id',
         as: 'creatorInfo'
@@ -366,7 +366,7 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
     deleted: false,
     is_completed: false,
     tremp_time: { $gte: currentDate }
-  })) as unknown as Tremp[];
+  },{},{tremp_time:1})) as unknown as Tremp[];
 
   const hitchhikerTremps = (await trempDataAccess.FindAll({
     $and: [
@@ -376,7 +376,7 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
     ],
     tremp_type: secondaryType,
     deleted: false
-  })) as unknown as Tremp[];
+  },{},{tremp_time:1})) as unknown as Tremp[];
 
 
   const driverTrempsMapped = driverTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, primaryType));
@@ -627,7 +627,7 @@ async function getUserDetailsById(userId: ObjectId) {
 }
 
 // trempCompleted
-export async function trempCompleted(trempId: string, userId: string): Promise<any> {  
+export async function trempCompleted(trempId: string, userId: string): Promise<any> {
   const tremp = await trempDataAccess.FindByID(trempId);
 
   if (!tremp) {
@@ -734,6 +734,22 @@ export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
 }
 
+
+
+export async function getTremp() {
+  let lastCheckedTime = getCurrentTimeInIsrael();
+  const currentTime = getCurrentTimeInIsrael();
+  console.log(currentTime);
+  console.log(lastCheckedTime);
+  const upcomingTremps = await db.FindAll('Tremps', {
+    deleted: false,
+    tremp_time: {
+      $gte: lastCheckedTime,
+      $lte: new Date(currentTime.getTime() + 30 * 60 * 1000) // 30 minutes from now
+    }
+  });
+  return upcomingTremps;
+}
 
 
 

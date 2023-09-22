@@ -16,7 +16,7 @@ const app = express();
 app.use(cors());// enable CORS 
 app.use(express.json());// parse incoming requests with JSON
 app.use(jsonErrorHandler);
-startTrempCronJob();
+// startTrempCronJob();
 
 app.get('/', async (req: Request, res: Response) => {
   res.send('server runinig');
