@@ -353,7 +353,7 @@ function getUserTremps(user_id, tremp_type) {
             deleted: false,
             is_completed: false,
             tremp_time: { $gte: currentDate }
-        }, {}, { tremp_time: 1 }));
+        }));
         const hitchhikerTremps = (yield trempDataAccess.FindAll({
             $and: [
                 { "users_in_tremp.user_id": userId },
@@ -362,7 +362,7 @@ function getUserTremps(user_id, tremp_type) {
             ],
             tremp_type: secondaryType,
             deleted: false
-        }, {}, { tremp_time: 1 }));
+        }));
         const driverTrempsMapped = driverTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, primaryType));
         const hitchhikerTrempsMapped = hitchhikerTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, secondaryType));
         return {
@@ -691,7 +691,11 @@ function getTremp() {
             deleted: false,
             tremp_time: {
                 $gte: lastCheckedTime,
-                $lte: new Date(currentTime.getTime() + 30 * 60 * 1000) // 30 minutes from now
+            },
+            "users_in_tremp": {
+                "$elemMatch": {
+                    "is_approved": 'approved',
+                }
             }
         });
         return upcomingTremps;

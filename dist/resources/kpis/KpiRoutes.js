@@ -32,10 +32,10 @@ const kpiRoutes = (0, express_1.Router)();
 // kpiRoutes.get('/get-top-routes', authenticateAdminToken, KpiController.getMostPopularRoutes);
 // kpiRoutes.get('/get-top-drivers', authenticateAdminToken, KpiController.getTopDrivers);
 // kpiRoutes.get('/get-top-hours', authenticateAdminToken, KpiController.getMostRequestedHours);
-kpiRoutes.get('/get-all-top-five', auth_1.authenticateAdminToken, KpiController.getAllKPIs);
-kpiRoutes.get('/get-people-and-tremps-counts', auth_1.authenticateAdminToken, KpiController.getPeopleAndTrempCounts);
-kpiRoutes.get('/get-percentages-per-type', auth_1.authenticateAdminToken, KpiController.getRideAndTripCounts);
-kpiRoutes.get('/get-hitchhiker-monthly-counts-by-gender', auth_1.authenticateAdminToken, KpiController.getHitchhikerMonthlyCountsByGender);
+kpiRoutes.post('/get-all-top-five', auth_1.authenticateAdminToken, KpiController.getAllKPIs);
+kpiRoutes.post('/get-people-and-tremps-counts', auth_1.authenticateAdminToken, KpiController.getPeopleAndTrempCounts);
+kpiRoutes.post('/get-percentages-per-type', auth_1.authenticateAdminToken, KpiController.getRideAndTripCounts);
+kpiRoutes.post('/get-hitchhiker-monthly-counts-by-gender', auth_1.authenticateAdminToken, KpiController.getHitchhikerMonthlyCountsByGender);
 // Add the following line
 kpiRoutes.get('/get-inactive-groups', auth_1.authenticateAdminToken, KpiController.getInactiveGroups);
 kpiRoutes.get('/get-most-active-groups', auth_1.authenticateAdminToken, KpiController.getMostActiveGroups);

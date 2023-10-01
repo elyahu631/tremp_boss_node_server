@@ -82,6 +82,17 @@ class TrempDataAccess {
                     $unwind: '$group',
                 },
                 {
+                    $lookup: {
+                        from: 'Users',
+                        localField: 'creator_id',
+                        foreignField: '_id',
+                        as: 'driver_data',
+                    },
+                },
+                {
+                    $unwind: '$driver_data',
+                },
+                {
                     $project: {
                         _id: 1,
                         tremp_type: 1,
@@ -93,6 +104,9 @@ class TrempDataAccess {
                         is_full: 1,
                         is_completed: 1,
                         tremp_group: '$group.group_name',
+                        driver_name: {
+                            $concat: ['$driver_data.first_name', ' ', '$driver_data.last_name'], // Combining first and last name.
+                        },
                     },
                 },
             ];

@@ -67,6 +67,17 @@ class TrempDataAccess {
         $unwind: '$group',
       },
       {
+        $lookup: {
+          from: 'Users',  // Assuming the user's collection is named 'Users'.
+          localField: 'creator_id',  // This field should match the driver's ID.
+          foreignField: '_id',
+          as: 'driver_data',
+        },
+      },
+      {
+        $unwind: '$driver_data',
+      },
+      {
         $project: {
           _id: 1,
           tremp_type: 1,
@@ -78,12 +89,16 @@ class TrempDataAccess {
           is_full: 1,
           is_completed: 1,
           tremp_group: '$group.group_name',
+          driver_name: {
+            $concat: ['$driver_data.first_name', ' ', '$driver_data.last_name'], // Combining first and last name.
+          },
         },
       },
     ];
 
     return await db.aggregate('Tremps', pipeline);
-  }
+}
+
 
 
 }

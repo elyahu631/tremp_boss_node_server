@@ -7,14 +7,33 @@ class KpiDataAccess {
   static GroupCollection = 'Groups';
   static usersGroupCollection = 'UserGroups'
 
-  async getPeopleAndTrempCounts() {
+  private static _createDateFilter(startDate?: string, endDate?: string): { $gte?: Date, $lte?: Date } {
+    let dateFilter: { $gte?: Date, $lte?: Date } = {};
+    if (startDate) {
+      dateFilter['$gte'] = new Date(startDate);
+    }
+    if (endDate) {
+      dateFilter['$lte'] = new Date(endDate);
+    }
+    return dateFilter;
+  }
 
-    // Pipeline for MongoDB aggregation is defined here.
+  async getPeopleAndTrempCounts(startDate?: string, endDate?: string,trempType?:string) {
+
+    const dateFilter = KpiDataAccess._createDateFilter(startDate, endDate);
+
+    
+    
     const pipeline = [
 
       // Documents marked as 'deleted' are filtered out in the 'match' stage.
       {
-        $match: { deleted: false }
+        $match: {
+          deleted: false,
+          ...(trempType && trempType.length > 4 ? { tremp_type: trempType } : {}),
+          ...(Object.keys(dateFilter).length ? { tremp_time: dateFilter } : {})
+        }
+
       },
 
       // New fields are added to each document in the 'addFields' stage.
@@ -82,8 +101,17 @@ class KpiDataAccess {
     return result;
   }
 
-  async getMostPopularRoutes() {
+  async getMostPopularRoutes(startDate?: string, endDate?: string,trempType?:string) {
+    const dateFilter = KpiDataAccess._createDateFilter(startDate, endDate);
+
     const pipeline = [
+      {
+        $match: {
+          deleted: false,
+          ...(trempType && trempType.length > 4 ? { tremp_type: trempType } : {}),
+          ...(Object.keys(dateFilter).length ? { tremp_time: dateFilter } : {})
+        },
+      },
       {
         $group: {
           _id: { from_route: "$from_route.name", to_route: "$to_route.name" },
@@ -102,19 +130,74 @@ class KpiDataAccess {
     return popularRoutes;
   }
 
-  async getTopDrivers() {
+  async getTopDrivers(startDate?: string, endDate?: string,trempType?:string) {
+
+    const dateFilter = KpiDataAccess._createDateFilter(startDate, endDate);
+
     const pipeline = [
       {
         $match: {
-          'users_in_tremp.is_approved': 'approved',
           'deleted': false,
-          'tremp_type': 'driver'
+          ...(trempType && trempType.length > 4 ? { tremp_type: trempType } : {}),
+          ...(Object.keys(dateFilter).length ? { tremp_time: dateFilter } : {})
+
         }
+      },
+      {
+        $facet: {
+          drivers: [
+            {
+              $match: {
+                'tremp_type': 'driver',
+                'users_in_tremp.is_approved': 'approved'
+              }
+            },
+            {
+              $group: {
+                _id: "$creator_id",
+                count: { $sum: 1 }
+              }
+            }
+          ],
+          hitchhikers: [
+            {
+              $match: {
+                'tremp_type': 'hitchhiker',
+                'users_in_tremp.is_approved': 'approved'
+              }
+            },
+            {
+              $unwind: "$users_in_tremp"
+            },
+            {
+              $match: {
+                'users_in_tremp.is_approved': 'approved'
+              }
+            },
+            {
+              $group: {
+                _id: "$users_in_tremp.user_id",
+                count: { $sum: 1 }
+              }
+            }
+          ]
+        }
+      },
+      {
+        $project: {
+          combined: { $concatArrays: ["$drivers", "$hitchhikers"] }
+        }
+      },
+      {
+        $unwind: "$combined"
+      },
+      {
+        $replaceRoot: { newRoot: "$combined" }
       },
       {
         $lookup: {
           from: KpiDataAccess.UserCollection,
-          localField: 'creator_id',
+          localField: '_id',
           foreignField: '_id',
           as: 'driver_data'
         }
@@ -124,10 +207,10 @@ class KpiDataAccess {
       },
       {
         $group: {
-          _id: "$creator_id",
+          _id: "$_id",
           driverName: { $first: { $concat: ['$driver_data.first_name', '-', '$driver_data.last_name'] } },
           driverEmail: { $first: "$driver_data.email" },
-          count: { $sum: 1 }
+          count: { $sum: "$count" }
         }
       },
       {
@@ -135,19 +218,24 @@ class KpiDataAccess {
       },
       {
         $limit: 5
-      },
+      }
     ];
 
     const drivers = await db.aggregate(KpiDataAccess.trempCollection, pipeline);
     return drivers;
   }
 
-  async getMostRequestedHours() {
+  async getMostRequestedHours(startDate?: string, endDate?: string,trempType?:string) {
+
+    const dateFilter = KpiDataAccess._createDateFilter(startDate, endDate);
+
     const pipeline = [
       {
         $match: {
-          'deleted': false,
-        }
+          deleted: false,
+          ...(trempType && trempType.length > 4 ? { tremp_type: trempType } : {}),
+          ...(Object.keys(dateFilter).length ? { tremp_time: dateFilter } : {})
+        },
       },
       {
         $addFields: {
@@ -184,11 +272,15 @@ class KpiDataAccess {
     return hours;
   }
 
-  async getRideAndTripCounts() {
+  async getRideAndTripCounts(startDate?: string, endDate?: string,trempType?:string) {
+    const dateFilter = KpiDataAccess._createDateFilter(startDate, endDate);
+
     const pipeline = [
       {
         $match: {
-          deleted: false
+          deleted: false,
+          ...(trempType && trempType.length > 4 ? { tremp_type: trempType } : {}),
+          ...(Object.keys(dateFilter).length ? { tremp_time: dateFilter } : {})
         }
       },
       {
@@ -237,15 +329,31 @@ class KpiDataAccess {
     return result;
   }
 
-  async getHitchhikerMonthlyCountsByGender() {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  async getHitchhikerMonthlyCountsByGender(startDate?: string, endDate?: string,trempType?:string) {
+
+    const corentDate = new Date();
+
+    if (!endDate) {
+      endDate = corentDate.toISOString();
+    }
+
+    // If startDate is not provided, default to six months ago.
+    if (!startDate) {
+      corentDate.setMonth(corentDate.getMonth() - 6);
+      startDate = corentDate.toISOString();
+    }
+
+
+    const dateFilter = KpiDataAccess._createDateFilter(startDate, endDate);
+
 
     const creatorsPipeline = [
       {
         $match: {
-          "create_date": { $gte: sixMonthsAgo },
-          "deleted": false
+          "tremp_time": dateFilter,
+          "deleted": false,
+          ...(trempType && trempType.length > 4 ? { tremp_type: trempType } : {}),
+
         }
       },
       {
@@ -275,7 +383,7 @@ class KpiDataAccess {
     const passengersPipeline = [
       {
         $match: {
-          "create_date": { $gte: sixMonthsAgo },
+          "tremp_time": { $gte: dateFilter },
           "users_in_tremp.is_approved": 'approved',
           "deleted": false
         }
@@ -345,7 +453,10 @@ class KpiDataAccess {
     return allGroups.filter(group => !inactiveGroupIds.includes(group._id.toString()));
   }
 
-   async getMostActiveGroups() {
+  async getMostActiveGroups(startDate?: string, endDate?: string,trempType?:string) {
+
+    const dateFilter = KpiDataAccess._createDateFilter(startDate, endDate);
+
     const pipeline = [
       {
         $match: {
@@ -409,14 +520,14 @@ class KpiDataAccess {
         $limit: 5,
       },
     ];
-    
+
 
     const activeGroups = await db.aggregate(KpiDataAccess.GroupCollection, pipeline);
-    activeGroups[0].user_count = (await db.FindAll(KpiDataAccess.UserCollection,{deleted:false,status:"active"})).length
+    activeGroups[0].user_count = (await db.FindAll(KpiDataAccess.UserCollection, { deleted: false, status: "active" })).length
     return activeGroups;
   }
 
-} 
+}
 
 
 

@@ -350,7 +350,6 @@ function findUserIndex(users: any[], user_id: string): number {
   return users.findIndex((user: any) => user.user_id.toString() === user_id);
 }
 
-
 // getUserTremps
 export async function getUserTremps(user_id: string, tremp_type: string) {
   const userId = new ObjectId(user_id);
@@ -366,7 +365,7 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
     deleted: false,
     is_completed: false,
     tremp_time: { $gte: currentDate }
-  },{},{tremp_time:1})) as unknown as Tremp[];
+  })) as unknown as Tremp[];
 
   const hitchhikerTremps = (await trempDataAccess.FindAll({
     $and: [
@@ -376,7 +375,7 @@ export async function getUserTremps(user_id: string, tremp_type: string) {
     ],
     tremp_type: secondaryType,
     deleted: false
-  },{},{tremp_time:1})) as unknown as Tremp[];
+  })) as unknown as Tremp[];
 
 
   const driverTrempsMapped = driverTremps.map(tremp => mapTrempWithApprovalStatus(tremp, userId, primaryType));
@@ -745,7 +744,11 @@ export async function getTremp() {
     deleted: false,
     tremp_time: {
       $gte: lastCheckedTime,
-      $lte: new Date(currentTime.getTime() + 30 * 60 * 1000) // 30 minutes from now
+    },
+    "users_in_tremp": {
+      "$elemMatch": {
+        "is_approved": 'approved',
+      }
     }
   });
   return upcomingTremps;

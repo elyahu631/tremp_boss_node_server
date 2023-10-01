@@ -13,51 +13,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMostActiveGroups = exports.getInactiveGroups = exports.getHitchhikerMonthlyCountsByGender = exports.getRideAndTripCounts = exports.getPeopleAndTrempCounts = exports.getAllKPIs = exports.getMostRequestedHours = exports.getTopDrivers = exports.getMostPopularRoutes = void 0;
+exports.getMostActiveGroups = exports.getInactiveGroups = exports.getHitchhikerMonthlyCountsByGender = exports.getRideAndTripCounts = exports.getPeopleAndTrempCounts = exports.getAllKPIs = void 0;
 const KpiDataAccess_1 = __importDefault(require("./KpiDataAccess"));
 const kpiDataAccess = new KpiDataAccess_1.default();
-function getMostPopularRoutes(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const routes = yield kpiDataAccess.getMostPopularRoutes();
-            res.status(200).json({ status: true, data: routes });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getMostPopularRoutes = getMostPopularRoutes;
-function getTopDrivers(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const drivers = yield kpiDataAccess.getTopDrivers();
-            res.status(200).json({ status: true, data: drivers });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getTopDrivers = getTopDrivers;
-function getMostRequestedHours(req, res, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const hours = yield kpiDataAccess.getMostRequestedHours();
-            res.status(200).json({ status: true, data: hours });
-        }
-        catch (err) {
-            next(err);
-        }
-    });
-}
-exports.getMostRequestedHours = getMostRequestedHours;
 function getAllKPIs(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const drivers = yield kpiDataAccess.getTopDrivers();
-            const hours = yield kpiDataAccess.getMostRequestedHours();
-            const routes = yield kpiDataAccess.getMostPopularRoutes();
+            const { startDate, endDate, trempType } = req.body;
+            const drivers = yield kpiDataAccess.getTopDrivers(startDate, endDate, trempType);
+            const hours = yield kpiDataAccess.getMostRequestedHours(startDate, endDate, trempType);
+            const routes = yield kpiDataAccess.getMostPopularRoutes(startDate, endDate, trempType);
             res.status(200).json({
                 status: true,
                 data: {
@@ -76,7 +41,8 @@ exports.getAllKPIs = getAllKPIs;
 function getPeopleAndTrempCounts(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const peopleCounts = yield kpiDataAccess.getPeopleAndTrempCounts();
+            const { startDate, endDate, trempType } = req.body;
+            const peopleCounts = yield kpiDataAccess.getPeopleAndTrempCounts(startDate, endDate, trempType);
             res.status(200).json({ status: true, data: peopleCounts });
         }
         catch (err) {
@@ -88,7 +54,8 @@ exports.getPeopleAndTrempCounts = getPeopleAndTrempCounts;
 function getRideAndTripCounts(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const counts = yield kpiDataAccess.getRideAndTripCounts();
+            const { startDate, endDate, trempType } = req.body;
+            const counts = yield kpiDataAccess.getRideAndTripCounts(startDate, endDate, trempType);
             res.status(200).json({ status: true, data: counts });
         }
         catch (err) {
@@ -100,7 +67,8 @@ exports.getRideAndTripCounts = getRideAndTripCounts;
 function getHitchhikerMonthlyCountsByGender(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const hitchhikerMonthlyCountsByGender = yield kpiDataAccess.getHitchhikerMonthlyCountsByGender();
+            const { startDate, endDate, trempType } = req.body;
+            const hitchhikerMonthlyCountsByGender = yield kpiDataAccess.getHitchhikerMonthlyCountsByGender(startDate, endDate, trempType);
             res.status(200).json({ status: true, data: hitchhikerMonthlyCountsByGender });
         }
         catch (err) {
