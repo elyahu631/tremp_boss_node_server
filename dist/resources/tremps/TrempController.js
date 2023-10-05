@@ -33,7 +33,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTremp = exports.getTrempHistory = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.checkNotificationsForUpcomingTremps = exports.getTremp = exports.getTrempHistory = exports.getAllTremps = exports.trempCompleted = exports.getApprovedTremps = exports.deleteTremp = exports.getUsersInTremp = exports.getUserTremps = exports.approveUserInTremp = exports.addUserToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 const TrempService = __importStar(require("./TrempService"));
 const UserService = __importStar(require("../users/UserService"));
 const HttpException_1 = require("../../middleware/HttpException");
@@ -225,4 +225,16 @@ function getTremp(req, res, next) {
     });
 }
 exports.getTremp = getTremp;
+function checkNotificationsForUpcomingTremps(req, res, next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield TrempService.notifyForUpcomingTremps();
+            res.status(200).json({ status: true, message: 'Checked for upcoming tremps and sent notifications.' });
+        }
+        catch (err) {
+            next(err);
+        }
+    });
+}
+exports.checkNotificationsForUpcomingTremps = checkNotificationsForUpcomingTremps;
 //# sourceMappingURL=TrempController.js.map

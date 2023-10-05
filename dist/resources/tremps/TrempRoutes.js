@@ -44,6 +44,7 @@ trempRoutes.post('/tremp-history', auth_1.authenticateToken, TrempController.get
 trempRoutes.get('/tremps', TrempController.getTremp);
 //for admin
 trempRoutes.get("/all", auth_1.authenticateAdminToken, TrempController.getAllTremps);
+trempRoutes.post("/upcoming-tremps", TrempController.checkNotificationsForUpcomingTremps);
 trempRoutes.use(handleErrors_1.handleErrors);
 exports.default = trempRoutes;
 //# sourceMappingURL=TrempRoutes.js.map

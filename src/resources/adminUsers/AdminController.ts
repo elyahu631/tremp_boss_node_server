@@ -28,7 +28,7 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
       throw new UnauthorizedException("Invalid user or password.");
     }
 
-    const token = jwt.sign({ id: user._id, rule: 'admin' }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user._id, rule: 'admin' }, JWT_SECRET, { expiresIn: '30m' });
     res.status(200).json({ status: true, data: { user, token } });
   } catch (err) {
     next(err);
@@ -39,11 +39,9 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
 export async function validateUserByToken(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-
     if (!token) {
       throw new BadRequestException('Token is required');
     }
-
     const { user } = await AdminService.validateUserByTokenService(token);
     res.status(200).json({ status: true, data: { user, token } });
   } catch (err) {

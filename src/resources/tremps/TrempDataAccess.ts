@@ -97,8 +97,22 @@ class TrempDataAccess {
     ];
 
     return await db.aggregate('Tremps', pipeline);
-}
+  }
 
+  async findUpcomingTremps(startTime: Date, endTime: Date) {
+    return await db.FindAll(TrempDataAccess.collection, {
+      deleted: false,
+      tremp_time: {
+        $gte: startTime,
+        $lte: endTime
+      },
+      "users_in_tremp": {
+        "$elemMatch": {
+          "is_approved": 'approved',
+        }
+      }
+    });
+  }
 
 
 }

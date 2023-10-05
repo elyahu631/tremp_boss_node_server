@@ -21,6 +21,7 @@ trempRoutes.get('/tremps', TrempController.getTremp);
 
 //for admin
 trempRoutes.get("/all", authenticateAdminToken, TrempController.getAllTremps);
+trempRoutes.post("/upcoming-tremps", TrempController.checkNotificationsForUpcomingTremps);
 
 trempRoutes.use(handleErrors); 
 

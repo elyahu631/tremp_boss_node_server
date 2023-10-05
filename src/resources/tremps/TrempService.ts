@@ -733,8 +733,6 @@ export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
 }
 
-
-
 export async function getTremp() {
   let lastCheckedTime = getCurrentTimeInIsrael();
   const currentTime = getCurrentTimeInIsrael();
@@ -752,6 +750,28 @@ export async function getTremp() {
     }
   });
   return upcomingTremps;
+}
+
+export async function notifyForUpcomingTremps() {
+  const lastCheckedTime = getCurrentTimeInIsrael();
+  const currentTime = new Date(lastCheckedTime.getTime() + 90 * 60 * 1000);
+  const upcomingTremps = await trempDataAccess.findUpcomingTremps(lastCheckedTime, currentTime);
+
+  for (const tremp of upcomingTremps) {
+      const driver = await db.FindByID('Users', tremp.creator_id.toString());
+
+      if (driver && driver.first_name && driver.notification_token) {
+          const trempTimeFormatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jerusalem' });
+          tremp.tremp_time.setHours(tremp.tremp_time.getHours() - 3);
+          const trempTime = trempTimeFormatter.format(tremp.tremp_time);
+          const title = `Upcoming Tremp!`;
+          const body = `Hi ${driver.first_name}, you have a tremp scheduled for ${trempTime}.`;
+          const data = { trempId: tremp._id.toString() };
+
+          // Send push notification
+          await sendNotificationToUser(driver.notification_token, title, body, data);
+      }
+  }
 }
 
 

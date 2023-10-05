@@ -113,6 +113,22 @@ class TrempDataAccess {
             return yield db_1.default.aggregate('Tremps', pipeline);
         });
     }
+    findUpcomingTremps(startTime, endTime) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield db_1.default.FindAll(TrempDataAccess.collection, {
+                deleted: false,
+                tremp_time: {
+                    $gte: startTime,
+                    $lte: endTime
+                },
+                "users_in_tremp": {
+                    "$elemMatch": {
+                        "is_approved": 'approved',
+                    }
+                }
+            });
+        });
+    }
 }
 TrempDataAccess.collection = 'Tremps';
 exports.default = TrempDataAccess;

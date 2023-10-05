@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTremp = exports.getTrempById = exports.getAllTremps = exports.getTrempsHistory = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
+exports.notifyForUpcomingTremps = exports.getTremp = exports.getTrempById = exports.getAllTremps = exports.getTrempsHistory = exports.trempCompleted = exports.getApprovedTremps = exports.getUsersInTremp = exports.deleteTremp = exports.getUserTremps = exports.approveUserInTremp = exports.joinToTremp = exports.getTrempsByFilters = exports.createTremp = void 0;
 // src/resources/tremps/trempService.ts
 const TrempModel_1 = __importDefault(require("./TrempModel"));
 const TrempDataAccess_1 = __importDefault(require("./TrempDataAccess"));
@@ -702,4 +702,25 @@ function getTremp() {
     });
 }
 exports.getTremp = getTremp;
+function notifyForUpcomingTremps() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const lastCheckedTime = (0, TimeService_1.getCurrentTimeInIsrael)();
+        const currentTime = new Date(lastCheckedTime.getTime() + 90 * 60 * 1000);
+        const upcomingTremps = yield trempDataAccess.findUpcomingTremps(lastCheckedTime, currentTime);
+        for (const tremp of upcomingTremps) {
+            const driver = yield db_1.default.FindByID('Users', tremp.creator_id.toString());
+            if (driver && driver.first_name && driver.notification_token) {
+                const trempTimeFormatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jerusalem' });
+                tremp.tremp_time.setHours(tremp.tremp_time.getHours() - 3);
+                const trempTime = trempTimeFormatter.format(tremp.tremp_time);
+                const title = `Upcoming Tremp!`;
+                const body = `Hi ${driver.first_name}, you have a tremp scheduled for ${trempTime}.`;
+                const data = { trempId: tremp._id.toString() };
+                // Send push notification
+                yield (0, sendNotification_1.sendNotificationToUser)(driver.notification_token, title, body, data);
+            }
+        }
+    });
+}
+exports.notifyForUpcomingTremps = notifyForUpcomingTremps;
 //# sourceMappingURL=TrempService.js.map

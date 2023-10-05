@@ -5,6 +5,7 @@ import * as TrempService from "./TrempService";
 import * as UserService from "../users/UserService";
 import { BadRequestException, NotFoundException } from '../../middleware/HttpException';
 import { sendNotificationToUser } from '../../services/sendNotification';
+import { getCurrentTimeInIsrael } from "../../services/TimeService";
 
 export async function createTremp(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -163,5 +164,13 @@ export async function getTremp(req: Request, res: Response, next: NextFunction):
   }
 }
 
+export async function checkNotificationsForUpcomingTremps(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        await TrempService.notifyForUpcomingTremps();
+        res.status(200).json({ status: true, message: 'Checked for upcoming tremps and sent notifications.' });
+    } catch (err) {
+        next(err);
+    }
+}
 
 
