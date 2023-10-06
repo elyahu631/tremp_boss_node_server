@@ -171,6 +171,9 @@ export async function getTrempsByFilters(filters: any): Promise<any> {
     },
     {
       $unset: ['users_in_tremp', 'creatorInfo']
+    },
+    {
+      $sort: { tremp_time: 1 }
     }
   ];
 
