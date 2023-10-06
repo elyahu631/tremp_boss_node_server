@@ -54,7 +54,6 @@ function loginAdmin(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const { username, password } = req.body;
-            console.log(username, password);
             if (!username || !password) {
                 throw new HttpException_1.BadRequestException('Username and password are required');
             }
