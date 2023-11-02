@@ -97,7 +97,7 @@ function getTodayDate() {
   return today;
 }
 async function findExistingTremps(creatorId: string, dates: Date[]) {
-  const existingTrempsQuery = { creator_id: new ObjectId(creatorId), tremp_time: { $in: dates } };
+  const existingTrempsQuery = { creator_id: new ObjectId(creatorId), tremp_time: { $in: dates }, deleted: false };
   return await trempDataAccess.FindTrempsByFilters(existingTrempsQuery);
 }
 function validateTrempHours(hour: string, return_hour: string, date: Date, returnDate: Date) {
