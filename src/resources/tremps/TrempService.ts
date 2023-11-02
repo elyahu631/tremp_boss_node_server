@@ -8,6 +8,8 @@ import { sendNotificationToUser } from '../../services/sendNotification';
 import { BadRequestException, NotFoundException, UnauthorizedException } from '../../middleware/HttpException';
 import { validateTrempRequest } from './TrempRequestValidation';
 import { getCurrentTimeInIsrael } from '../../services/TimeService';
+import { HOUR_DIFFERENCE } from "../../config/environment";
+
 import db from '../../utils/db';
 
 const trempDataAccess = new TrempDataAccess();
@@ -112,11 +114,11 @@ function validateTrempHours(hour: string, return_hour: string, date: Date, retur
   }
 
   const differenceInMinutes = returnHourInMinutes - hourInMinutes;
-
-  const threeHoursInMinutes = 3 * minInHour;
+  console.log(HOUR_DIFFERENCE);
+  const hourDifferenceInMinutes = Number(HOUR_DIFFERENCE) * minInHour;
   const fourteenHoursInMinutes = 14 * minInHour;
 
-  if (differenceInMinutes < threeHoursInMinutes || differenceInMinutes > fourteenHoursInMinutes) {
+  if (differenceInMinutes < hourDifferenceInMinutes || differenceInMinutes > fourteenHoursInMinutes) {
     throw new BadRequestException("Return time must be at least 3 hours and no more than 14 hours from departure time");
   }
 }
@@ -205,25 +207,6 @@ async function constructQueryFromFilters(filters: any): Promise<any> {
     },
   };
 }
-// function createUserMapFromList(users: any[]): Map<string, any> {
-//   return new Map(users.map(user => [user._id.toString(), user]));
-// }
-// function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, any>): void {
-//   tremps.forEach(tremp => {
-//     tremp.participants_amount = getNumberOfApprovedUsers(tremp)
-//     tremp.users_in_tremp = undefined
-//     let user = usersMap.get(tremp.creator_id.toString());
-//     if (user) {
-//       tremp.creator = {
-//         first_name: user.first_name,
-//         last_name: user.last_name,
-//         image_URL: user.image_URL,
-//         gender: user.gender,
-//       };
-//     }
-//   });
-// }
-
 
 /**
  * Allows a user to join a specific 'tremp' (ride).
@@ -732,6 +715,7 @@ export async function getTrempsHistory(user_id: string, tremp_type: string) {
 export async function getAllTremps() {
   return trempDataAccess.getAllTremps();
 }
+
 export async function getTrempById(id: string) {
   return trempDataAccess.FindByID(id);
 }
@@ -761,19 +745,19 @@ export async function notifyForUpcomingTremps() {
   const upcomingTremps = await trempDataAccess.findUpcomingTremps(lastCheckedTime, currentTime);
 
   for (const tremp of upcomingTremps) {
-      const driver = await db.FindByID('Users', tremp.creator_id.toString());
+    const driver = await db.FindByID('Users', tremp.creator_id.toString());
 
-      if (driver && driver.first_name && driver.notification_token) {
-          const trempTimeFormatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jerusalem' });
-          tremp.tremp_time.setHours(tremp.tremp_time.getHours() - 3);
-          const trempTime = trempTimeFormatter.format(tremp.tremp_time);
-          const title = `Upcoming Tremp!`;
-          const body = `Hi ${driver.first_name}, you have a tremp scheduled for ${trempTime}.`;
-          const data = { trempId: tremp._id.toString() };
+    if (driver && driver.first_name && driver.notification_token) {
+      const trempTimeFormatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jerusalem' });
+      tremp.tremp_time.setHours(tremp.tremp_time.getHours() - 3);
+      const trempTime = trempTimeFormatter.format(tremp.tremp_time);
+      const title = `Upcoming Tremp!`;
+      const body = `Hi ${driver.first_name}, you have a tremp scheduled for ${trempTime}.`;
+      const data = { trempId: tremp._id.toString() };
 
-          // Send push notification
-          await sendNotificationToUser(driver.notification_token, title, body, data);
-      }
+      // Send push notification
+      await sendNotificationToUser(driver.notification_token, title, body, data);
+    }
   }
 }
 
