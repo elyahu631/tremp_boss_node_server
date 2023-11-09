@@ -24,3 +24,4 @@ export const FIREBASE_ENV =
 
 export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "";
 export const HOUR_DIFFERENCE = process.env.HOUR_DIFFERENCE || 4
+export const TREMPBOSS_EMAIL = process.env.TREMPBOSS_EMAIL || ""

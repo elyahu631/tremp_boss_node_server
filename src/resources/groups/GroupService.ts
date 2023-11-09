@@ -18,7 +18,6 @@ const userGroupsDataAccess = new UserGroupsDataAccess();
 export async function getGroupById(id: string) {
   return groupDataAccess.FindById(id);
 }
-///////
 function assertUserHasGroups(user: any) {
   if (!user || !user.groups) {
     throw new NotFoundException("User not found or user has no groups.");

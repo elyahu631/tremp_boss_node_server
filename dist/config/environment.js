@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ENCRYPTION_KEY = exports.FIREBASE_ENV = exports.SERVER_KEY = exports.EMAIL_PASS = exports.JWT_SECRET = exports.PORT = exports.DB_NAME = exports.DB_URI = void 0;
+exports.TREMPBOSS_EMAIL = exports.HOUR_DIFFERENCE = exports.ENCRYPTION_KEY = exports.FIREBASE_ENV = exports.SERVER_KEY = exports.EMAIL_PASS = exports.JWT_SECRET = exports.PORT = exports.DB_NAME = exports.DB_URI = void 0;
 // src/config/environment.ts
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -26,4 +26,6 @@ exports.FIREBASE_ENV = {
     client_x509_cert_url: process.env.CLIENT_X509_CERT_URL || "",
 };
 exports.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || "";
+exports.HOUR_DIFFERENCE = process.env.HOUR_DIFFERENCE || 4;
+exports.TREMPBOSS_EMAIL = process.env.TREMPBOSS_EMAIL || "";
 //# sourceMappingURL=environment.js.map

@@ -33,6 +33,7 @@ const sendNotification_1 = require("../../services/sendNotification");
 const HttpException_1 = require("../../middleware/HttpException");
 const TrempRequestValidation_1 = require("./TrempRequestValidation");
 const TimeService_1 = require("../../services/TimeService");
+const environment_1 = require("../../config/environment");
 const db_1 = __importDefault(require("../../utils/db"));
 const trempDataAccess = new TrempDataAccess_1.default();
 const userDataAccess = new UserDataAccess_1.default();
@@ -106,7 +107,7 @@ function getTodayDate() {
 }
 function findExistingTremps(creatorId, dates) {
     return __awaiter(this, void 0, void 0, function* () {
-        const existingTrempsQuery = { creator_id: new mongodb_1.ObjectId(creatorId), tremp_time: { $in: dates } };
+        const existingTrempsQuery = { creator_id: new mongodb_1.ObjectId(creatorId), tremp_time: { $in: dates }, deleted: false };
         return yield trempDataAccess.FindTrempsByFilters(existingTrempsQuery);
     });
 }
@@ -122,9 +123,10 @@ function validateTrempHours(hour, return_hour, date, returnDate) {
         returnDate.setDate(returnDate.getDate() + 1); // Increment the return date by one day
     }
     const differenceInMinutes = returnHourInMinutes - hourInMinutes;
-    const threeHoursInMinutes = 3 * minInHour;
+    console.log(environment_1.HOUR_DIFFERENCE);
+    const hourDifferenceInMinutes = Number(environment_1.HOUR_DIFFERENCE) * minInHour;
     const fourteenHoursInMinutes = 14 * minInHour;
-    if (differenceInMinutes < threeHoursInMinutes || differenceInMinutes > fourteenHoursInMinutes) {
+    if (differenceInMinutes < hourDifferenceInMinutes || differenceInMinutes > fourteenHoursInMinutes) {
         throw new HttpException_1.BadRequestException("Return time must be at least 3 hours and no more than 14 hours from departure time");
     }
 }
@@ -170,6 +172,9 @@ function getTrempsByFilters(filters) {
             },
             {
                 $unset: ['users_in_tremp', 'creatorInfo']
+            },
+            {
+                $sort: { tremp_time: 1 }
             }
         ];
         return yield db_1.default.aggregate('Tremps', pipeline);
@@ -203,24 +208,6 @@ function constructQueryFromFilters(filters) {
         };
     });
 }
-// function createUserMapFromList(users: any[]): Map<string, any> {
-//   return new Map(users.map(user => [user._id.toString(), user]));
-// }
-// function appendCreatorInformationToTremps(tremps: any[], usersMap: Map<string, any>): void {
-//   tremps.forEach(tremp => {
-//     tremp.participants_amount = getNumberOfApprovedUsers(tremp)
-//     tremp.users_in_tremp = undefined
-//     let user = usersMap.get(tremp.creator_id.toString());
-//     if (user) {
-//       tremp.creator = {
-//         first_name: user.first_name,
-//         last_name: user.last_name,
-//         image_URL: user.image_URL,
-//         gender: user.gender,
-//       };
-//     }
-//   });
-// }
 /**
  * Allows a user to join a specific 'tremp' (ride).
  *

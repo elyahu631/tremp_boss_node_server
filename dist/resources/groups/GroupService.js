@@ -32,7 +32,6 @@ function getGroupById(id) {
     });
 }
 exports.getGroupById = getGroupById;
-///////
 function assertUserHasGroups(user) {
     if (!user || !user.groups) {
         throw new HttpException_1.NotFoundException("User not found or user has no groups.");

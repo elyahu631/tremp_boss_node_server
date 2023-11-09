@@ -1,5 +1,3 @@
-//  src/middleware/handleErrors.ts
-
 // src/middleware/handleErrors.ts
 
 import { NextFunction, Request, Response } from "express";

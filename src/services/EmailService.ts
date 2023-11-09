@@ -1,13 +1,13 @@
 import nodemailer from 'nodemailer';
 import { SentMessageInfo } from 'nodemailer';
-import { EMAIL_PASS } from '../config/environment';
+import { EMAIL_PASS,TREMPBOSS_EMAIL } from '../config/environment';
 import { encrypt } from './Encryption';
 import { BadRequestException } from '../middleware/HttpException';
 
 export class EmailService {
-  private transporter;
+  private readonly transporter: nodemailer.Transporter;
 
-  static OUR_EMAIL = 'trempboss777@gmail.com'
+  static OUR_EMAIL = TREMPBOSS_EMAIL
 
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -42,9 +42,6 @@ export class EmailService {
 
 
   public sendResetCode(to: string, code: number) {
-    console.log("entering");
-    console.log(to);
-    console.log(code);
 
     const mailOptions = {
       from: EmailService.OUR_EMAIL,
@@ -61,5 +58,4 @@ export class EmailService {
       }
     });
   }
-
 }

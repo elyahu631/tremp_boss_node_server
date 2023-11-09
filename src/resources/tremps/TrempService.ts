@@ -749,7 +749,7 @@ export async function notifyForUpcomingTremps() {
 
     if (driver && driver.first_name && driver.notification_token) {
       const trempTimeFormatter = new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jerusalem' });
-      tremp.tremp_time.setHours(tremp.tremp_time.getHours() - 3);
+      tremp.tremp_time.setHours(tremp.tremp_time.getHours() - 2);
       const trempTime = trempTimeFormatter.format(tremp.tremp_time);
       const title = `Upcoming Tremp!`;
       const body = `Hi ${driver.first_name}, you have a tremp scheduled for ${trempTime}.`;

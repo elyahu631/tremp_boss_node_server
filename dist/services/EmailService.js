@@ -37,9 +37,6 @@ class EmailService {
         });
     }
     sendResetCode(to, code) {
-        console.log("entering");
-        console.log(to);
-        console.log(code);
         const mailOptions = {
             from: EmailService.OUR_EMAIL,
             to: to,
@@ -57,5 +54,5 @@ class EmailService {
     }
 }
 exports.EmailService = EmailService;
-EmailService.OUR_EMAIL = 'trempboss777@gmail.com';
+EmailService.OUR_EMAIL = environment_1.TREMPBOSS_EMAIL;
 //# sourceMappingURL=EmailService.js.map
